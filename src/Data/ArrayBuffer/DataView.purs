@@ -7,7 +7,6 @@ import Control.Monad.Eff
 
 foreign import data DataView :: *
 
-
 foreign import whole
 """
 function whole(b) {

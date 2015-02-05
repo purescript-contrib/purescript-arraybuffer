@@ -9,6 +9,7 @@ import qualified Data.ArrayBuffer.DataView as DV
 import qualified Data.ArrayBuffer.Typed as TA
 import qualified Data.ArrayBuffer.Serializer as S
 import qualified Data.ArrayBuffer.Deserializer as D
+import Data.ArrayBuffer.Show
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
@@ -108,7 +109,7 @@ main = do
   assert $ AB.byteLength sab == 8
 
   let nab = AB.create 8
-  let dv = DV.whole nab
+  let dv = DV.whole nab      
   assert $ AB.byteLength (DV.buffer dv) == 8
 
   assert $ AB.byteLength (DV.buffer $ TA.dataView (TA.asInt8Array dv)) == 8

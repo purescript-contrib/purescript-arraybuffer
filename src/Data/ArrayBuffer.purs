@@ -5,14 +5,6 @@ import Data.ArrayBuffer.Types
 
 foreign import data ArrayBuffer :: *
 
-instance showArrayBuffer :: Show ArrayBuffer where
-  show = showImpl
-  
-foreign import showImpl
-"""
-var showImpl = require('util').inspect;
-""" :: ArrayBuffer -> String
-
 foreign import create
 """
 function create(s) {
