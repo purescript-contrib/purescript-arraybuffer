@@ -19,26 +19,30 @@ type Int8Array = ArrayView Int8
 --type Float32Array = ArrayView Float32
 --type Float64Array = ArrayView Float64 
 
-foreign import asInt8Array """
+foreign import asInt8Array
+"""
 function asInt8Array(v) {
   return new Int8Array(v.buffer, v.byteOffset, v.byteLength);
 }
 """:: DataView -> Int8Array
 
-foreign import dataView """
+foreign import dataView
+"""
 function dataView(a) {
   return a;
 }
 """ :: forall a. ArrayView a -> DataView
 
-foreign import unsafeAtImpl """
+foreign import unsafeAtImpl
+"""
 function unsafeAtImpl(a, i) {
    return a[i];
 }
 """ :: forall a. Fn2 (ArrayView a) Number Number
 unsafeAt = runFn2 unsafeAtImpl
 
-foreign import hasIndexImpl """
+foreign import hasIndexImpl
+"""
 function hasIndexImpl(a, i) {
   return i in a;
 }

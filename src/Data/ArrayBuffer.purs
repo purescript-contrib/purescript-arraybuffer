@@ -12,15 +12,19 @@ instance showArrayBuffer :: Show ArrayBuffer where
   
 foreign import showImpl "var showImpl = require('util').inspect;" :: ArrayBuffer -> String
 
-foreign import create """
-  function create(s) {
-    return new ArrayBuffer(s);
-  }""" :: ByteLength -> ArrayBuffer
+foreign import create
+"""
+function create(s) {
+  return new ArrayBuffer(s);
+}
+""" :: ByteLength -> ArrayBuffer
 
-foreign import byteLength """
-  function byteLength(a) {
-    return a.byteLength;
-  }""" :: ArrayBuffer -> ByteLength
+foreign import byteLength
+"""
+function byteLength(a) {
+  return a.byteLength;
+}
+""" :: ArrayBuffer -> ByteLength
 
 foreign import sliceImpl """
   function sliceImpl(s, e, a) {

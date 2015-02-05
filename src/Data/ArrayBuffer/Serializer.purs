@@ -6,7 +6,8 @@ import qualified Data.ArrayBuffer.DataView as DV
 import Data.Function
 import Control.Monad.Eff
 
-foreign import advance """
+foreign import advance
+"""
 function advance(d) {
   return function(s) {
     return function() {

@@ -8,13 +8,15 @@ import Control.Monad.Eff
 foreign import data DataView :: *
 
 
-foreign import whole """
+foreign import whole
+"""
 function whole(b) {
   return new DataView(b);
 }
 """ :: ArrayBuffer -> DataView
 
-foreign import sliceImpl """
+foreign import sliceImpl
+"""
 function sliceImpl(s, l, b) {
   return new DataView(b, s, l);
 }
@@ -22,19 +24,22 @@ function sliceImpl(s, l, b) {
 slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> DataView
 slice = runFn3 sliceImpl
 
-foreign import buffer """
+foreign import buffer
+"""
 function buffer(v) {
   return v.buffer;
 }
 """ :: DataView -> ArrayBuffer
 
-foreign import byteOffset """
+foreign import byteOffset
+"""
 function byteOffset(v) {
   return v.byteOffset;
 }
 """ :: DataView -> ByteOffset
 
-foreign import byteLength """
+foreign import byteLength
+"""
 function byteLength(v) {
   return v.byteLength;
 }
@@ -43,7 +48,8 @@ function byteLength(v) {
 
 foreign import data Reader :: !                    
 
-foreign import getInt8 """
+foreign import getInt8
+"""
 function getInt8(v) {
   return function(o) {
     return function() {
@@ -55,7 +61,8 @@ function getInt8(v) {
 
 foreign import data Writer :: !
 
-foreign import setInt8 """
+foreign import setInt8
+"""
 function setInt8(v) {
   return function(o) {
     return function(n) {
