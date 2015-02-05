@@ -10,6 +10,9 @@
     "bower_components",
     "output"
   ], 
+  "dependencies": {
+    "purescript-maybe": "*"
+  },
   "devDependencies": {
     "purescript-quickcheck": "*"
   }
