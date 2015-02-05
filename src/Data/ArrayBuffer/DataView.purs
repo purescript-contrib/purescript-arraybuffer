@@ -1,6 +1,6 @@
 module Data.ArrayBuffer.DataView where
 
-import Data.ArrayBuffer(ArrayBuffer(), ByteOffset(), ByteLength())
+import Data.ArrayBuffer(ArrayBuffer())
 import Data.ArrayBuffer.Types
 import Data.Function
 import Control.Monad.Eff
@@ -64,13 +64,13 @@ foreign import data Writer :: !
 foreign import setInt8
 """
 function setInt8(v) {
-  return function(o) {
-    return function(n) {
+  return function(n) {
+    return function(o) {
       return function() {
         v.setInt8(o, n);
       };
     };
   };
 }
-""" :: forall e. DataView -> ByteOffset -> Int8 -> Eff (writer :: Writer | e) Unit
+""" :: forall e. DataView -> Int8 -> ByteOffset -> Eff (writer :: Writer | e) Unit
 

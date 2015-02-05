@@ -12,7 +12,6 @@ import qualified Data.ArrayBuffer.Deserializer as D
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
-import Control.Monad.Trans
 import Math
 
 instance eqInt8 :: Eq Int8 where
@@ -122,14 +121,23 @@ main = do
      let i8 = TA.asInt8Array dv
      ((Just 2) == i8 `TA.at` 1) && (Nothing == i8 `TA.at` 4) && (Nothing == i8 `TA.at` (-1))
 
-  quickCheck serdes
+  quickCheck' 5000 serdes
 
-serdes :: M4I8 -> Boolean
-serdes v0 = forcePure $ do
-    a <- S.serialized $ \s -> S.put s v0
+serdes :: M4I8 -> M4I8 -> M4I8 -> M4I8 -> Boolean
+serdes m0 m1 m2 m3 = forcePure $ do
+    a <- S.serialized 256 $ \s -> do
+      let p = S.put s
+      p m0
+      p m1
+      p m2
+      p m3      
     d <- D.deserializer a
-    v1 <- D.get d
-    return $ v0 == v1
+    let g = D.get d
+    m0' <- g
+    m1' <- g
+    m2' <- g
+    m3' <- g
+    return $ m0 == m0' && m1 == m1' && m2 == m2' && m3 == m3'
         
 
 assert :: Boolean -> QC Unit

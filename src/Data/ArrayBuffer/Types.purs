@@ -1,5 +1,9 @@
 module Data.ArrayBuffer.Types where
 
+type ByteOffset = Number
+type ByteLength = Number
+
+
 newtype Int8 = Int8 Number
 --newtype Uint8
 --newtype Uint8Clamped

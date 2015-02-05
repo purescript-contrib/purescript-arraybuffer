@@ -1,11 +1,9 @@
 module Data.ArrayBuffer where
 
 import Data.Function
+import Data.ArrayBuffer.Types
 
 foreign import data ArrayBuffer :: *
-
-type ByteOffset = Number
-type ByteLength = Number
 
 instance showArrayBuffer :: Show ArrayBuffer where
   show = showImpl
