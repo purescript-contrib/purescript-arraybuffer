@@ -26,27 +26,31 @@ function byteLength(a) {
 }
 """ :: ArrayBuffer -> ByteLength
 
-foreign import sliceImpl """
-  function sliceImpl(s, e, a) {
-    return a.slice(s,e);
-  }""" :: Fn3 ByteOffset ByteOffset ArrayBuffer ArrayBuffer
+foreign import sliceImpl
+"""
+function sliceImpl(s, e, a) {
+  return a.slice(s,e);
+}
+""" :: Fn3 ByteOffset ByteOffset ArrayBuffer ArrayBuffer
 slice :: ByteOffset -> ByteOffset -> ArrayBuffer -> ArrayBuffer
 slice = runFn3 sliceImpl
 
 
-foreign import fromArray """
-  function fromArray(s) {
-    return (new Uint8Array(s)).buffer;
-  }
+foreign import fromArray
+"""
+function fromArray(s) {
+  return (new Uint8Array(s)).buffer;
+}
 """ :: [Number] -> ArrayBuffer
 
-foreign import fromString """
-  function fromString(s) {
-    var l = s.length;
-    var ab = new ArrayBuffer(l * 2);
-    var a = new Uint16Array(ab);
-    for (var i = 0; i < l; i++)
-      a[i] = s.charCodeAt(i);
-    return ab;
-  }
+foreign import fromString
+"""
+function fromString(s) {
+  var l = s.length;
+  var ab = new ArrayBuffer(l * 2);
+  var a = new Uint16Array(ab);
+  for (var i = 0; i < l; i++)
+    a[i] = s.charCodeAt(i);
+  return ab;
+}
 """ :: String -> ArrayBuffer
