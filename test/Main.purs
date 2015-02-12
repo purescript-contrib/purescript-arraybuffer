@@ -122,6 +122,10 @@ main = do
      let i8 = TA.asInt8Array dv
      ((Just 2) == i8 `TA.at` 1) && (Nothing == i8 `TA.at` 4) && (Nothing == i8 `TA.at` (-1))
 
+  assert $ [1,2,3] == (TA.toArray $ TA.asInt8Array $ DV.whole $ AB.fromArray [1,2,3])
+
+     
+
   quickCheck' 5000 serdes
 
 serdes :: M4I8 -> M4I8 -> M4I8 -> M4I8 -> Boolean

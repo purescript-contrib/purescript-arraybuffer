@@ -5,7 +5,7 @@ type ByteLength = Number
 
 
 newtype Int8 = Int8 Number
---newtype Uint8
+newtype Uint8 = Uint8 Number
 --newtype Uint8Clamped
 newtype Int16 = Int16 Number
 --newtype Uint16
