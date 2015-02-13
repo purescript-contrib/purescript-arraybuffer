@@ -15,76 +15,86 @@ import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
 import Math
 
-instance eqInt8 :: Eq Int8 where
-  (==) (Int8 v0) (Int8 v1) = v0 == v1
+newtype Comp = Comp Number
+
+instance isSerializableComp :: S.IsSerializable Comp where
+  put d (Comp v) = S.put d $ Int8 v
+
+instance isDeserializableComp :: D.IsDeserializable Comp where
+  get d = do
+    (Int8 v) <- D.get d
+    return $ Comp v
+
+instance eqComp :: Eq Comp where
+  (==) (Comp v0) (Comp v1) = v0 == v1
   (/=) a b = not $ a == b
 
-instance showInt8 :: Show Int8 where
-  show (Int8 v) = "Int8 " ++ show v
+instance showComp :: Show Comp where
+  show (Comp v) = "Comp " ++ show v
 
-instance arbInt8 :: Arbitrary Int8 where
-  arbitrary = uniformToInt8 <$> arbitrary
+instance arbComp :: Arbitrary Comp where
+  arbitrary = uniformToComp <$> arbitrary
     where
-    uniformToInt8 n = Int8 $ Math.floor (n * 256) - 128
+    uniformToComp n = Comp $ Math.floor (n * 256) - 128
 
-data V4I8 = V4I8 Int8 Int8 Int8 Int8
+data V4 = V4 Comp Comp Comp Comp
 
-instance eqV4I8 :: Eq V4I8 where
-  (==) (V4I8 x0 y0 z0 t0) (V4I8 x1 y1 z1 t1) = x0 == x0 && y0 == y1 && z0 == z1 && t0 == t1
+instance eqV4 :: Eq V4 where
+  (==) (V4 x0 y0 z0 t0) (V4 x1 y1 z1 t1) = x0 == x0 && y0 == y1 && z0 == z1 && t0 == t1
   (/=) a b = not $ a == b
 
-instance showV4I8 :: Show V4I8 where
-  show (V4I8 x y z t) = "(V4I8 " ++ show x ++ " " ++ show y ++ " " ++ show z ++ " " ++ show t ++ ")"
+instance showV4 :: Show V4 where
+  show (V4 x y z t) = "(V4 " ++ show x ++ " " ++ show y ++ " " ++ show z ++ " " ++ show t ++ ")"
   
-instance arbV4I8 :: Arbitrary V4I8 where
-  arbitrary = V4I8 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+instance arbV4 :: Arbitrary V4 where
+  arbitrary = V4 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-instance v4i8IsSerializable :: S.IsSerializable V4I8 where
-  put d (V4I8 x y z t) = do
+instance v4IsSerializable :: S.IsSerializable V4 where
+  put d (V4 x y z t) = do
     let i8 = S.put d
     i8 x
     i8 y
     i8 z
     i8 t
 
-instance v4i8IsDeserializable :: D.IsDeserializable V4I8 where
+instance v4IsDeserializable :: D.IsDeserializable V4 where
   get d = do
     let i8 = D.get d
     x <- i8
     y <- i8
     z <- i8
     t <- i8
-    return $ V4I8 x y z t
+    return $ V4 x y z t
 
-data M4I8 = M4I8 V4I8 V4I8 V4I8 V4I8
+data M4 = M4 V4 V4 V4 V4
 
-instance eqM4I8 :: Eq M4I8 where
-  (==) (M4I8 x0 y0 z0 t0) (M4I8 x1 y1 z1 t1) = x0 == x0 && y0 == y1 && z0 == z1 && t0 == t1
+instance eqM4 :: Eq M4 where
+  (==) (M4 x0 y0 z0 t0) (M4 x1 y1 z1 t1) = x0 == x0 && y0 == y1 && z0 == z1 && t0 == t1
   (/=) a b = not $ a == b
 
-instance showM4I8 :: Show M4I8 where
-  show (M4I8 x y z t) = "M4I8 " ++ show x ++ " " ++ show y ++ " " ++ show z ++ " " ++ show t
+instance showM4 :: Show M4 where
+  show (M4 x y z t) = "M4 " ++ show x ++ " " ++ show y ++ " " ++ show z ++ " " ++ show t
 
-instance arbM4I8 :: Arbitrary M4I8 where
-  arbitrary = M4I8 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+instance arbM4 :: Arbitrary M4 where
+  arbitrary = M4 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
   
 
-instance m4i8IsSerializable :: S.IsSerializable M4I8 where
-  put d (M4I8 x y z t) = do
-    let v4i8 = S.put d
-    v4i8 x
-    v4i8 y
-    v4i8 z
-    v4i8 t
+instance m4IsSerializable :: S.IsSerializable M4 where
+  put d (M4 x y z t) = do
+    let v4 = S.put d
+    v4 x
+    v4 y
+    v4 z
+    v4 t
 
-instance m4i8IsDeserializable :: D.IsDeserializable M4I8 where
+instance m4IsDeserializable :: D.IsDeserializable M4 where
   get d = do
-    let v4i8= D.get d
-    x <- v4i8
-    y <- v4i8
-    z <- v4i8
-    t <- v4i8
-    return $ M4I8 x y z t
+    let v4= D.get d
+    x <- v4
+    y <- v4
+    z <- v4
+    t <- v4
+    return $ M4 x y z t
 
 foreign import ut """
 function ut(a) {
@@ -128,7 +138,7 @@ main = do
 
   quickCheck' 5000 serdes
 
-serdes :: M4I8 -> M4I8 -> M4I8 -> M4I8 -> Boolean
+serdes :: M4 -> M4 -> M4 -> M4 -> Boolean
 serdes m0 m1 m2 m3 = forcePure $ do
     a <- S.serialized 256 $ \s -> do
       let p = S.put s
