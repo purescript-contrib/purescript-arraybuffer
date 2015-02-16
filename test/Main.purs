@@ -1,6 +1,7 @@
 module Test.Main where
 
 import Debug.Trace
+import Data.Either
 import Data.Maybe
 import Test.QuickCheck
 import Data.ArrayBuffer.Types
@@ -22,8 +23,10 @@ instance isSerializableComp :: S.IsSerializable Comp where
 
 instance isDeserializableComp :: D.IsDeserializable Comp where
   get d = do
-    (Int8 v) <- D.get d
-    return $ Comp v
+    v <- D.getInt8 d
+    return $ case v of
+      (Right (Int8 vv)) -> Right $ Comp vv
+      (Left err) -> Left err
 
 instance eqComp :: Eq Comp where
   (==) (Comp v0) (Comp v1) = v0 == v1
@@ -59,13 +62,13 @@ instance v4IsSerializable :: S.IsSerializable V4 where
 
 instance v4IsDeserializable :: D.IsDeserializable V4 where
   get d = do
-    let i8 = D.get d
-    x <- i8
-    y <- i8
-    z <- i8
-    t <- i8
-    return $ V4 x y z t
-
+    let comp = D.get d
+    x <- comp
+    y <- comp
+    z <- comp
+    t <- comp
+    return $ V4 <$> x <*> y <*> z <*> t
+    
 data M4 = M4 V4 V4 V4 V4
 
 instance eqM4 :: Eq M4 where
@@ -94,7 +97,7 @@ instance m4IsDeserializable :: D.IsDeserializable M4 where
     y <- v4
     z <- v4
     t <- v4
-    return $ M4 x y z t
+    return $ M4 <$> x <*> y <*> z <*> t
 
 foreign import ut """
 function ut(a) {
@@ -134,9 +137,9 @@ main = do
 
   assert $ [1,2,3] == (TA.toArray $ TA.asInt8Array $ DV.whole $ AB.fromArray [1,2,3])
 
-     
+  quickCheck short
 
-  quickCheck' 5000 serdes
+  quickCheck serdes
 
 serdes :: M4 -> M4 -> M4 -> M4 -> Boolean
 serdes m0 m1 m2 m3 = forcePure $ do
@@ -152,7 +155,19 @@ serdes m0 m1 m2 m3 = forcePure $ do
     m1' <- g
     m2' <- g
     m3' <- g
-    return $ m0 == m0' && m1 == m1' && m2 == m2' && m3 == m3'
+    return $ (Right m0) == m0' && (Right m1) == m1' && (Right m2) == m2' && (Right m3) == m3'
+
+short :: M4 -> M4 -> Boolean
+short m0 m1 = forcePure $ do
+    a <- S.serialized 256 $ \s -> do
+      let p = S.put s
+      p m0
+    d <- D.deserializer a
+    let g = D.get d
+    m0' <- g
+    m1' <- g
+    return $ m0' == (Right m0) && m1' /= (Right m1) && m1' == (Left "Short read")
+
         
 
 assert :: Boolean -> QC Unit

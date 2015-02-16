@@ -1,6 +1,7 @@
 module Data.ArrayBuffer.Deserializer where
 
-import Data.Function
+import Data.Either
+import Data.Maybe
 import Control.Monad.Eff
 import Data.ArrayBuffer.Advancer
 import Data.ArrayBuffer.Types
@@ -11,24 +12,40 @@ import qualified Data.ArrayBuffer.DataView as DV
 type Deserializer = Advancer
 
 class IsDeserializable a where
-  get :: forall e. Deserializer -> Eff (reader :: DV.Reader | e) a
+  get :: forall e. Deserializer -> Eff (reader :: DV.Reader | e) (Either String a)
+
+chkErr :: forall a e. Maybe a -> Either String a
+chkErr x = case x of
+  (Just v) -> Right v
+  otherwise -> Left "Short read"
+
+
+getInt8 :: forall e. Deserializer -> Eff (reader :: DV.Reader | e) (Either String Int8)
+getInt8 d =  chkErr <$> (advance 1 d >>= DV.getInt8 d.dv)
+getInt16 d = chkErr <$> (advance 2 d >>= DV.getInt16 d.dv)
+getInt32 d = chkErr <$> (advance 4 d >>= DV.getInt32 d.dv)
+getUint8 d = chkErr <$> (advance 1 d >>= DV.getUint8 d.dv)
+getUint16 d = chkErr <$> (advance 2 d >>= DV.getUint16 d.dv)
+getUint32 d = chkErr <$> (advance 4 d >>= DV.getUint32 d.dv)
+getFloat32 d = chkErr <$> (advance 4 d >>= DV.getFloat32 d.dv)
+getFloat64 d = chkErr <$> (advance 8 d >>= DV.getFloat64 d.dv)
 
 instance isDeserializableInt8 :: IsDeserializable Int8 where
-  get d = advance 1 d >>= DV.getInt8 d.dv
+  get = getInt8
 instance isDeserializableInt16 :: IsDeserializable Int16 where
-  get d = advance 2 d >>= DV.getInt16 d.dv
+  get = getInt16
 instance isDeserializableInt32 :: IsDeserializable Int32 where
-  get d = advance 4 d >>= DV.getInt32 d.dv
+  get = getInt32
 instance isDeserializableUint8 :: IsDeserializable Uint8 where
-  get d = advance 1 d >>= DV.getUint8 d.dv
+  get = getUint8
 instance isDeserializableUint16 :: IsDeserializable Uint16 where
-  get d = advance 2 d >>= DV.getUint16 d.dv
+  get = getUint16
 instance isDeserializableUint32 :: IsDeserializable Uint32 where
-  get d = advance 4 d >>= DV.getUint32 d.dv
+  get = getUint32
 instance isDeserializableFloat32 :: IsDeserializable Float32 where
-  get d = advance 4 d >>= DV.getFloat32 d.dv
+  get = getFloat32
 instance isDeserializableFloat64 :: IsDeserializable Float64 where
-  get d = advance 8 d >>= DV.getFloat64 d.dv
+  get = getFloat64
 
 getDataView :: forall e. Deserializer -> ByteLength -> Eff (reader :: DV.Reader | e) DV.DataView
 getDataView d n = do
