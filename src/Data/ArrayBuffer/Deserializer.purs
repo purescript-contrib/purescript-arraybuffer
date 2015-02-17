@@ -47,31 +47,42 @@ instance isDeserializableFloat32 :: IsDeserializable Float32 where
 instance isDeserializableFloat64 :: IsDeserializable Float64 where
   get = getFloat64
 
-getDataView :: forall e. Deserializer -> ByteLength -> Eff (reader :: DV.Reader | e) DV.DataView
+getDataView :: forall e. Deserializer -> ByteLength -> Eff (reader :: DV.Reader | e) (Either String DV.DataView)
 getDataView d n = do
   o <- advance n d
-  return $ DV.slice o n (DV.buffer d.dv)
+  return $ case DV.slice o n (DV.buffer d.dv) of
+    (Just dv) -> Right dv
+    otherwise -> Left "short read"
 
-type AD t = forall e. Deserializer -> Number -> Eff (reader :: DV.Reader | e) t
+type AD t = forall e. Deserializer -> Number -> Eff (reader :: DV.Reader | e) (Either String t)
+
+
+getTypedArray :: forall e t. Deserializer -> Number -> (DV.DataView -> t) -> Eff (reader :: DV.Reader | e) (Either String t)
+getTypedArray d sz conv = do
+  edv <- getDataView d sz
+  return $ case edv of
+    Right dv -> Right $ conv dv
+    Left err -> Left err
+
 
 getInt8Array :: AD TA.Int8Array
-getInt8Array d n = getDataView d n >>= return <<< TA.asInt8Array
+getInt8Array d n = getTypedArray d n TA.asInt8Array
 getInt16Array :: AD TA.Int16Array
-getInt16Array d n = getDataView d (n * 2) >>= return <<< TA.asInt16Array
+getInt16Array d n = getTypedArray d (n * 2) TA.asInt16Array
 getInt32Array :: AD TA.Int32Array
-getInt32Array d n = getDataView d (n * 4) >>= return <<< TA.asInt32Array
+getInt32Array d n = getTypedArray d (n * 4) TA.asInt32Array
 getUint8Array :: AD TA.Uint8Array
-getUint8Array d n = getDataView d n >>= return <<< TA.asUint8Array
+getUint8Array d n = getTypedArray d n TA.asUint8Array
 getUint16Array :: AD TA.Uint16Array
-getUint16Array d n = getDataView d (n * 2) >>= return <<< TA.asUint16Array
+getUint16Array d n = getTypedArray d (n * 2) TA.asUint16Array
 getUint32Array :: AD TA.Uint32Array
-getUint32Array d n = getDataView d (n * 4) >>= return <<< TA.asUint32Array
+getUint32Array d n = getTypedArray d (n * 4) TA.asUint32Array
 getUint8ClampedArray :: AD TA.Uint8ClampedArray
-getUint8ClampedArray d n = getDataView d n >>= return <<< TA.asUint8ClampedArray
+getUint8ClampedArray d n = getTypedArray d n TA.asUint8ClampedArray
 getFloat32Array :: AD TA.Float32Array
-getFloat32Array d n = getDataView d (n * 4) >>= return <<< TA.asFloat32Array
+getFloat32Array d n = getTypedArray d (n * 4) TA.asFloat32Array
 getFloat64Array :: AD TA.Float64Array
-getFloat64Array d n = getDataView d (n * 8) >>= return <<< TA.asFloat64Array
+getFloat64Array d n = getTypedArray d (n * 8) TA.asFloat64Array
 
 deserializer :: forall e. AB.ArrayBuffer -> Eff (reader :: DV.Reader | e) Deserializer
 deserializer ab = return $ { dv : DV.whole ab, off : 0 }

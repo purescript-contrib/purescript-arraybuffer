@@ -17,12 +17,12 @@ function whole(b) {
 
 foreign import sliceImpl
 """
-function sliceImpl(s, l, b) {
-  return new DataView(b, s, l);
+function sliceImpl(just, nothing, s, l, b) {
+  return s + l <= b.byteLength? just(new DataView(b, s, l)) : nothing;
 }
-""" :: forall e. Fn3 ByteOffset ByteLength ArrayBuffer DataView
-slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> DataView
-slice = runFn3 sliceImpl
+""" :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
+slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> Maybe DataView
+slice = runFn5 sliceImpl Just Nothing
 
 foreign import buffer
 """

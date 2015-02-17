@@ -114,8 +114,8 @@ main = do
   assert $ AB.byteLength (AB.slice 2 4 ab) == 2
   assert $ AB.byteLength (AB.slice (-2) (-2) ab) == 0
   assert $ AB.byteLength (AB.slice (-2) (-1) ab) == 1     
-  assert $ DV.byteLength (DV.slice 0 2 ab) == 2
-  assert $ DV.byteLength (DV.slice 2 2 ab) == 2
+  assert $ (DV.byteLength <$> (DV.slice 0 2 ab)) == Just 2
+  assert $ (DV.byteLength <$> (DV.slice 2 2 ab)) == Just 2
   let aab = AB.fromArray [1, 2, 3, 4]
   assert $ AB.byteLength aab == 4
   let sab = AB.fromString "hola"
@@ -127,7 +127,8 @@ main = do
 
   assert $ AB.byteLength (DV.buffer $ TA.dataView (TA.asInt8Array dv)) == 8
 
-  assert $ DV.byteLength (DV.slice 0 4 nab) == 4
+  assert $ (DV.byteLength <$> DV.slice 0 4 nab) == Just 4
+  assert $ (DV.byteLength <$> DV.slice 0 40 nab) == Nothing
 
   assert $ do
      let ab = AB.fromArray [1,2,3,4]

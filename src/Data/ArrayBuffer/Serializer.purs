@@ -5,6 +5,7 @@ import qualified Data.ArrayBuffer as AB
 import qualified Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Advancer
 import Data.Function
+import Data.Maybe
 import Control.Monad.Eff
 
 type Serializer = Advancer
@@ -29,7 +30,7 @@ instance isSerializableFloat32 :: IsSerializable Float32 where
 instance isSerializableFloat64 :: IsSerializable Float64 where
   put s v = advance 8 s >>= DV.setFloat64 s.dv v
 
-mapDataView :: forall e. Serializer -> ByteLength -> Eff (writer :: DV.Writer | e) DV.DataView
+mapDataView :: forall e. Serializer -> ByteLength -> Eff (writer :: DV.Writer | e) (Maybe DV.DataView)
 mapDataView s n = do
   o <- advance n s
   return $ DV.slice o n (DV.buffer s.dv)
