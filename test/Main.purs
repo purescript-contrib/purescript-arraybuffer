@@ -18,11 +18,10 @@ import Math
 
 newtype Comp = Comp Number
 
-instance isSerializableComp :: S.IsSerializable Comp where
-  put d (Comp v) = S.put d $ Int8 v
+putComp d (Comp v) = S.putInt8 d $ Int8 v
 
-instance isDeserializableComp :: D.IsDeserializable Comp where
-  get d = do
+
+getComp d = do
     v <- D.getInt8 d
     return $ case v of
       (Right (Int8 vv)) -> Right $ Comp vv
@@ -52,17 +51,15 @@ instance showV4 :: Show V4 where
 instance arbV4 :: Arbitrary V4 where
   arbitrary = V4 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-instance v4IsSerializable :: S.IsSerializable V4 where
-  put d (V4 x y z t) = do
-    let i8 = S.put d
+putV4 d (V4 x y z t) = do
+    let i8 = putComp d
     i8 x
     i8 y
     i8 z
     i8 t
 
-instance v4IsDeserializable :: D.IsDeserializable V4 where
-  get d = do
-    let comp = D.get d
+getV4 d = do
+    let comp = getComp d
     x <- comp
     y <- comp
     z <- comp
@@ -82,17 +79,15 @@ instance arbM4 :: Arbitrary M4 where
   arbitrary = M4 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
   
 
-instance m4IsSerializable :: S.IsSerializable M4 where
-  put d (M4 x y z t) = do
-    let v4 = S.put d
+putM4 d (M4 x y z t) = do
+    let v4 = putV4 d
     v4 x
     v4 y
     v4 z
     v4 t
 
-instance m4IsDeserializable :: D.IsDeserializable M4 where
-  get d = do
-    let v4= D.get d
+getM4 d = do
+    let v4= getV4 d
     x <- v4
     y <- v4
     z <- v4
@@ -145,13 +140,13 @@ main = do
 serdes :: M4 -> M4 -> M4 -> M4 -> Boolean
 serdes m0 m1 m2 m3 = forcePure $ do
     a <- S.serialized 256 $ \s -> do
-      let p = S.put s
+      let p = putM4 s
       p m0
       p m1
       p m2
       p m3      
     d <- D.deserializer a
-    let g = D.get d
+    let g = getM4 d
     m0' <- g
     m1' <- g
     m2' <- g
@@ -161,10 +156,10 @@ serdes m0 m1 m2 m3 = forcePure $ do
 short :: M4 -> M4 -> Boolean
 short m0 m1 = forcePure $ do
     a <- S.serialized 256 $ \s -> do
-      let p = S.put s
+      let p = putM4 s
       p m0
     d <- D.deserializer a
-    let g = D.get d
+    let g = getM4 d
     m0' <- g
     m1' <- g
     return $ m0' == (Right m0) && m1' /= (Right m1) && m1' == (Left "Short read")
