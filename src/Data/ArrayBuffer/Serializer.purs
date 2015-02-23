@@ -10,27 +10,29 @@ import Control.Monad.Eff
 
 type Serializer = Advancer
 
+type SE = Eff (writer :: DV.Writer) Serializer
+
 putter :: forall a. Number -> DV.Setter a -> a -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putter n f v s = do
   o <- advance n s
   f s.dv v o
   return s
 
-putInt8 :: Int8 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putInt8 :: Int8 -> Serializer -> SE
 putInt8 = putter 1 DV.setInt8
-putInt16 :: Int16 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putInt16 :: Int16 -> Serializer -> SE
 putInt16 = putter 2 DV.setInt16
-putInt32 :: Int32 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putInt32 :: Int32 -> Serializer -> SE
 putInt32 = putter 4 DV.setInt32
-putUint8 :: Uint8 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putUint8 :: Uint8 -> Serializer -> SE
 putUint8 = putter 1 DV.setUint8
-putUint16 :: Uint16 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putUint16 :: Uint16 -> Serializer -> SE
 putUint16 = putter 2 DV.setUint16
-putUint32 :: Uint32 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putUint32 :: Uint32 -> Serializer -> SE
 putUint32 = putter 4 DV.setUint32
-putFloat32 :: Float32 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putFloat32 :: Float32 -> Serializer -> SE
 putFloat32 = putter 4 DV.setFloat32
-putFloat64 :: Float64 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putFloat64 :: Float64 -> Serializer -> SE
 putFloat64 = putter 8 DV.setFloat64
 
 mapDataView :: forall e. ByteLength -> Serializer -> Eff (writer :: DV.Writer | e) (Maybe DV.DataView)
