@@ -10,17 +10,24 @@ import Control.Monad.Eff
 
 type Serializer = Advancer
 
-putInt8 s v = advance 1 s >>= DV.setInt8 s.dv v
-putInt16 s v = advance 2 s >>= DV.setInt16 s.dv v
-putInt32 s v = advance 4 s >>= DV.setInt32 s.dv v
-putUint8 s v = advance 1 s >>= DV.setUint8 s.dv v
-putUint16 s v = advance 2 s >>= DV.setUint16 s.dv v
-putUint32 s v = advance 4 s >>= DV.setUint32 s.dv v
-putFloat32 s v = advance 4 s >>= DV.setFloat32 s.dv v
-putFloat64 s v = advance 8 s >>= DV.setFloat64 s.dv v
+putter :: forall a. Number -> DV.Setter a -> a -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putter n f v s = do
+  o <- advance n s
+  f s.dv v o
+  return s
 
-mapDataView :: forall e. Serializer -> ByteLength -> Eff (writer :: DV.Writer | e) (Maybe DV.DataView)
-mapDataView s n = do
+putInt8 :: Int8 -> Serializer -> Eff (writer :: DV.Writer) Serializer
+putInt8 = putter 1 DV.setInt8
+putInt16 = putter 2 DV.setInt16
+putInt32 = putter 4 DV.setInt32
+putUint8 = putter 1 DV.setUint8
+putUint16 = putter 2 DV.setUint16
+putUint32 = putter 4 DV.setUint32
+putFloat32 = putter 4 DV.setFloat32
+putFloat64 = putter 8 DV.setFloat64
+
+mapDataView :: forall e. ByteLength -> Serializer -> Eff (writer :: DV.Writer | e) (Maybe DV.DataView)
+mapDataView n s = do
   o <- advance n s
   return $ DV.slice o n (DV.buffer s.dv)
 
@@ -30,11 +37,8 @@ serializer l = return $ { dv : DV.whole $ AB.create l, off : 0 }
 close :: Serializer -> forall e. Eff (writer :: DV.Writer | e) AB.ArrayBuffer
 close s = return $ AB.slice 0 s.off (DV.buffer s.dv)
 
-serialized :: forall e. ByteLength -> (Serializer -> Eff (writer :: DV.Writer | e) Unit) -> AB.ArrayBuffer
-serialized n f = runWPure (do
-  s <- serializer n
-  f s
-  close s)
+serialized :: forall e. ByteLength -> (Serializer -> Eff (writer :: DV.Writer | e) Serializer) -> AB.ArrayBuffer
+serialized n f = runWPure (serializer n >>= f >>= close)
 
 foreign import runWPure
 """
