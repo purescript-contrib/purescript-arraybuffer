@@ -72,7 +72,7 @@ function setter(s) {
     return function(n) {
       return function(o) {
         return function() {
-          return f.call(v,o,n);
+          f.call(v,o,n);
         };
       };
     };
