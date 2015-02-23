@@ -18,12 +18,19 @@ putter n f v s = do
 
 putInt8 :: Int8 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putInt8 = putter 1 DV.setInt8
+putInt16 :: Int16 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putInt16 = putter 2 DV.setInt16
+putInt32 :: Int32 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putInt32 = putter 4 DV.setInt32
+putUint8 :: Uint8 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putUint8 = putter 1 DV.setUint8
+putUint16 :: Uint16 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putUint16 = putter 2 DV.setUint16
+putUint32 :: Uint32 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putUint32 = putter 4 DV.setUint32
+putFloat32 :: Float32 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putFloat32 = putter 4 DV.setFloat32
+putFloat64 :: Float64 -> Serializer -> Eff (writer :: DV.Writer) Serializer
 putFloat64 = putter 8 DV.setFloat64
 
 mapDataView :: forall e. ByteLength -> Serializer -> Eff (writer :: DV.Writer | e) (Maybe DV.DataView)
