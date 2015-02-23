@@ -30,8 +30,15 @@ serializer l = return $ { dv : DV.whole $ AB.create l, off : 0 }
 close :: Serializer -> forall e. Eff (writer :: DV.Writer | e) AB.ArrayBuffer
 close s = return $ AB.slice 0 s.off (DV.buffer s.dv)
 
-serialized :: forall e. ByteLength -> (Serializer -> Eff (writer :: DV.Writer | e) Unit) -> Eff (writer :: DV.Writer | e) AB.ArrayBuffer
-serialized n f = do
+serialized :: forall e. ByteLength -> (Serializer -> Eff (writer :: DV.Writer | e) Unit) -> AB.ArrayBuffer
+serialized n f = runWPure (do
   s <- serializer n
   f s
-  close s
+  close s)
+
+foreign import runWPure
+"""
+function runWPure(f) {
+  return f();
+}
+""" :: forall a e. Eff (| e) a -> a

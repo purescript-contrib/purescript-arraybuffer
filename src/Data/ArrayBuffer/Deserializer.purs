@@ -65,3 +65,18 @@ getFloat64Array d n = getTypedArray d (n * 8) TA.asFloat64Array
 deserializer :: forall e. AB.ArrayBuffer -> Eff (reader :: DV.Reader | e) Deserializer
 deserializer ab = return $ { dv : DV.whole ab, off : 0 }
 
+
+deserialized :: forall a e. (Deserializer -> Eff (reader :: DV.Reader | e) (Either String a)) -> AB.ArrayBuffer -> Either String a
+deserialized f b = runRPure (do
+          d <- deserializer b
+          res <- f d
+          return res)
+
+type WPure a = forall e. Eff (writer :: DV.Writer |e) a
+
+foreign import runRPure
+"""
+function runRPure(f) {
+  return f();
+}
+""" :: forall e a. Eff (|e) a -> a
