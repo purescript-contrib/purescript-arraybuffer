@@ -1,9 +1,6 @@
 {
   "name": "purescript-arraybuffer",
   "version": "0.1.0",
-  "moduleType": [
-    "node"
-  ],
   "ignore": [
     "**/.*",
     "node_modules",

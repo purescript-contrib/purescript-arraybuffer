@@ -18,7 +18,7 @@ import Math
 
 newtype Comp = Comp Number
 
-putComp d (Comp v) = S.putInt8 d $ Int8 v
+putComp (Comp v) = S.putInt8 (Int8 v)
 
 
 getComp d = do
@@ -51,12 +51,8 @@ instance showV4 :: Show V4 where
 instance arbV4 :: Arbitrary V4 where
   arbitrary = V4 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-putV4 d (V4 x y z t) = do
-    let i8 = putComp d
-    i8 x
-    i8 y
-    i8 z
-    i8 t
+
+putV4 (V4 x y z t) d = pure d >>= putComp x >>= putComp y >>= putComp z >>= putComp t
 
 getV4 d = do
     let comp = getComp d
@@ -79,12 +75,7 @@ instance arbM4 :: Arbitrary M4 where
   arbitrary = M4 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
   
 
-putM4 d (M4 x y z t) = do
-    let v4 = putV4 d
-    v4 x
-    v4 y
-    v4 z
-    v4 t
+putM4 (M4 x y z t) d = pure d >>= putV4 x >>= putV4 y >>= putV4 z >>= putV4 t
 
 getM4 d = do
     let v4= getV4 d
@@ -139,12 +130,7 @@ main = do
 
 serdes :: M4 -> M4 -> M4 -> M4 -> Boolean
 serdes m0 m1 m2 m3 = forcePure $ do
-    a <- S.serialized 256 $ \s -> do
-      let p = putM4 s
-      p m0
-      p m1
-      p m2
-      p m3      
+    let a = S.serialized 256 \s -> pure s >>= putM4 m0 >>= putM4 m1 >>= putM4 m2 >>= putM4 m3
     d <- D.deserializer a
     let g = getM4 d
     m0' <- g
@@ -155,9 +141,7 @@ serdes m0 m1 m2 m3 = forcePure $ do
 
 short :: M4 -> M4 -> Boolean
 short m0 m1 = forcePure $ do
-    a <- S.serialized 256 $ \s -> do
-      let p = putM4 s
-      p m0
+    let a = S.serialized 256 \s -> putM4 m0 s
     d <- D.deserializer a
     let g = getM4 d
     m0' <- g
