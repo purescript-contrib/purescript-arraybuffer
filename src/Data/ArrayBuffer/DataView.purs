@@ -1,12 +1,9 @@
 module Data.ArrayBuffer.DataView where
 
-import Data.ArrayBuffer(ArrayBuffer())
 import Data.ArrayBuffer.Types
 import Data.Function
 import Data.Maybe
 import Control.Monad.Eff
-
-foreign import data DataView :: *
 
 foreign import whole
 """

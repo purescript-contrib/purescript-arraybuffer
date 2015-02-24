@@ -2,22 +2,9 @@
 module Data.ArrayBuffer.Typed where
 
 import Data.ArrayBuffer
-import Data.ArrayBuffer.DataView(DataView())
 import Data.Function
 import Data.Maybe
 import Data.ArrayBuffer.Types
-
-foreign import data ArrayView :: * -> *
-
-type Int8Array = ArrayView Int8
-type Int16Array = ArrayView Int16
-type Int32Array = ArrayView Int32
-type Uint8Array = ArrayView Uint8
-type Uint16Array = ArrayView Uint16
-type Uint32Array = ArrayView Uint32
-type Uint8ClampedArray = ArrayView Uint8Clamped
-type Float32Array = ArrayView Float32
-type Float64Array = ArrayView Float64 
 
 foreign import asInt8Array
 """

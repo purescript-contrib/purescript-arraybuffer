@@ -1,16 +1,17 @@
 module Data.ArrayBuffer.Show where
-       
+
+import Data.ArrayBuffer.Types
 import qualified Data.ArrayBuffer as AB
 import qualified Data.ArrayBuffer.DataView as DV
 import qualified Data.ArrayBuffer.Typed as T
 
-instance showArrayView :: Show (T.ArrayView a) where
+instance showArrayView :: Show (ArrayView a) where
   show = showImpl
 
-instance showDataView :: Show DV.DataView where
+instance showDataView :: Show DataView where
   show = show <<< T.asInt8Array
 
-instance showArrayBuffer :: Show AB.ArrayBuffer where
+instance showArrayBuffer :: Show ArrayBuffer where
   show = show <<< DV.whole
   
 foreign import showImpl
@@ -18,5 +19,5 @@ foreign import showImpl
 function showImpl(a) {
   return require('util').inspect(a);
 }
-""" :: forall a. T.ArrayView a -> String
+""" :: forall a. ArrayView a -> String
 

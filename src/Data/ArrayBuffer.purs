@@ -3,8 +3,6 @@ module Data.ArrayBuffer where
 import Data.Function
 import Data.ArrayBuffer.Types
 
-foreign import data ArrayBuffer :: *
-
 foreign import create
 """
 function create(s) {

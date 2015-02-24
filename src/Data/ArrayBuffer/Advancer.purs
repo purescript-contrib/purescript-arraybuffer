@@ -1,6 +1,5 @@
 module Data.ArrayBuffer.Advancer where
 
-import Data.ArrayBuffer.DataView(DataView())
 import Data.ArrayBuffer.Types
 import Control.Monad.Eff
 

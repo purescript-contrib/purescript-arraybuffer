@@ -36,7 +36,7 @@ putFloat32 = putter 4 DV.setFloat32
 putFloat64 :: Putter Float64
 putFloat64 = putter 8 DV.setFloat64
 
-mapDataView :: ByteLength -> Serializer -> Eff (writer :: DV.Writer) (Maybe DV.DataView)
+mapDataView :: ByteLength -> Serializer -> Eff (writer :: DV.Writer) (Maybe DataView)
 mapDataView n s = do
   o <- advance n s
   return $ DV.slice o n (DV.buffer s.dv)
@@ -44,10 +44,10 @@ mapDataView n s = do
 serializer :: ByteLength -> Eff (writer :: DV.Writer) Serializer
 serializer l = return $ { dv : DV.whole $ AB.create l, off : 0 }
 
-close :: Serializer -> Eff (writer :: DV.Writer) AB.ArrayBuffer
+close :: Serializer -> Eff (writer :: DV.Writer) ArrayBuffer
 close s = return $ AB.slice 0 s.off (DV.buffer s.dv)
 
-serialized :: ByteLength -> (Serializer -> Eff (writer :: DV.Writer) Serializer) -> AB.ArrayBuffer
+serialized :: ByteLength -> (Serializer -> Eff (writer :: DV.Writer) Serializer) -> ArrayBuffer
 serialized n f = runWPure (serializer n >>= f >>= close)
 
 foreign import runWPure
