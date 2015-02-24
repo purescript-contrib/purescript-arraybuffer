@@ -6,7 +6,7 @@ import Control.Monad.Eff
 import Data.ArrayBuffer.Advancer
 import Data.ArrayBuffer.Types
 import qualified Data.ArrayBuffer.Typed as TA
-import qualified Data.ArrayBuffer as AB
+import qualified Data.ArrayBuffer.ArrayBuffer as AB
 import qualified Data.ArrayBuffer.DataView as DV
 
 type Deserializer = Advancer

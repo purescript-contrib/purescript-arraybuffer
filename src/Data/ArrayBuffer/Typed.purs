@@ -1,10 +1,10 @@
 
 module Data.ArrayBuffer.Typed where
 
-import Data.ArrayBuffer
+import Data.ArrayBuffer.Types
+import Data.ArrayBuffer.ArrayBuffer
 import Data.Function
 import Data.Maybe
-import Data.ArrayBuffer.Types
 
 foreign import asInt8Array
 """

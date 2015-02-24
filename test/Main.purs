@@ -5,7 +5,7 @@ import Data.Either
 import Data.Maybe
 import Test.QuickCheck
 import Data.ArrayBuffer.Types
-import qualified Data.ArrayBuffer as AB
+import qualified Data.ArrayBuffer.ArrayBuffer as AB
 import qualified Data.ArrayBuffer.DataView as DV
 import qualified Data.ArrayBuffer.Typed as TA
 import qualified Data.ArrayBuffer.Serializer as S

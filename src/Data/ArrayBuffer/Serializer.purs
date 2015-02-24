@@ -1,7 +1,7 @@
 module Data.ArrayBuffer.Serializer where
 
 import Data.ArrayBuffer.Types
-import qualified Data.ArrayBuffer as AB
+import qualified Data.ArrayBuffer.ArrayBuffer as AB
 import qualified Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Advancer
 import Data.Function

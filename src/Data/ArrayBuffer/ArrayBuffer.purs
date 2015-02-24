@@ -1,4 +1,4 @@
-module Data.ArrayBuffer where
+module Data.ArrayBuffer.ArrayBuffer where
 
 import Data.Function
 import Data.ArrayBuffer.Types
