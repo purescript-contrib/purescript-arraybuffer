@@ -5,6 +5,9 @@ import Data.ArrayBuffer.Types
 import Data.ArrayBuffer.ArrayBuffer
 import Data.Function
 import Data.Maybe
+import Control.Monad.Eff
+
+foreign import data Writer :: !
 
 foreign import asInt8Array
 """
@@ -75,6 +78,16 @@ function dataView(a) {
   return a;
 }
 """ :: forall a. ArrayView a -> DataView
+
+foreign import setImpl
+"""
+function setImpl(ra, off, a) {
+  return function() {
+    a.set(ra, off);
+  };
+}""" :: forall a e. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Eff (writer :: Writer | e) Unit)
+set :: forall a e. ArrayView a -> ByteOffset -> ArrayView a -> Eff (writer :: Writer | e) Unit
+set = runFn3 setImpl
 
 foreign import unsafeAtImpl
 """
