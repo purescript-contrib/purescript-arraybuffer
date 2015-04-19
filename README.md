@@ -8,6 +8,7 @@
 create :: ByteLength -> ArrayBuffer
 ```
 
+Create an `ArrayBuffer` with the given capacity.
 
 #### `byteLength`
 
@@ -15,6 +16,7 @@ create :: ByteLength -> ArrayBuffer
 byteLength :: ArrayBuffer -> ByteLength
 ```
 
+Represents the length of an `ArrayBuffer` in bytes.
 
 #### `sliceImpl`
 
@@ -29,6 +31,7 @@ sliceImpl :: Fn3 ByteOffset ByteOffset ArrayBuffer ArrayBuffer
 slice :: ByteOffset -> ByteOffset -> ArrayBuffer -> ArrayBuffer
 ```
 
+Returns a new `ArrayBuffer` whose contents are a copy of this ArrayBuffer's bytes from begin, inclusive, up to end, exclusive.
 
 #### `fromArray`
 
@@ -36,6 +39,7 @@ slice :: ByteOffset -> ByteOffset -> ArrayBuffer -> ArrayBuffer
 fromArray :: [Number] -> ArrayBuffer
 ```
 
+Convert an array into an `ArrayBuffer` representation.
 
 #### `fromString`
 
@@ -43,9 +47,26 @@ fromArray :: [Number] -> ArrayBuffer
 fromString :: String -> ArrayBuffer
 ```
 
+Convert a string into an `ArrayBuffer` representation.
 
 
 ## Module Data.ArrayBuffer.DataView
+
+#### `Getter`
+
+``` purescript
+type Getter r = forall e. DataView -> ByteOffset -> Eff (reader :: Reader | e) (Maybe r)
+```
+
+Type for all fetching functions.
+
+#### `Setter`
+
+``` purescript
+type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (writer :: Writer | e) Unit
+```
+
+Type for all storing functions.
 
 #### `whole`
 
@@ -53,13 +74,7 @@ fromString :: String -> ArrayBuffer
 whole :: ArrayBuffer -> DataView
 ```
 
-
-#### `sliceImpl`
-
-``` purescript
-sliceImpl :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
-```
-
+View mapping the whole `ArrayBuffer`.
 
 #### `slice`
 
@@ -67,6 +82,7 @@ sliceImpl :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOff
 slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> Maybe DataView
 ```
 
+View mapping a region of the `ArrayBuffer`. 
 
 #### `buffer`
 
@@ -74,6 +90,7 @@ slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> Maybe DataView
 buffer :: DataView -> ArrayBuffer
 ```
 
+`ArrayBuffer` being mapped by the view.
 
 #### `byteOffset`
 
@@ -81,6 +98,7 @@ buffer :: DataView -> ArrayBuffer
 byteOffset :: DataView -> ByteOffset
 ```
 
+Represents the offset of this view from the start of its `ArrayBuffer`.
 
 #### `byteLength`
 
@@ -88,32 +106,12 @@ byteOffset :: DataView -> ByteOffset
 byteLength :: DataView -> ByteLength
 ```
 
+Represents the length of this view.
 
 #### `Reader`
 
 ``` purescript
 data Reader :: !
-```
-
-
-#### `getterImpl`
-
-``` purescript
-getterImpl :: forall e r. Fn6 (r -> Maybe r) (Maybe r) String ByteLength DataView ByteOffset (Eff (reader :: Reader | e) (Maybe r))
-```
-
-
-#### `getter`
-
-``` purescript
-getter :: forall e r. String -> ByteLength -> DataView -> ByteOffset -> Eff (reader :: Reader | e) (Maybe r)
-```
-
-
-#### `Getter`
-
-``` purescript
-type Getter r = forall e. DataView -> ByteOffset -> Eff (reader :: Reader | e) (Maybe r)
 ```
 
 
@@ -124,26 +122,13 @@ data Writer :: !
 ```
 
 
-#### `setter`
-
-``` purescript
-setter :: forall e r. String -> DataView -> r -> ByteOffset -> Eff (writer :: Writer | e) Unit
-```
-
-
-#### `Setter`
-
-``` purescript
-type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (writer :: Writer | e) Unit
-```
-
-
 #### `getInt8`
 
 ``` purescript
 getInt8 :: Getter Number
 ```
 
+Fetch int8 value at a certain index in a `DataView`.
 
 #### `getInt16`
 
@@ -151,6 +136,7 @@ getInt8 :: Getter Number
 getInt16 :: Getter Number
 ```
 
+Fetch int16 value at a certain index in a `DataView`.
 
 #### `getInt32`
 
@@ -158,6 +144,7 @@ getInt16 :: Getter Number
 getInt32 :: Getter Number
 ```
 
+Fetch int32 value at a certain index in a `DataView`.
 
 #### `getUint8`
 
@@ -165,6 +152,7 @@ getInt32 :: Getter Number
 getUint8 :: Getter Number
 ```
 
+Fetch uint8 value at a certain index in a `DataView`.
 
 #### `getUint16`
 
@@ -172,6 +160,7 @@ getUint8 :: Getter Number
 getUint16 :: Getter Number
 ```
 
+Fetch uint16 value at a certain index in a `DataView`.
 
 #### `getUint32`
 
@@ -179,6 +168,7 @@ getUint16 :: Getter Number
 getUint32 :: Getter Number
 ```
 
+Fetch uint32 value at a certain index in a `DataView`.
 
 #### `getFloat32`
 
@@ -186,6 +176,7 @@ getUint32 :: Getter Number
 getFloat32 :: Getter Number
 ```
 
+Fetch float32 value at a certain index in a `DataView`.
 
 #### `getFloat64`
 
@@ -193,6 +184,7 @@ getFloat32 :: Getter Number
 getFloat64 :: Getter Number
 ```
 
+Fetch float64 value at a certain index in a `DataView`.
 
 #### `setInt8`
 
@@ -200,6 +192,7 @@ getFloat64 :: Getter Number
 setInt8 :: Setter Number
 ```
 
+Store int8 value at a certain index in a `DataView`.
 
 #### `setInt16`
 
@@ -207,6 +200,7 @@ setInt8 :: Setter Number
 setInt16 :: Setter Number
 ```
 
+Store int16 value at a certain index in a `DataView`.
 
 #### `setInt32`
 
@@ -214,6 +208,7 @@ setInt16 :: Setter Number
 setInt32 :: Setter Number
 ```
 
+Store int32 value at a certain index in a `DataView`.
 
 #### `setUint8`
 
@@ -221,6 +216,7 @@ setInt32 :: Setter Number
 setUint8 :: Setter Number
 ```
 
+Store uint8 value at a certain index in a `DataView`.
 
 #### `setUint16`
 
@@ -228,6 +224,7 @@ setUint8 :: Setter Number
 setUint16 :: Setter Number
 ```
 
+Store uint16 value at a certain index in a `DataView`.
 
 #### `setUint32`
 
@@ -235,6 +232,7 @@ setUint16 :: Setter Number
 setUint32 :: Setter Number
 ```
 
+Store uint32 value at a certain index in a `DataView`.
 
 #### `setFloat32`
 
@@ -242,6 +240,7 @@ setUint32 :: Setter Number
 setFloat32 :: Setter Number
 ```
 
+Store float32 value at a certain index in a `DataView`.
 
 #### `setFloat64`
 
@@ -249,6 +248,7 @@ setFloat32 :: Setter Number
 setFloat64 :: Setter Number
 ```
 
+Store float64 value at a certain index in a `DataView`.
 
 
 ## Module Data.ArrayBuffer.Show
@@ -297,6 +297,7 @@ data Writer :: !
 asInt8Array :: DataView -> Int8Array
 ```
 
+Create typed int8 array viewing the buffer mapped by the `DataView`
 
 #### `asInt16Array`
 
@@ -304,6 +305,7 @@ asInt8Array :: DataView -> Int8Array
 asInt16Array :: DataView -> Int16Array
 ```
 
+Create typed int16 array viewing the buffer mapped by the `DataView`
 
 #### `asInt32Array`
 
@@ -311,6 +313,7 @@ asInt16Array :: DataView -> Int16Array
 asInt32Array :: DataView -> Int32Array
 ```
 
+Create typed int32 array viewing the buffer mapped by the `DataView`
 
 #### `asUint8Array`
 
@@ -318,6 +321,7 @@ asInt32Array :: DataView -> Int32Array
 asUint8Array :: DataView -> Uint8Array
 ```
 
+Create typed uint8 array viewing the buffer mapped by the `DataView`
 
 #### `asUint16Array`
 
@@ -325,6 +329,7 @@ asUint8Array :: DataView -> Uint8Array
 asUint16Array :: DataView -> Uint16Array
 ```
 
+Create typed uint16 array viewing the buffer mapped by the `DataView`
 
 #### `asUint32Array`
 
@@ -332,6 +337,7 @@ asUint16Array :: DataView -> Uint16Array
 asUint32Array :: DataView -> Uint32Array
 ```
 
+Create typed uint32 array viewing the buffer mapped by the `DataView`
 
 #### `asUint8ClampedArray`
 
@@ -339,6 +345,7 @@ asUint32Array :: DataView -> Uint32Array
 asUint8ClampedArray :: DataView -> Uint8ClampedArray
 ```
 
+Create typed uint8 clamped array viewing the buffer mapped by the `DataView`
 
 #### `asFloat32Array`
 
@@ -346,6 +353,7 @@ asUint8ClampedArray :: DataView -> Uint8ClampedArray
 asFloat32Array :: DataView -> Float32Array
 ```
 
+Create typed float32 array viewing the buffer mapped by the `DataView`
 
 #### `asFloat64Array`
 
@@ -353,6 +361,7 @@ asFloat32Array :: DataView -> Float32Array
 asFloat64Array :: DataView -> Float64Array
 ```
 
+Create typed float64 array viewing the buffer mapped by the `DataView`
 
 #### `dataView`
 
@@ -360,13 +369,7 @@ asFloat64Array :: DataView -> Float64Array
 dataView :: forall a. ArrayView a -> DataView
 ```
 
-
-#### `setImpl`
-
-``` purescript
-setImpl :: forall a e. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Eff (writer :: Writer | e) Unit)
-```
-
+Interpret typed array as a `DataView`.
 
 #### `set`
 
@@ -374,20 +377,7 @@ setImpl :: forall a e. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Eff (writer :
 set :: forall a e. ArrayView a -> ByteOffset -> ArrayView a -> Eff (writer :: Writer | e) Unit
 ```
 
-
-#### `unsafeAtImpl`
-
-``` purescript
-unsafeAtImpl :: forall a. Fn2 (ArrayView a) Number Number
-```
-
-
-#### `hasIndexImpl`
-
-``` purescript
-hasIndexImpl :: forall a. Fn2 (ArrayView a) Number Boolean
-```
-
+Stores multiple values in the last typed array, reading input values from ther first typed array.
 
 #### `at`
 
@@ -395,9 +385,15 @@ hasIndexImpl :: forall a. Fn2 (ArrayView a) Number Boolean
 at :: forall a. ArrayView a -> Number -> Maybe Number
 ```
 
+Fetch element at index.
 
 #### `toArray`
 
 ``` purescript
 toArray :: forall a. ArrayView a -> [Number]
 ```
+
+Turn typed array into an array.
+
+
+
