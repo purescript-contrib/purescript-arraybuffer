@@ -97,9 +97,6 @@ getUint16 = getter "getUint16" 2
 getUint32 :: Getter Number
 getUint32 = getter "getUint32" 4
 
-getUint8Clamped :: Getter Number
-getUint8Clamped = getter "getUint8Clamped" 1
-
 getFloat32 :: Getter Number
 getFloat32 = getter "getFloat32" 4
 
@@ -124,9 +121,6 @@ setUint16 = setter "setUint16"
 
 setUint32 :: Setter Number
 setUint32 = setter "setUint32"
-
-setUint8Clamped :: Setter Number
-setUint8Clamped = setter "setUint8Clamped"
 
 setFloat32 :: Setter Number
 setFloat32 = setter "setFloat32"
