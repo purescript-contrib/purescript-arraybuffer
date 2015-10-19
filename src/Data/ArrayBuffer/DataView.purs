@@ -25,6 +25,7 @@ module Data.ArrayBuffer.DataView( Reader()
                                 , setFloat64
                                 ) where
 
+import Prelude
 import Data.ArrayBuffer.Types
 import Data.Function
 import Data.Maybe
@@ -37,59 +38,27 @@ type Getter r = forall e. DataView -> ByteOffset -> Eff (reader :: Reader | e) (
 type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (writer :: Writer | e) Unit
 
 -- | View mapping the whole `ArrayBuffer`.
-foreign import whole
-"""
-function whole(b) {
-  return new DataView(b);
-}
-""" :: ArrayBuffer -> DataView
+foreign import whole :: ArrayBuffer -> DataView
 
-foreign import sliceImpl
-"""
-function sliceImpl(just, nothing, s, l, b) {
-  return s + l <= b.byteLength? just(new DataView(b, s, l)) : nothing;
-}
-""" :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
+foreign import sliceImpl :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
 
--- | View mapping a region of the `ArrayBuffer`. 
+-- | View mapping a region of the `ArrayBuffer`.
 slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> Maybe DataView
 slice = runFn5 sliceImpl Just Nothing
 
 -- | `ArrayBuffer` being mapped by the view.
-foreign import buffer
-"""
-function buffer(v) {
-  return v.buffer;
-}
-""" :: DataView -> ArrayBuffer
+foreign import buffer :: DataView -> ArrayBuffer
 
 -- | Represents the offset of this view from the start of its `ArrayBuffer`.
-foreign import byteOffset
-"""
-function byteOffset(v) {
-  return v.byteOffset;
-}
-""" :: DataView -> ByteOffset
+foreign import byteOffset :: DataView -> ByteOffset
 
 -- | Represents the length of this view.
-foreign import byteLength
-"""
-function byteLength(v) {
-  return v.byteLength;
-}
-""" :: DataView -> ByteLength
+foreign import byteLength :: DataView -> ByteLength
 
 
 foreign import data Reader :: !
 
-foreign import getterImpl
-"""
-function getterImpl(just, nothing, s, l, v, o) {
-  return function() {
-    return (o + l) <= v.byteLength? just(v[s].call(v,o)) : nothing;
-  };
-}
-""" :: forall e r. Fn6 (r -> Maybe r) (Maybe r) String ByteLength DataView ByteOffset (Eff (reader :: Reader | e) (Maybe r))
+foreign import getterImpl :: forall e r. Fn6 (r -> Maybe r) (Maybe r) String ByteLength DataView ByteOffset (Eff (reader :: Reader | e) (Maybe r))
 
 getter :: forall e r. String -> ByteLength -> DataView -> ByteOffset -> Eff (reader :: Reader | e) (Maybe r)
 getter = runFn6 getterImpl Just Nothing
@@ -97,21 +66,7 @@ getter = runFn6 getterImpl Just Nothing
 
 foreign import data Writer :: !
 
-foreign import setter
-"""
-function setter(s) {
-  return function(v) {
-    var f = v[s];
-    return function(n) {
-      return function(o) {
-        return function() {
-          f.call(v,o,n);
-        };
-      };
-    };
-  };
-}
-""" :: forall e r. String -> DataView -> r -> ByteOffset -> Eff (writer :: Writer | e) Unit
+foreign import setter :: forall e r. String -> DataView -> r -> ByteOffset -> Eff (writer :: Writer | e) Unit
 
 
 -- | Fetch int8 value at a certain index in a `DataView`.
@@ -177,5 +132,3 @@ setFloat32 = setter "setFloat32"
 -- | Store float64 value at a certain index in a `DataView`.
 setFloat64 :: Setter Number
 setFloat64 = setter "setFloat64"
-
-
