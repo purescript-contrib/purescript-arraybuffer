@@ -6,9 +6,9 @@ import Data.Either
 import Data.Maybe
 import Test.QuickCheck
 import Data.ArrayBuffer.Types
-import qualified Data.ArrayBuffer.ArrayBuffer as AB
-import qualified Data.ArrayBuffer.DataView as DV
-import qualified Data.ArrayBuffer.Typed as TA
+import Data.ArrayBuffer.ArrayBuffer as AB
+import Data.ArrayBuffer.DataView as DV
+import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Show
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
