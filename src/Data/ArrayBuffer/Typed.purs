@@ -16,12 +16,11 @@ module Data.ArrayBuffer.Typed( Writer()
                              , toArray
                              ) where
 
-import Prelude
-import Data.ArrayBuffer.Types
-import Data.ArrayBuffer.ArrayBuffer
-import Data.Function
-import Data.Maybe
-import Control.Monad.Eff
+import Prelude (Unit, ($))
+import Data.ArrayBuffer.Types (ArrayView, ByteOffset, DataView, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array)
+import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
+import Data.Maybe (Maybe(..))
+import Control.Monad.Eff (Eff)
 
 foreign import data Writer :: !
 
@@ -65,11 +64,13 @@ set = runFn3 setImpl
 foreign import unsafeAtImpl :: forall a. Fn2 (ArrayView a) Int Number
 
 -- | Fetch element at index.
+unsafeAt :: forall a. ArrayView a -> Int -> Number
 unsafeAt = runFn2 unsafeAtImpl
 
 foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Int Boolean
 
 -- | Determine if a certain index is valid.
+hasIndex :: forall a. ArrayView a -> Int -> Boolean
 hasIndex = runFn2 hasIndexImpl
 
 -- | Fetch element at index.
