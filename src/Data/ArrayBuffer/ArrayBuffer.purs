@@ -1,7 +1,7 @@
 module Data.ArrayBuffer.ArrayBuffer where
 
-import Data.Function.Uncurried
-import Data.ArrayBuffer.Types
+import Data.Function.Uncurried (Fn3, runFn3)
+import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 
 
 -- | Create an `ArrayBuffer` with the given capacity.

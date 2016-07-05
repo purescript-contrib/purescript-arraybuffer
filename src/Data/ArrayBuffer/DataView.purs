@@ -26,10 +26,10 @@ module Data.ArrayBuffer.DataView( Reader()
                                 ) where
 
 import Prelude
-import Data.ArrayBuffer.Types
-import Data.Function.Uncurried
-import Data.Maybe
-import Control.Monad.Eff
+import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
+import Data.Function.Uncurried (Fn5, Fn6, runFn5, runFn6)
+import Data.Maybe (Maybe(..))
+import Control.Monad.Eff (Eff)
 
 -- | Type for all fetching functions.
 type Getter r = forall e. DataView -> ByteOffset -> Eff (reader :: Reader | e) (Maybe r)
@@ -40,10 +40,10 @@ type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (writer :: Writer |
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
 
-foreign import sliceImpl :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
+foreign import sliceImpl :: Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
 
 -- | View mapping a region of the `ArrayBuffer`.
-slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> Maybe DataView
+slice :: ByteOffset -> ByteLength -> ArrayBuffer -> Maybe DataView
 slice = runFn5 sliceImpl Just Nothing
 
 -- | `ArrayBuffer` being mapped by the view.
