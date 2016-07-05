@@ -1,20 +1,17 @@
 module Test.Main where
 
-import Prelude
-import Debug.Trace
-import Data.Either
-import Data.Maybe
+import Prelude (Unit, negate, bind, ($), (==), (&&), (<$>))
+import Data.Maybe (Maybe(..))
 import Test.QuickCheck
-import Data.ArrayBuffer.Types
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff.Random (RANDOM)
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Data.ArrayBuffer.ArrayBuffer as AB
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Typed as TA
-import Data.ArrayBuffer.Show
-import Control.Monad.Eff
-import Control.Monad.Eff.Random
-import Control.Monad.Eff.Exception
-import Math
 
+main :: Eff ( console :: CONSOLE, random :: RANDOM, err :: EXCEPTION ) Unit
 main = do
   let ab = AB.create 4
   assert $ AB.byteLength ab == 4
@@ -39,9 +36,9 @@ main = do
   assert $ (DV.byteLength <$> DV.slice 0 40 nab) == Nothing
 
   assert $ do
-     let ab = AB.fromArray [1.0,2.0,3.0,4.0]
-     let dv = DV.whole ab
-     let i8 = TA.asInt8Array dv
+     let ab' = AB.fromArray [1.0,2.0,3.0,4.0]
+     let dv' = DV.whole ab'
+     let i8 = TA.asInt8Array dv'
      ((Just 2.0) == i8 `TA.at` 1) && (Nothing == i8 `TA.at` 4) && (Nothing == i8 `TA.at` (-1))
 
   assert $ [1.0,2.0,3.0] == (TA.toArray $ TA.asInt8Array $ DV.whole $ AB.fromArray [1.0,2.0,3.0])
