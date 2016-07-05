@@ -2,9 +2,9 @@ module Data.ArrayBuffer.Show where
 
 import Prelude
 import Data.ArrayBuffer.Types
-import qualified Data.ArrayBuffer.ArrayBuffer as AB
-import qualified Data.ArrayBuffer.DataView as DV
-import qualified Data.ArrayBuffer.Typed as T
+import Data.ArrayBuffer.ArrayBuffer as AB
+import Data.ArrayBuffer.DataView as DV
+import Data.ArrayBuffer.Typed as T
 
 -- instance showArrayView :: Show (ArrayView a) where
 --   show = showImpl

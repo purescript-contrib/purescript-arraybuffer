@@ -1,6 +1,6 @@
 module Data.ArrayBuffer.ArrayBuffer where
 
-import Data.Function
+import Data.Function.Uncurried
 import Data.ArrayBuffer.Types
 
 

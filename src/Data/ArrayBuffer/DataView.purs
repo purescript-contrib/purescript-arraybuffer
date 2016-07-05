@@ -27,7 +27,7 @@ module Data.ArrayBuffer.DataView( Reader()
 
 import Prelude
 import Data.ArrayBuffer.Types
-import Data.Function
+import Data.Function.Uncurried
 import Data.Maybe
 import Control.Monad.Eff
 
