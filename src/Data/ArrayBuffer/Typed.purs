@@ -14,6 +14,7 @@ module Data.ArrayBuffer.Typed( Writer()
                              , hasIndex
                              , at
                              , toArray
+                             , toIntArray
                              ) where
 
 import Prelude (Unit, ($))
@@ -82,3 +83,7 @@ at a n = if a `hasIndex` n then
 
 -- | Turn typed array into an array.
 foreign import toArray :: forall a. ArrayView a -> Array Number
+
+-- | Turn typed array into integer array.
+foreign import toIntArray :: forall a. ArrayView a -> Array Int
+
