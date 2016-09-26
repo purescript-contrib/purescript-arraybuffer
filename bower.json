@@ -2,6 +2,10 @@
   "name": "purescript-arraybuffer",
   "version": "2.0.0",
   "license": "MIT",
+  "repository": {                                                          
+    "type": "git",                                                         
+    "url": "git://github.com/jacereda/purescript-arraybuffer.git"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
