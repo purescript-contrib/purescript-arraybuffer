@@ -23,19 +23,21 @@ exports.byteLength = function(v) {
   return v.byteLength;
 }
 
-exports.getterImpl = function(just, nothing, s, l, v, o) {
+exports.getterImpl = function(just, nothing, s, l, e, v, o) {
   return function() {
-    return (o + l) <= v.byteLength? just(v[s].call(v,o)) : nothing;
+    return (o + l) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
   };
 }
 
 exports.setter = function(s) {
-  return function(v) {
-    var f = v[s];
-    return function(n) {
-      return function(o) {
-        return function() {
-          f.call(v,o,n);
+  return function(e) {
+    return function(v) {
+      var f = v[s];
+      return function(n) {
+        return function(o) {
+            return function() {
+            f.call(v,o,n,e);
+          };
         };
       };
     };

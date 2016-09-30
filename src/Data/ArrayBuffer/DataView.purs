@@ -7,29 +7,42 @@ module Data.ArrayBuffer.DataView( READER()
                                 , byteLength
                                 , Getter()
                                 , getInt8
-                                , getInt16
-                                , getInt32
+                                , getInt16be
+                                , getInt32be
                                 , getUint8
-                                , getUint16
-                                , getUint32
-                                , getFloat32
-                                , getFloat64
+                                , getUint16be
+                                , getUint32be
+                                , getFloat32be
+                                , getFloat64be
+                                , getInt16le
+                                , getInt32le
+                                , getUint16le
+                                , getUint32le
+                                , getFloat32le
+                                , getFloat64le
                                 , Setter()
                                 , setInt8
-                                , setInt16
-                                , setInt32
+                                , setInt16be
+                                , setInt32be
                                 , setUint8
-                                , setUint16
-                                , setUint32
-                                , setFloat32
-                                , setFloat64
+                                , setUint16be
+                                , setUint32be
+                                , setFloat32be
+                                , setFloat64be
+                                , setInt16le
+                                , setInt32le
+                                , setUint16le
+                                , setUint32le
+                                , setFloat32le
+                                , setFloat64le
                                 ) where
 
 import Prelude
 import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
-import Data.Function.Uncurried (Fn5, Fn6, runFn5, runFn6)
+import Data.Function.Uncurried (Fn5, Fn7, runFn5, runFn7)
 import Data.Maybe (Maybe(..))
 import Control.Monad.Eff (Eff)
+import Data.Int53 (Int53)
 
 -- | Type for all fetching functions.
 type Getter r = forall e. DataView -> ByteOffset -> Eff (reader :: READER | e) (Maybe r)
@@ -58,77 +71,115 @@ foreign import byteLength :: DataView -> ByteLength
 
 foreign import data READER :: !
 
-foreign import getterImpl :: forall e r. Fn6 (r -> Maybe r) (Maybe r) String ByteLength DataView ByteOffset (Eff (reader :: READER | e) (Maybe r))
+type Endianness = Boolean
 
-getter :: forall e r. String -> ByteLength -> DataView -> ByteOffset -> Eff (reader :: READER | e) (Maybe r)
-getter = runFn6 getterImpl Just Nothing
+foreign import getterImpl :: forall e r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Eff (reader :: READER | e) (Maybe r))
+
+getter :: forall e r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Eff (reader :: READER | e) (Maybe r)
+getter = runFn7 getterImpl Just Nothing
 
 
 foreign import data WRITER :: !
 
-foreign import setter :: forall e r. String -> DataView -> r -> ByteOffset -> Eff (writer :: WRITER | e) Unit
+foreign import setter :: forall e r. String -> Endianness -> DataView -> r -> ByteOffset -> Eff (writer :: WRITER | e) Unit
 
 
 -- | Fetch int8 value at a certain index in a `DataView`.
 getInt8 :: Getter Int
-getInt8 = getter "getInt8" 1
+getInt8 = getter "getInt8" 1 false
 
 -- | Fetch int16 value at a certain index in a `DataView`.
-getInt16 :: Getter Int
-getInt16 = getter "getInt16" 2
+getInt16be :: Getter Int
+getInt16be = getter "getInt16" 2 false
+
+getInt16le :: Getter Int
+getInt16le = getter "getInt16" 2 true
 
 -- | Fetch int32 value at a certain index in a `DataView`.
-getInt32 :: Getter Int
-getInt32 = getter "getInt32" 4
+getInt32be :: Getter Int
+getInt32be = getter "getInt32" 4 false
+
+getInt32le :: Getter Int
+getInt32le = getter "getInt32" 4 true
 
 -- | Fetch uint8 value at a certain index in a `DataView`.
 getUint8 :: Getter Int
-getUint8 = getter "getUint8" 1
+getUint8 = getter "getUint8" 1 false
 
 -- | Fetch uint16 value at a certain index in a `DataView`.
-getUint16 :: Getter Int
-getUint16 = getter "getUint16" 2
+getUint16be :: Getter Int
+getUint16be = getter "getUint16" 2 false
+
+getUint16le :: Getter Int
+getUint16le = getter "getUint16" 2 true
 
 -- | Fetch uint32 value at a certain index in a `DataView`.
-getUint32 :: Getter Int
-getUint32 = getter "getUint32" 4
+getUint32be :: Getter Int53
+getUint32be = getter "getUint32" 4 false
+
+getUint32le :: Getter Int53
+getUint32le = getter "getUint32" 4 true
 
 -- | Fetch float32 value at a certain index in a `DataView`.
-getFloat32 :: Getter Number
-getFloat32 = getter "getFloat32" 4
+getFloat32be :: Getter Number
+getFloat32be = getter "getFloat32" 4 false
+
+getFloat32le :: Getter Number
+getFloat32le = getter "getFloat32" 4 true
 
 -- | Fetch float64 value at a certain index in a `DataView`.
-getFloat64 :: Getter Number
-getFloat64 = getter "getFloat64" 8
+getFloat64be :: Getter Number
+getFloat64be = getter "getFloat64" 8 false
+
+getFloat64le :: Getter Number
+getFloat64le = getter "getFloat64" 8 true
 
 -- | Store int8 value at a certain index in a `DataView`.
 setInt8 :: Setter Int
-setInt8 = setter "setInt8"
+setInt8 = setter "setInt8" false
 
 -- | Store int16 value at a certain index in a `DataView`.
-setInt16 :: Setter Int
-setInt16 = setter "setInt16"
+setInt16be :: Setter Int
+setInt16be = setter "setInt16" false
+
+setInt16le :: Setter Int
+setInt16le = setter "setInt16" true
 
 -- | Store int32 value at a certain index in a `DataView`.
-setInt32 :: Setter Int
-setInt32 = setter "setInt32"
+setInt32be :: Setter Int
+setInt32be = setter "setInt32" false
+
+setInt32le :: Setter Int
+setInt32le = setter "setInt32" true
 
 -- | Store uint8 value at a certain index in a `DataView`.
 setUint8 :: Setter Int
-setUint8 = setter "setUint8"
+setUint8 = setter "setUint8" false
 
 -- | Store uint16 value at a certain index in a `DataView`.
-setUint16 :: Setter Int
-setUint16 = setter "setUint16"
+setUint16be :: Setter Int
+setUint16be = setter "setUint16" false
+
+setUint16le :: Setter Int
+setUint16le = setter "setUint16" true
 
 -- | Store uint32 value at a certain index in a `DataView`.
-setUint32 :: Setter Int
-setUint32 = setter "setUint32"
+setUint32be :: Setter Int53
+setUint32be = setter "setUint32" false
+
+setUint32le :: Setter Int53
+setUint32le = setter "setUint32" true
 
 -- | Store float32 value at a certain index in a `DataView`.
-setFloat32 :: Setter Number
-setFloat32 = setter "setFloat32"
+setFloat32be :: Setter Number
+setFloat32be = setter "setFloat32" false
+
+setFloat32le :: Setter Number
+setFloat32le = setter "setFloat32" true
 
 -- | Store float64 value at a certain index in a `DataView`.
-setFloat64 :: Setter Number
-setFloat64 = setter "setFloat64"
+setFloat64be :: Setter Number
+setFloat64be = setter "setFloat64" false
+
+setFloat64le :: Setter Number
+setFloat64le = setter "setFloat64" true

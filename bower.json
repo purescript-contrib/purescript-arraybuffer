@@ -2,8 +2,8 @@
   "name": "purescript-arraybuffer",
   "version": "2.0.0",
   "license": "MIT",
-  "repository": {                                                          
-    "type": "git",                                                         
+  "repository": {
+    "type": "git",
     "url": "git://github.com/jacereda/purescript-arraybuffer.git"
   },
   "ignore": [
@@ -16,7 +16,8 @@
     "purescript-functions": "~1.0.0",
     "purescript-arraybuffer-types": "~0.2.0",
     "purescript-maybe": "~1.0.0",
-    "purescript-eff": "1.0.0"
+    "purescript-eff": "1.0.0",
+    "purescript-int-53": "^2.0.1"
   },
   "devDependencies": {
     "purescript-debug": "~1.0.0",
