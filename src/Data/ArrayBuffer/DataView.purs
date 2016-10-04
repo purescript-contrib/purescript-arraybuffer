@@ -42,7 +42,7 @@ import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
 import Data.Function.Uncurried (Fn5, Fn7, runFn5, runFn7)
 import Data.Maybe (Maybe(..))
 import Control.Monad.Eff (Eff)
-import Data.Int53 (Int53)
+import Data.UInt (UInt)
 
 -- | Type for all fetching functions.
 type Getter r = forall e. DataView -> ByteOffset -> Eff (reader :: READER | e) (Maybe r)
@@ -114,10 +114,10 @@ getUint16le :: Getter Int
 getUint16le = getter "getUint16" 2 true
 
 -- | Fetch uint32 value at a certain index in a `DataView`.
-getUint32be :: Getter Int53
+getUint32be :: Getter UInt
 getUint32be = getter "getUint32" 4 false
 
-getUint32le :: Getter Int53
+getUint32le :: Getter UInt
 getUint32le = getter "getUint32" 4 true
 
 -- | Fetch float32 value at a certain index in a `DataView`.
@@ -164,10 +164,10 @@ setUint16le :: Setter Int
 setUint16le = setter "setUint16" true
 
 -- | Store uint32 value at a certain index in a `DataView`.
-setUint32be :: Setter Int53
+setUint32be :: Setter UInt
 setUint32be = setter "setUint32" false
 
-setUint32le :: Setter Int53
+setUint32le :: Setter UInt
 setUint32le = setter "setUint32" true
 
 -- | Store float32 value at a certain index in a `DataView`.

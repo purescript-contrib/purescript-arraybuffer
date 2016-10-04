@@ -8,7 +8,7 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Eff.Exception (EXCEPTION)
-import Data.Int53 (fromInt, pow)
+import Data.UInt (fromInt, pow)
 import Data.ArrayBuffer.ArrayBuffer as AB
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Typed as TA
