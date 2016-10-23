@@ -1,9 +1,8 @@
 module Test.Main where
 
-import Prelude ( Unit, negate, bind, ($), (==), (&&), (<$>), pure
-               , (=<<), (*), (-) )
+import Prelude
 import Data.Maybe (Maybe(..))
-import Test.QuickCheck
+import Test.QuickCheck (QC, quickCheck')
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Random (RANDOM)
