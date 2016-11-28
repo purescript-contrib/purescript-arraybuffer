@@ -21,3 +21,4 @@ foreign import fromArray :: Array Number -> ArrayBuffer
 
 -- | Convert a string into an `ArrayBuffer` representation.
 foreign import fromString :: String -> ArrayBuffer
+

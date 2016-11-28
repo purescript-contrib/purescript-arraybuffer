@@ -183,3 +183,4 @@ setFloat64be = setter "setFloat64" false
 
 setFloat64le :: Setter Number
 setFloat64le = setter "setFloat64" true
+
