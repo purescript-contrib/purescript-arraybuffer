@@ -4,11 +4,15 @@
 
 
 exports.whole = function(b) {
-  return new DataView(b);
+  return function() {
+    return new DataView(b);
+  };
 }
 
 exports.sliceImpl = function(just, nothing, s, l, b) {
-  return s + l <= b.byteLength? just(new DataView(b, s, l)) : nothing;
+  return function() {
+    return s + l <= b.byteLength? just(new DataView(b, s, l)) : nothing;
+  };
 }
 
 exports.buffer = function(v) {
