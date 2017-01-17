@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "purescript-debug": "^2.0.0",
-    "purescript-quickcheck": "^3.0.0"
+    "purescript-quickcheck": "^3.0.0",
+    "purescript-partial": "^1.2.0"
   }
 }
