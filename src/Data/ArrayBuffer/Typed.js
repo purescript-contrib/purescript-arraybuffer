@@ -39,7 +39,9 @@ exports.asFloat64Array = function(v) {
 }
 
 exports.dataView = function(a) {
-  return a;
+  return function() {
+    return a;
+  }
 }
 
 exports.setImpl = function(ra, off, a) {
@@ -49,25 +51,33 @@ exports.setImpl = function(ra, off, a) {
 }
 
 exports.unsafeAtImpl = function(a, i) {
+  return function() {
    return a[i];
+  }
 }
 
 exports.hasIndexImpl = function(a, i) {
-  return i in a;
+  return function() {
+    return i in a;
+  }
 }
 
 exports.toArray = function(a) {
-  var l = a.length;
-  var ret = new Array(l);
-  for (var i = 0; i < l; i++)
-    ret[i] = a[i];
-  return ret;
+  return function() {
+    var l = a.length;
+    var ret = new Array(l);
+    for (var i = 0; i < l; i++)
+      ret[i] = a[i];
+    return ret;
+  }
 }
 
 exports.toIntArray = function(a) {
-  var l = a.length;
-  var ret = new Array(l);
-  for (var i = 0; i < l; i++)
-    ret[i] = a[i]|0;
-  return ret;
+  return function() {
+    var l = a.length;
+    var ret = new Array(l);
+    for (var i = 0; i < l; i++)
+      ret[i] = a[i] | 0;
+    return ret;
+  }
 }
