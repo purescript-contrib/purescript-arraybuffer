@@ -4,33 +4,23 @@
 
 
 exports.whole = function(b) {
-  return function() {
-    return new DataView(b);
-  }
+  return new DataView(b);
 }
 
 exports.sliceImpl = function(just, nothing, s, l, b) {
-  return function() {
-    return s + l <= b.byteLength ? just(new DataView(b, s, l)) : nothing;
-  }
+  return s + l <= b.byteLength ? just(new DataView(b, s, l)) : nothing;
 }
 
 exports.buffer = function(v) {
-  return function() {
-    return v.buffer;
-  }
+  return v.buffer;
 }
 
 exports.byteOffset = function(v) {
-  return function() {
-    return v.byteOffset;
-  }
+  return v.byteOffset;
 }
 
 exports.byteLength = function(v) {
-  return function() {
-    return v.byteLength;
-  }
+  return v.byteLength;
 }
 
 exports.getterImpl = function(just, nothing, s, l, e, v, o) {

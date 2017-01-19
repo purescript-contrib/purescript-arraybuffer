@@ -39,9 +39,7 @@ exports.asFloat64Array = function(v) {
 }
 
 exports.dataView = function(a) {
-  return function() {
-    return a;
-  }
+  return a;
 }
 
 exports.setImpl = function(ra, off, a) {
@@ -53,13 +51,11 @@ exports.setImpl = function(ra, off, a) {
 exports.unsafeAtImpl = function(a, i) {
   return function() {
    return a[i];
-  }
+  };
 }
 
 exports.hasIndexImpl = function(a, i) {
-  return function() {
-    return i in a;
-  }
+  return i in a;
 }
 
 exports.toArray = function(a) {
@@ -69,7 +65,7 @@ exports.toArray = function(a) {
     for (var i = 0; i < l; i++)
       ret[i] = a[i];
     return ret;
-  }
+  };
 }
 
 exports.toIntArray = function(a) {
@@ -79,5 +75,5 @@ exports.toIntArray = function(a) {
     for (var i = 0; i < l; i++)
       ret[i] = a[i] | 0;
     return ret;
-  }
+  };
 }

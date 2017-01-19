@@ -36,7 +36,7 @@ module Data.ArrayBuffer.DataView( whole
                                 ) where
 
 import Prelude
-import Data.ArrayBuffer.ArrayBuffer (ARRAYBUFFER)
+import Data.ArrayBuffer.ArrayBuffer (ARRAY_BUFFER)
 import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
 import Data.Function.Uncurried (Fn5, Fn7, runFn5, runFn7)
 import Data.Maybe (Maybe(..))
@@ -44,39 +44,39 @@ import Control.Monad.Eff (Eff)
 import Data.UInt (UInt)
 
 -- | Type for all fetching functions.
-type Getter r = forall e. DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAYBUFFER | e) (Maybe r)
+type Getter r = forall e. DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r)
 
 -- | Type for all storing functions.
-type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAYBUFFER | e) Unit
+type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit
 
 -- | View mapping the whole `ArrayBuffer`.
-foreign import whole :: forall e. ArrayBuffer -> Eff (arrayBuffer :: ARRAYBUFFER | e) DataView
+foreign import whole :: ArrayBuffer -> DataView
 
-foreign import sliceImpl :: forall e. Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Eff (arrayBuffer :: ARRAYBUFFER | e) (Maybe DataView))
+foreign import sliceImpl :: Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
 
 -- | View mapping a region of the `ArrayBuffer`.
-slice :: forall e. ByteOffset -> ByteLength -> ArrayBuffer -> (Eff (arrayBuffer :: ARRAYBUFFER | e) (Maybe DataView))
+slice :: ByteOffset -> ByteLength -> ArrayBuffer -> (Maybe DataView)
 slice = runFn5 sliceImpl Just Nothing
 
 -- | `ArrayBuffer` being mapped by the view.
-foreign import buffer :: forall e. DataView -> Eff (arrayBuffer :: ARRAYBUFFER | e) ArrayBuffer
+foreign import buffer :: DataView -> ArrayBuffer
 
 -- | Represents the offset of this view from the start of its `ArrayBuffer`.
-foreign import byteOffset :: forall e. DataView -> Eff (arrayBuffer :: ARRAYBUFFER | e) ByteOffset
+foreign import byteOffset :: DataView -> ByteOffset
 
 -- | Represents the length of this view.
-foreign import byteLength :: forall e. DataView -> Eff (arrayBuffer :: ARRAYBUFFER | e) ByteLength
+foreign import byteLength :: DataView -> ByteLength
 
 
 type Endianness = Boolean
 
-foreign import getterImpl :: forall e r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Eff (arrayBuffer :: ARRAYBUFFER | e) (Maybe r))
+foreign import getterImpl :: forall e r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r))
 
-getter :: forall e r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAYBUFFER | e) (Maybe r)
+getter :: forall e r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r)
 getter = runFn7 getterImpl Just Nothing
 
 
-foreign import setter :: forall e r. String -> Endianness -> DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAYBUFFER | e) Unit
+foreign import setter :: forall e r. String -> Endianness -> DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit
 
 
 -- | Fetch int8 value at a certain index in a `DataView`.
