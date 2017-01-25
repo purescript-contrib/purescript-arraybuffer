@@ -98,14 +98,14 @@ getInt32le :: Getter Int
 getInt32le = getter "getInt32" 4 true
 
 -- | Fetch uint8 value at a certain index in a `DataView`.
-getUint8 :: Getter Int
+getUint8 :: Getter UInt
 getUint8 = getter "getUint8" 1 false
 
 -- | Fetch uint16 value at a certain index in a `DataView`.
-getUint16be :: Getter Int
+getUint16be :: Getter UInt
 getUint16be = getter "getUint16" 2 false
 
-getUint16le :: Getter Int
+getUint16le :: Getter UInt
 getUint16le = getter "getUint16" 2 true
 
 -- | Fetch uint32 value at a certain index in a `DataView`.
@@ -148,14 +148,14 @@ setInt32le :: Setter Int
 setInt32le = setter "setInt32" true
 
 -- | Store uint8 value at a certain index in a `DataView`.
-setUint8 :: Setter Int
+setUint8 :: Setter UInt
 setUint8 = setter "setUint8" false
 
 -- | Store uint16 value at a certain index in a `DataView`.
-setUint16be :: Setter Int
+setUint16be :: Setter UInt
 setUint16be = setter "setUint16" false
 
-setUint16le :: Setter Int
+setUint16le :: Setter UInt
 setUint16le = setter "setUint16" true
 
 -- | Store uint32 value at a certain index in a `DataView`.
