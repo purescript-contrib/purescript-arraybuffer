@@ -23,7 +23,7 @@ assertEquals expected actual = quickCheck' 1 $ expected == actual
 main :: forall e
       . Eff ( console :: CONSOLE
             , random :: RANDOM
-            , err :: EXCEPTION
+            , exception :: EXCEPTION
             , arrayBuffer :: AB.ARRAY_BUFFER
             | e )
             Unit

@@ -6,11 +6,11 @@ module Data.ArrayBuffer.ArrayBuffer( ARRAY_BUFFER()
                                    , fromString
                                    ) where
 
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Data.Function.Uncurried (Fn3, runFn3)
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 
-foreign import data ARRAY_BUFFER :: !
+foreign import data ARRAY_BUFFER :: Effect
 
 -- | Create an `ArrayBuffer` with the given capacity.
 foreign import create :: forall e. ByteLength -> Eff (arrayBuffer :: ARRAY_BUFFER | e) ArrayBuffer
