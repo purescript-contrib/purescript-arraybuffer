@@ -1,24 +1,28 @@
 module Test.Main where
 
 import Prelude
-import Data.ArrayBuffer.ArrayBuffer as AB
-import Data.ArrayBuffer.DataView as DV
-import Data.ArrayBuffer.Typed as TA
+
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Random (RANDOM)
+import Data.ArrayBuffer.ArrayBuffer as AB
+import Data.ArrayBuffer.DataView as DV
+import Data.ArrayBuffer.Typed as TA
 import Data.Maybe (Maybe(..), isNothing)
 import Data.UInt (fromInt, pow)
-import Test.QuickCheck (QC, quickCheck')
+import Test.QuickCheck (QC, quickCheck', (<?>))
 
-assertEffEquals :: forall a e. Eq a => a -> QC e a -> QC e Unit
+assertEffEquals :: forall a e. Eq a => Show a => a -> QC e a -> QC e Unit
 assertEffEquals expectedValue computation = do
   actualValue <- computation
-  quickCheck' 1 $ actualValue == expectedValue
+  let msg = show expectedValue <> " /= " <> show actualValue
+  quickCheck' 1 $ actualValue == expectedValue <?> msg
 
-assertEquals :: forall a e. Eq a => a -> a -> QC e Unit
-assertEquals expected actual = quickCheck' 1 $ expected == actual  
+assertEquals :: forall a e. Eq a => Show a => a -> a -> QC e Unit
+assertEquals expected actual = do
+  let msg = show expected <> " /= " <> show actual
+  quickCheck' 1 $ expected == actual <?> msg
 
 main :: forall e
       . Eff ( console :: CONSOLE
@@ -35,6 +39,7 @@ main = do
   assertEffEquals 2 $ pure <<< AB.byteLength =<< AB.slice 2 4 ab4
   assertEffEquals 0 $ pure <<< AB.byteLength =<< AB.slice (-2) (-2) ab4
   assertEffEquals 1 $ pure <<< AB.byteLength =<< (AB.slice (-2) (-1) ab4)
+  assertEquals Nothing $ DV.byteLength <$> DV.slice 0 200 ab4  
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 0 2 ab4
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 2 2 ab4
   assertEffEquals 4 $ pure <<< AB.byteLength =<< AB.fromArray [1.0, 2.0, 3.0, 4.0]

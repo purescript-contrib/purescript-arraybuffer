@@ -8,7 +8,7 @@ exports.whole = function(b) {
 }
 
 exports.sliceImpl = function(just, nothing, s, l, b) {
-  return s + l <= b.byteLength ? just(new DataView(b, s, l)) : nothing;
+  return ((s + l)>>>0) <= b.byteLength ? just(new DataView(b, s, l)) : nothing;
 }
 
 exports.buffer = function(v) {
@@ -25,7 +25,7 @@ exports.byteLength = function(v) {
 
 exports.getterImpl = function(just, nothing, s, l, e, v, o) {
   return function() {
-    return (o + l) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
+    return ((o + l)>>>0) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
   };
 }
 
