@@ -55,7 +55,7 @@ main = do
   assertEffEquals Nothing $ TA.at fourElementInt8Array 4
   assertEffEquals Nothing $ TA.at fourElementInt8Array (-1)
 
-  assertEffEquals [1.0, 2.0, 3.0] $ TA.toArray <<< TA.asInt8Array <<< DV.whole $ AB.fromArray [1.0, 2.0, 3.0]
+  assertEquals [1.0, 2.0, 3.0] $ TA.toArray <<< TA.asInt8Array <<< DV.whole $ AB.fromArray [1.0, 2.0, 3.0]
 
   twoElementDataView <- do
     ab' <- AB.create 2

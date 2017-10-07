@@ -59,21 +59,17 @@ exports.hasIndexImpl = function(a, i) {
 }
 
 exports.toArray = function(a) {
-  return function() {
-    var l = a.length;
-    var ret = new Array(l);
-    for (var i = 0; i < l; i++)
-      ret[i] = a[i];
-    return ret;
-  };
+  var l = a.length;
+  var ret = new Array(l);
+  for (var i = 0; i < l; i++)
+    ret[i] = a[i];
+  return ret;
 }
 
 exports.toIntArray = function(a) {
-  return function() {
-    var l = a.length;
-    var ret = new Array(l);
-    for (var i = 0; i < l; i++)
-      ret[i] = a[i] | 0;
-    return ret;
-  };
+  var l = a.length;
+  var ret = new Array(l);
+  for (var i = 0; i < l; i++)
+    ret[i] = a[i] | 0;
+  return ret;
 }

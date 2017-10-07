@@ -82,8 +82,8 @@ at a n = do
       pure Nothing
 
 -- | Turn typed array into an array.
-foreign import toArray :: forall a e. ArrayView a -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Array Number)
+foreign import toArray :: forall a. ArrayView a -> Array Number
 
 -- | Turn typed array into integer array.
-foreign import toIntArray :: forall a e. ArrayView a -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Array Int)
+foreign import toIntArray :: forall a. ArrayView a -> Array Int
 
