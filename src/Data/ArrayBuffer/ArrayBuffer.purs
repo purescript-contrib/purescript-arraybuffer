@@ -25,8 +25,8 @@ slice :: forall e. ByteOffset -> ByteOffset -> ArrayBuffer -> Eff (arrayBuffer :
 slice = runFn3 sliceImpl
 
 -- | Convert an array into an `ArrayBuffer` representation.
-foreign import fromArray :: forall e. Array Number -> Eff (arrayBuffer :: ARRAY_BUFFER | e) ArrayBuffer
+foreign import fromArray :: Array Number -> ArrayBuffer
 
 -- | Convert a string into an `ArrayBuffer` representation.
-foreign import fromString :: forall e. String -> Eff (arrayBuffer :: ARRAY_BUFFER | e) ArrayBuffer
+foreign import fromString :: String -> ArrayBuffer
 

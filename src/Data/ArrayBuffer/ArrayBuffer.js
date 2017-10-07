@@ -19,18 +19,14 @@ exports.sliceImpl = function(s, e, a) {
 }
 
 exports.fromArray = function(s) {
-  return function() {
-    return (new Uint8Array(s)).buffer;
-  };
+  return (new Uint8Array(s)).buffer;
 }
 
 exports.fromString = function(s) {
-  return function() {
-    var l = s.length;
-    var ab = new ArrayBuffer(l * 2);
-    var a = new Uint16Array(ab);
-    for (var i = 0; i < l; i++)
-      a[i] = s.charCodeAt(i);
-    return ab;
-  };
+  var l = s.length;
+  var ab = new ArrayBuffer(l * 2);
+  var a = new Uint16Array(ab);
+  for (var i = 0; i < l; i++)
+    a[i] = s.charCodeAt(i);
+  return a.buffer;
 }
