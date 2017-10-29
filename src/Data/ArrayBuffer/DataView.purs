@@ -44,7 +44,7 @@ import Control.Monad.Eff (Eff)
 import Data.UInt (UInt)
 
 -- | Type for all fetching functions.
-type Getter r = forall e. DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r)
+type Getter r = DataView -> ByteOffset -> Maybe r
 
 -- | Type for all storing functions.
 type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit
@@ -70,9 +70,9 @@ foreign import byteLength :: DataView -> ByteLength
 
 type Endianness = Boolean
 
-foreign import getterImpl :: forall e r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r))
+foreign import getterImpl :: forall r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Maybe r)
 
-getter :: forall e r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r)
+getter :: forall r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Maybe r
 getter = runFn7 getterImpl Just Nothing
 
 

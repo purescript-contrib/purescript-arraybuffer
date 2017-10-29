@@ -24,9 +24,7 @@ exports.byteLength = function(v) {
 }
 
 exports.getterImpl = function(just, nothing, s, l, e, v, o) {
-  return function() {
-    return ((o + l)>>>0) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
-  };
+  return ((o + l)>>>0) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
 }
 
 exports.setter = function(s) {

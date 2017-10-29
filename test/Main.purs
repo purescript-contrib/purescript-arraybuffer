@@ -63,8 +63,8 @@ main = do
     DV.setUint8 dv (fromInt 123) 0
     DV.setUint8 dv (fromInt 0) 1
     pure dv
-  assertEffEquals (Just $ fromInt 123) $ DV.getUint16le twoElementDataView 0
-  assertEffEquals (Just $ fromInt 31488) $ DV.getUint16be twoElementDataView 0 
+  assertEquals (Just $ fromInt 123) $ DV.getUint16le twoElementDataView 0
+  assertEquals (Just $ fromInt 31488) $ DV.getUint16be twoElementDataView 0 
   assertEffEquals (Just $ fromInt 2 `pow` fromInt 32 - fromInt 1) $ do
     ab' <- AB.create 4
     let dv = DV.whole ab'
@@ -73,4 +73,4 @@ main = do
     DV.setUint8 dv t 1
     DV.setUint8 dv t 2
     DV.setUint8 dv t 3
-    DV.getUint32be dv 0
+    pure $ DV.getUint32be dv 0
