@@ -1,6 +1,5 @@
 {
   "name": "purescript-arraybuffer",
-  "version": "4.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",
