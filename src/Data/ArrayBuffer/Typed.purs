@@ -17,8 +17,7 @@ module Data.ArrayBuffer.Typed( asInt8Array
                              ) where
 
 import Prelude
-import Control.Monad.Eff (Eff)
-import Data.ArrayBuffer.ArrayBuffer (ARRAY_BUFFER)
+import Effect (Effect)
 import Data.ArrayBuffer.Types (ArrayView, ByteOffset, DataView, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Maybe (Maybe(..))
@@ -53,16 +52,16 @@ foreign import asFloat64Array :: DataView -> Float64Array
 -- | Interpret typed array as a `DataView`.
 foreign import dataView :: forall a. ArrayView a -> DataView
 
-foreign import setImpl :: forall a e. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit)
+foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Effect Unit)
 
 -- | Stores multiple values in the last typed array, reading input values from ther first typed array.
-set :: forall a e. ArrayView a -> ByteOffset -> ArrayView a -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit
+set :: forall a. ArrayView a -> ByteOffset -> ArrayView a -> Effect Unit
 set = runFn3 setImpl
 
-foreign import unsafeAtImpl :: forall a e. Fn2 (ArrayView a) Int (Eff (arrayBuffer :: ARRAY_BUFFER | e) Number)
+foreign import unsafeAtImpl :: forall a. Fn2 (ArrayView a) Int (Effect Number)
 
 -- | Fetch element at index.
-unsafeAt :: forall a e. ArrayView a -> Int -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Number
+unsafeAt :: forall a. ArrayView a -> Int -> Effect Number
 unsafeAt = runFn2 unsafeAtImpl
 
 foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Int Boolean
@@ -72,7 +71,7 @@ hasIndex :: forall a. ArrayView a -> Int -> Boolean
 hasIndex = runFn2 hasIndexImpl
 
 -- | Fetch element at index.
-at :: forall a e. ArrayView a -> Int -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe Number)
+at :: forall a. ArrayView a -> Int -> Effect (Maybe Number)
 at a n = do
   if a `hasIndex` n
     then do

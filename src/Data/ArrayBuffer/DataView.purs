@@ -36,18 +36,18 @@ module Data.ArrayBuffer.DataView( whole
                                 ) where
 
 import Prelude
-import Data.ArrayBuffer.ArrayBuffer (ARRAY_BUFFER)
+--import Data.ArrayBuffer.ArrayBuffer (ARRAY_BUFFER)
 import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
 import Data.Function.Uncurried (Fn5, Fn7, runFn5, runFn7)
 import Data.Maybe (Maybe(..))
-import Control.Monad.Eff (Eff)
+import Effect (Effect)
 import Data.UInt (UInt)
 
 -- | Type for all fetching functions.
-type Getter r = forall e. DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r)
+type Getter r = DataView -> ByteOffset -> Effect (Maybe r)
 
 -- | Type for all storing functions.
-type Setter r = forall e. DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit
+type Setter r = DataView -> r -> ByteOffset -> Effect Unit
 
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
@@ -70,13 +70,13 @@ foreign import byteLength :: DataView -> ByteLength
 
 type Endianness = Boolean
 
-foreign import getterImpl :: forall e r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r))
+foreign import getterImpl :: ∀ r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Effect (Maybe r))
 
-getter :: forall e r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) (Maybe r)
+getter :: ∀ r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Effect (Maybe r)
 getter = runFn7 getterImpl Just Nothing
 
 
-foreign import setter :: forall e r. String -> Endianness -> DataView -> r -> ByteOffset -> Eff (arrayBuffer :: ARRAY_BUFFER | e) Unit
+foreign import setter :: ∀ r. String -> Endianness -> DataView -> r -> ByteOffset -> Effect Unit
 
 
 -- | Fetch int8 value at a certain index in a `DataView`.

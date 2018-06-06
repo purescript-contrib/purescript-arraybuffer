@@ -2,35 +2,26 @@ module Test.Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Random (RANDOM)
+import Effect (Effect)
 import Data.ArrayBuffer.ArrayBuffer as AB
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Typed as TA
 import Data.Maybe (Maybe(..), isNothing)
 import Data.UInt (fromInt, pow)
-import Test.QuickCheck (QC, quickCheck', (<?>))
+import Test.QuickCheck (quickCheck', (<?>))
 
-assertEffEquals :: forall a e. Eq a => Show a => a -> QC e a -> QC e Unit
+assertEffEquals :: forall a. Eq a => Show a => a -> Effect a -> Effect Unit
 assertEffEquals expectedValue computation = do
   actualValue <- computation
   let msg = show expectedValue <> " /= " <> show actualValue
   quickCheck' 1 $ actualValue == expectedValue <?> msg
 
-assertEquals :: forall a e. Eq a => Show a => a -> a -> QC e Unit
+assertEquals :: forall a. Eq a => Show a => a -> a -> Effect Unit
 assertEquals expected actual = do
   let msg = show expected <> " /= " <> show actual
   quickCheck' 1 $ expected == actual <?> msg
 
-main :: forall e
-      . Eff ( console :: CONSOLE
-            , random :: RANDOM
-            , exception :: EXCEPTION
-            , arrayBuffer :: AB.ARRAY_BUFFER
-            | e )
-            Unit
+main :: Effect Unit
 main = do
   ab4 <- AB.create 4
   ab8 <- AB.create 8
