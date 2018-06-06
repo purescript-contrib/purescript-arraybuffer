@@ -30,7 +30,7 @@ main = do
   assertEffEquals 2 $ pure <<< AB.byteLength =<< AB.slice 2 4 ab4
   assertEffEquals 0 $ pure <<< AB.byteLength =<< AB.slice (-2) (-2) ab4
   assertEffEquals 1 $ pure <<< AB.byteLength =<< (AB.slice (-2) (-1) ab4)
-  assertEquals Nothing $ DV.byteLength <$> DV.slice 0 200 ab4  
+  assertEquals Nothing $ DV.byteLength <$> DV.slice 0 200 ab4
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 0 2 ab4
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 2 2 ab4
   assertEquals 4 $ AB.byteLength $ AB.fromArray [1.0, 2.0, 3.0, 4.0]
@@ -55,7 +55,7 @@ main = do
     DV.setUint8 dv (fromInt 0) 1
     pure dv
   assertEffEquals (Just $ fromInt 123) $ DV.getUint16le twoElementDataView 0
-  assertEffEquals (Just $ fromInt 31488) $ DV.getUint16be twoElementDataView 0 
+  assertEffEquals (Just $ fromInt 31488) $ DV.getUint16be twoElementDataView 0
   assertEffEquals (Just $ fromInt 2 `pow` fromInt 32 - fromInt 1) $ do
     ab' <- AB.create 4
     let dv = DV.whole ab'

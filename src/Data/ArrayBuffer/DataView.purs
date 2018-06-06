@@ -70,13 +70,13 @@ foreign import byteLength :: DataView -> ByteLength
 
 type Endianness = Boolean
 
-foreign import getterImpl :: ∀ r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Effect (Maybe r))
+foreign import getterImpl :: forall r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Effect (Maybe r))
 
-getter :: ∀ r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Effect (Maybe r)
+getter :: forall r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Effect (Maybe r)
 getter = runFn7 getterImpl Just Nothing
 
 
-foreign import setter :: ∀ r. String -> Endianness -> DataView -> r -> ByteOffset -> Effect Unit
+foreign import setter :: forall r. String -> Endianness -> DataView -> r -> ByteOffset -> Effect Unit
 
 
 -- | Fetch int8 value at a certain index in a `DataView`.

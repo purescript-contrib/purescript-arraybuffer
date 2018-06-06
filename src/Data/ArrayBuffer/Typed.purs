@@ -85,4 +85,3 @@ foreign import toArray :: forall a. ArrayView a -> Array Number
 
 -- | Turn typed array into integer array.
 foreign import toIntArray :: forall a. ArrayView a -> Array Int
-
