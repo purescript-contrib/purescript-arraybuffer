@@ -22,6 +22,10 @@ exports.fromArray = function(s) {
   return (new Uint8Array(s)).buffer;
 }
 
+exports.fromIntArray = function(s) {
+  return (new Uint8Array(s)).buffer;
+}
+
 exports.fromString = function(s) {
   var l = s.length;
   var ab = new ArrayBuffer(l * 2);

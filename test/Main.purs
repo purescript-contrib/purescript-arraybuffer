@@ -34,6 +34,7 @@ main = do
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 0 2 ab4
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 2 2 ab4
   assertEquals 4 $ AB.byteLength $ AB.fromArray [1.0, 2.0, 3.0, 4.0]
+  assertEquals 4 $ AB.byteLength $ AB.fromIntArray [1, 2, 3, 4]
   assertEquals 8 $ AB.byteLength $ AB.fromString "hola"
   assertEquals 8 $ AB.byteLength $ DV.buffer $ DV.whole ab8
   assertEquals 8 $ AB.byteLength $ DV.buffer $ TA.dataView $ TA.asInt8Array $ DV.whole ab8
@@ -41,7 +42,7 @@ main = do
   assertEquals (Just 8) $ DV.byteLength <$> DV.slice 0 8 ab8
   assertEquals true $ isNothing $ DV.slice 0 40 ab8
 
-  fourElementInt8Array <- pure <<< TA.asInt8Array <<< DV.whole $ AB.fromArray [1.0, 2.0, 3.0, 4.0]
+  fourElementInt8Array <- pure <<< TA.asInt8Array <<< DV.whole $ AB.fromIntArray [1, 2, 3, 4]
   assertEffEquals (Just 2.0) $ TA.at fourElementInt8Array 1
   assertEffEquals Nothing $ TA.at fourElementInt8Array 4
   assertEffEquals Nothing $ TA.at fourElementInt8Array (-1)

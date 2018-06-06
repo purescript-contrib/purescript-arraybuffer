@@ -2,6 +2,7 @@ module Data.ArrayBuffer.ArrayBuffer ( create
                                     , byteLength
                                     , slice
                                     , fromArray
+                                    , fromIntArray
                                     , fromString
                                    ) where
 
@@ -24,6 +25,8 @@ slice = runFn3 sliceImpl
 -- | Convert an array into an `ArrayBuffer` representation.
 foreign import fromArray :: Array Number -> ArrayBuffer
 
+-- | Convert an array into an `ArrayBuffer` representation.
+foreign import fromIntArray :: Array Int -> ArrayBuffer
+
 -- | Convert a string into an `ArrayBuffer` representation.
 foreign import fromString :: String -> ArrayBuffer
-
