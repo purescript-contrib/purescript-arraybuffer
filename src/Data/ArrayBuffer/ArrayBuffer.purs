@@ -4,6 +4,7 @@ module Data.ArrayBuffer.ArrayBuffer ( create
                                     , fromArray
                                     , fromIntArray
                                     , fromString
+                                    , decodeToString
                                    ) where
 
 import Effect (Effect)
@@ -30,3 +31,6 @@ foreign import fromIntArray :: Array Int -> ArrayBuffer
 
 -- | Convert a string into an `ArrayBuffer` representation.
 foreign import fromString :: String -> ArrayBuffer
+
+foreign import decodeToString :: ArrayBuffer -> String
+
