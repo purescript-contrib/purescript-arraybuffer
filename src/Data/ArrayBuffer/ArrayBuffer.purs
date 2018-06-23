@@ -32,5 +32,6 @@ foreign import fromIntArray :: Array Int -> ArrayBuffer
 -- | Convert a string into an `ArrayBuffer` representation.
 foreign import fromString :: String -> ArrayBuffer
 
+-- | Convert an ArrayBuffer into a string. Uses fromCharCode and thus does not support full utf-16
 foreign import decodeToString :: ArrayBuffer -> String
 
