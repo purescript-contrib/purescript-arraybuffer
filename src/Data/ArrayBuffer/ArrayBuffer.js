@@ -26,10 +26,6 @@ exports.fromIntArray = function(s) {
   return (new Uint8Array(s)).buffer;
 };
 
-exports.fromInt16Array = function(s) {
-  return (new Uint16Array(s)).buffer;
-};
-
 exports.fromString = function(s) {
   var buf = new ArrayBuffer(s.length*2);
   var bufView = new Uint16Array(buf);
