@@ -35,12 +35,17 @@ exports.fromString = function(s) {
  return buf;
 };
 
-exports.decodeToString = function(buffer) {
-  const uintBuffer = new Uint16Array(buffer);
-  const reducer = function(accum, point) {
-      // use concat instead of es6 syntax for compatibility
-      return accum.concat([String.fromCharCode(point)]);
-  };
-  const points = uintBuffer.reduce(reducer, new Array());
-  return points.join("");
+exports.decodeToStringImpl = function(just, nothing, buffer) {
+  try {
+    const uintBuffer = new Uint16Array(buffer);
+    const reducer = function(accum, point) {
+        // use concat instead of es6 syntax for compatibility
+        return accum.concat([String.fromCharCode(point)]);
+    };
+    const points = uintBuffer.reduce(reducer, new Array());
+    return just(points.join(""));
+  }
+  catch (e) {
+    return nothing;
+  }
 };

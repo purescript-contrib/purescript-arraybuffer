@@ -58,7 +58,7 @@ main = do
 
   quickCheck
     \(s) ->
-      s == (AB.decodeToString $ AB.fromString s)
+      Just s == (AB.decodeToString $ AB.fromString s)
       <?> "Isormorphic arraybuffer conversion with string failed for input "
       <> s
 
