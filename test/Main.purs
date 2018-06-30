@@ -6,16 +6,9 @@ import Effect (Effect)
 import Data.ArrayBuffer.ArrayBuffer as AB
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Typed as TA
-import Data.ArrayBuffer.Types as AT
 import Data.Maybe (Maybe(..), isNothing)
 import Data.UInt (fromInt, pow)
 import Test.QuickCheck (quickCheck', (<?>), quickCheck)
-import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
-
-newtype ABuffer = ABuffer AT.ArrayBuffer
-
-instance arbitraryArrayBuffer :: Arbitrary ABuffer where
-  arbitrary = map (ABuffer <<< AB.fromString) arbitrary
 
 assertEffEquals :: forall a. Eq a => Show a => a -> Effect a -> Effect Unit
 assertEffEquals expectedValue computation = do
