@@ -33,8 +33,10 @@ foreign import fromIntArray :: Array Int -> ArrayBuffer
 -- | Convert a string into an `ArrayBuffer` representation.
 foreign import fromString :: String -> ArrayBuffer
 
--- | Convert an ArrayBuffer into a string. Uses fromCharCode and thus does not support full utf-16
 foreign import decodeToStringImpl :: Fn3 (String -> Maybe String) (Maybe String) ArrayBuffer (Maybe String)
 
+-- | Convert an ArrayBuffer into a string. Uses fromCharCode and thus does not support full utf-16
+-- | Is currently only defined for ArrayBuffers with even numbers of bytes, as it assumes the ArrayBuffer encodes string data.
+-- | For more general string-encoding forms of data, use a base64 or other encoding scheme.
 decodeToString :: ArrayBuffer -> Maybe String
 decodeToString = runFn3 decodeToStringImpl Just Nothing
