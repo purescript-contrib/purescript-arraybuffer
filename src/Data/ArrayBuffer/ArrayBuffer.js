@@ -37,13 +37,7 @@ exports.fromString = function(s) {
 
 exports.decodeToStringImpl = function(just, nothing, buffer) {
   try {
-    const uintBuffer = new Uint16Array(buffer);
-    const reducer = function(accum, point) {
-        // use concat instead of es6 syntax for compatibility
-        return accum.concat([String.fromCharCode(point)]);
-    };
-    const points = uintBuffer.reduce(reducer, new Array());
-    return just(points.join(""));
+    return just(String.fromCharCode.apply(null, new Uint16Array(buffer)));
   }
   catch (e) {
     return nothing;
