@@ -8,6 +8,7 @@ module Data.ArrayBuffer.ArrayBuffer ( create
                                    ) where
 
 import Effect (Effect)
+import Data.Maybe (Maybe(..))
 import Data.Function.Uncurried (Fn3, runFn3)
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 
@@ -33,5 +34,7 @@ foreign import fromIntArray :: Array Int -> ArrayBuffer
 foreign import fromString :: String -> ArrayBuffer
 
 -- | Convert an ArrayBuffer into a string. Uses fromCharCode and thus does not support full utf-16
-foreign import decodeToString :: ArrayBuffer -> String
+foreign import decodeToStringImpl :: Fn3 (String -> Maybe String) (Maybe String) ArrayBuffer (Maybe String)
 
+decodeToString :: ArrayBuffer -> Maybe String
+decodeToString = runFn3 decodeToStringImpl Just Nothing
