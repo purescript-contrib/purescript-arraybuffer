@@ -25,6 +25,19 @@ assertEquals expected actual = do
 
 main :: Effect Unit
 main = do
+  assertEquals "釺椱�밸造ə㊡癥闗" (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString "釺椱�밸造ə㊡癥闗")
+
+  quickCheck
+    \(s) ->
+        let
+          result = (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString s)
+        in
+          s == result
+          <?> "Isormorphic arraybuffer conversion with string failed for input\n"
+          <> s
+          <> " which, after the round trip, result in\n"
+          <> result
+
   ab4 <- AB.create 4
   ab8 <- AB.create 8
   assertEquals 4 $ AB.byteLength ab4
@@ -50,19 +63,6 @@ main = do
   assertEffEquals (Just 2.0) $ TA.at fourElementInt8Array 1
   assertEffEquals Nothing $ TA.at fourElementInt8Array 4
   assertEffEquals Nothing $ TA.at fourElementInt8Array (-1)
-
-  assertEquals "釺椱�밸造ə㊡癥闗" (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString "釺椱�밸造ə㊡癥闗")
-
-  quickCheck
-    \(s) ->
-        let
-          result = (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString s)
-        in
-          s == result
-          <?> "Isormorphic arraybuffer conversion with string failed for input\n"
-          <> s
-          <> " which, after the round trip, result in\n"
-          <> result
 
   assertEquals [1.0, 2.0, 3.0] $ TA.toArray <<< TA.asInt8Array <<< DV.whole $ AB.fromArray [1.0, 2.0, 3.0]
 
