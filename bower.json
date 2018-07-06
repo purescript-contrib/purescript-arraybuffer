@@ -16,7 +16,8 @@
     "purescript-arraybuffer-types": "^2.0.0",
     "purescript-maybe": "^4.0.0",
     "purescript-effect": "^2.0.0",
-    "purescript-uint": "^4.0.0"
+    "purescript-uint": "^4.0.0",
+    "purescript-text-encoding": "^0.0.7"
   },
   "devDependencies": {
     "purescript-debug": "^4.0.0",
