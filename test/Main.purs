@@ -51,6 +51,8 @@ main = do
   assertEffEquals Nothing $ TA.at fourElementInt8Array 4
   assertEffEquals Nothing $ TA.at fourElementInt8Array (-1)
 
+  assertEquals "釺椱�밸造ə㊡癥闗" (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString "釺椱�밸造ə㊡癥闗")
+
   quickCheck
     \(s) ->
         let
