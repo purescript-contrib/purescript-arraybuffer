@@ -11,6 +11,7 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.UInt (fromInt, pow)
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (quickCheck', (<?>), quickCheck)
+import Test.Input
 
 assertEffEquals :: forall a. Eq a => Show a => a -> Effect a -> Effect Unit
 assertEffEquals expectedValue computation = do
@@ -28,7 +29,7 @@ main = do
   assertEquals "釺椱�밸造ə㊡癥闗" (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString "釺椱�밸造ə㊡癥闗")
 
   quickCheck
-    \(s) ->
+    \(WellFormedInput s) ->
         let
           result = (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString s)
         in
