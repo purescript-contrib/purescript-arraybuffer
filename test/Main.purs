@@ -11,7 +11,8 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.UInt (fromInt, pow)
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (quickCheck', (<?>), quickCheck)
-import Test.Input
+import Test.Input (WellFormedInput(..))
+
 
 assertEffEquals :: forall a. Eq a => Show a => a -> Effect a -> Effect Unit
 assertEffEquals expectedValue computation = do
@@ -84,4 +85,3 @@ main = do
     DV.setUint8 dv t 2
     DV.setUint8 dv t 3
     DV.getUint32be dv 0
-
