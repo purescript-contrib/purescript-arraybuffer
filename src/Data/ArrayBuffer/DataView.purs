@@ -36,7 +36,6 @@ module Data.ArrayBuffer.DataView( whole
                                 ) where
 
 import Prelude
---import Data.ArrayBuffer.ArrayBuffer (ARRAY_BUFFER)
 import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
 import Data.Function.Uncurried (Fn5, Fn7, runFn5, runFn7)
 import Data.Maybe (Maybe(..))

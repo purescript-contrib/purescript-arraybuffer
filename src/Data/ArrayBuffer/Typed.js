@@ -39,7 +39,7 @@ exports.asFloat64Array = function(v) {
 }
 
 exports.dataView = function(a) {
-  return a;
+  return new DataView(a.buffer);
 }
 
 exports.setImpl = function(ra, off, a) {

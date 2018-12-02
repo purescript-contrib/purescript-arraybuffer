@@ -85,3 +85,12 @@ main = do
     DV.setUint8 dv t 2
     DV.setUint8 dv t 3
     DV.getUint32be dv 0
+
+  let arr = DV.whole (AB.fromIntArray [0x4, 0x3, 0x2, 0x1])
+
+  assertEffEquals (Just 0x04) (DV.getInt8 arr 0)
+  assertEffEquals (Just 0x04) (DV.getInt8 (TA.dataView (TA.asInt8Array arr)) 0)
+  assertEffEquals (Just 0x0304) (DV.getInt16le arr 0)
+  assertEffEquals (Just 0x0304) (DV.getInt16le (TA.dataView (TA.asInt16Array arr)) 0)
+  assertEffEquals (Just 0x01020304) (DV.getInt32le arr 0)
+  assertEffEquals (Just 0x01020304) (DV.getInt32le (TA.dataView (TA.asInt32Array arr)) 0)
