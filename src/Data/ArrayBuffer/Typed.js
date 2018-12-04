@@ -75,6 +75,11 @@ exports.copyWithinImpl3 = function copyWithinImpl (a,t,s,e) {
 };
 
 
+exports.sortImpl = function sortImpl (a) {
+    a.sort();
+};
+
+
 exports.subArrayImpl = function subArrayImpl (a,s) {
     return a.subarray(s);
 };

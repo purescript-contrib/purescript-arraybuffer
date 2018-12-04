@@ -13,6 +13,7 @@ module Data.ArrayBuffer.Typed
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart
   , copyWithin, copyWithinPart
+  , sort
   , subArray, subArrayRemainder
   , toString
   , set
@@ -143,8 +144,16 @@ copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffse
 copyWithinPart = runEffectFn4 copyWithinImpl3
 
 
+foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
+
+-- | Sorts the values in-place
+sort :: forall a. ArrayView a -> Effect Unit
+sort = runEffectFn1 sortImpl
+
+
 foreign import subArrayImpl :: forall a. Fn2 (ArrayView a) ByteOffset (ArrayView a)
 foreign import subArrayImpl2 :: forall a. Fn3 (ArrayView a) ByteOffset ByteOffset (ArrayView a)
+
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
 subArray :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ArrayView a
