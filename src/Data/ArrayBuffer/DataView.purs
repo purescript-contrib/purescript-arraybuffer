@@ -1,45 +1,47 @@
-module Data.ArrayBuffer.DataView( whole
-                                , slice
-                                , buffer
-                                , byteOffset
-                                , byteLength
-                                , Getter()
-                                , getInt8
-                                , getInt16be
-                                , getInt32be
-                                , getUint8
-                                , getUint16be
-                                , getUint32be
-                                , getFloat32be
-                                , getFloat64be
-                                , getInt16le
-                                , getInt32le
-                                , getUint16le
-                                , getUint32le
-                                , getFloat32le
-                                , getFloat64le
-                                , Setter()
-                                , setInt8
-                                , setInt16be
-                                , setInt32be
-                                , setUint8
-                                , setUint16be
-                                , setUint32be
-                                , setFloat32be
-                                , setFloat64be
-                                , setInt16le
-                                , setInt32le
-                                , setUint16le
-                                , setUint32le
-                                , setFloat32le
-                                , setFloat64le
-                                ) where
+module Data.ArrayBuffer.DataView
+  ( whole
+  , part
+  , buffer
+  , byteOffset
+  , byteLength
+  , Getter()
+  , getInt8
+  , getInt16be
+  , getInt32be
+  , getUint8
+  , getUint16be
+  , getUint32be
+  , getFloat32be
+  , getFloat64be
+  , getInt16le
+  , getInt32le
+  , getUint16le
+  , getUint32le
+  , getFloat32le
+  , getFloat64le
+  , Setter()
+  , setInt8
+  , setInt16be
+  , setInt32be
+  , setUint8
+  , setUint16be
+  , setUint32be
+  , setFloat32be
+  , setFloat64be
+  , setInt16le
+  , setInt32le
+  , setUint16le
+  , setUint32le
+  , setFloat32le
+  , setFloat64le
+  ) where
 
 import Prelude
 import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
-import Data.Function.Uncurried (Fn5, Fn7, runFn5, runFn7)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
+import Effect.Exception (catchException)
+import Effect.Uncurried (EffectFn5, EffectFn3, runEffectFn5, runEffectFn3)
 import Data.UInt (UInt)
 
 -- | Type for all fetching functions.
@@ -51,11 +53,11 @@ type Setter r = DataView -> r -> ByteOffset -> Effect Unit
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
 
-foreign import sliceImpl :: Fn5 (DataView -> Maybe DataView) (Maybe DataView) ByteOffset ByteLength ArrayBuffer (Maybe DataView)
+foreign import partImpl :: EffectFn3 ArrayBuffer ByteOffset ByteLength DataView
 
 -- | View mapping a region of the `ArrayBuffer`.
-slice :: ByteOffset -> ByteLength -> ArrayBuffer -> (Maybe DataView)
-slice = runFn5 sliceImpl Just Nothing
+part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect DataView
+part = runEffectFn3 partImpl
 
 -- | `ArrayBuffer` being mapped by the view.
 foreign import buffer :: DataView -> ArrayBuffer
@@ -69,13 +71,18 @@ foreign import byteLength :: DataView -> ByteLength
 
 type Endianness = Boolean
 
-foreign import getterImpl :: forall r. Fn7 (r -> Maybe r) (Maybe r) String ByteLength Endianness DataView ByteOffset (Effect (Maybe r))
+foreign import getterImpl :: forall r. EffectFn5 String ByteLength Endianness DataView ByteOffset r
 
-getter :: forall r. String ->  ByteLength -> Endianness -> DataView -> ByteOffset -> Effect (Maybe r)
-getter = runFn7 getterImpl Just Nothing
+getter :: forall r. String -> ByteLength -> Endianness -> Getter r
+getter p l e d o =
+  let x = runEffectFn5 getterImpl p l e d o
+  in  catchException (const (pure Nothing)) (Just <$> x)
 
+foreign import setterImpl :: forall r. EffectFn5 String Endianness DataView r ByteOffset Unit
 
-foreign import setter :: forall r. String -> Endianness -> DataView -> r -> ByteOffset -> Effect Unit
+setter :: forall r. String -> Endianness -> Setter r
+setter p e d x o =
+  runEffectFn5 setterImpl p e d x o
 
 
 -- | Fetch int8 value at a certain index in a `DataView`.

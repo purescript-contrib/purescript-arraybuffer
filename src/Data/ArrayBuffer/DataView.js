@@ -3,43 +3,31 @@
 // module Data.ArrayBuffer.DataView
 
 
-exports.whole = function(b) {
-  return new DataView(b);
-}
+exports.whole = function whole (b) {
+    return new DataView(b);
+};
 
-exports.sliceImpl = function(just, nothing, s, l, b) {
-  return ((s + l)>>>0) <= b.byteLength ? just(new DataView(b, s, l)) : nothing;
-}
+exports.partImpl = function partImpl (b,i,j) {
+    return new DataView(b,i,j);
+};
 
-exports.buffer = function(v) {
-  return v.buffer;
-}
+exports.buffer = function buffer (v) {
+    return v.buffer;
+};
 
-exports.byteOffset = function(v) {
-  return v.byteOffset;
-}
+exports.byteOffset = function byteOffset (v) {
+    return v.byteOffset;
+};
 
-exports.byteLength = function(v) {
-  return v.byteLength;
-}
+exports.byteLength = function byteLength (v) {
+    return v.byteLength;
+};
 
-exports.getterImpl = function(just, nothing, s, l, e, v, o) {
-  return function() {
-    return ((o + l)>>>0) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
-  };
-}
+exports.getterImpl = function getterImpl (s, l, e, v, o) {
+    return v[s].call(v,o,e);
+};
 
-exports.setter = function(s) {
-  return function(e) {
-    return function(v) {
-      var f = v[s];
-      return function(n) {
-        return function(o) {
-            return function() {
-            f.call(v,o,n,e);
-          };
-        };
-      };
-    };
-  };
-}
+exports.setterImpl = function setterImpl (s,e,v,n,o) {
+    var f = v[s];
+    f.call(v,o,n,e);
+};
