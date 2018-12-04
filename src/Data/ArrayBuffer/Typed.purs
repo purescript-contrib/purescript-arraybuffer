@@ -13,6 +13,7 @@ module Data.ArrayBuffer.Typed
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart
   , copyWithin, copyWithinPart
+  , subArray, subArrayRemainder
   , toString
   , set
   , unsafeAt
@@ -140,6 +141,17 @@ copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithin = runEffectFn3 copyWithinImpl
 copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithinPart = runEffectFn4 copyWithinImpl3
+
+
+foreign import subArrayImpl :: forall a. Fn2 (ArrayView a) ByteOffset (ArrayView a)
+foreign import subArrayImpl2 :: forall a. Fn3 (ArrayView a) ByteOffset ByteOffset (ArrayView a)
+
+-- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
+subArray :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ArrayView a
+subArray = runFn3 subArrayImpl2
+-- | Returns a new typed array view of the same buffer, beginning at the index
+subArrayRemainder :: forall a. ArrayView a -> ByteOffset -> ArrayView a
+subArrayRemainder = runFn2 subArrayImpl
 
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
