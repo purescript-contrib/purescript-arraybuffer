@@ -1,10 +1,11 @@
 -- | This module represents the functional bindings to JavaScript's `ArrayBuffer`
 -- | objects. See [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) for details.
 
-module Data.ArrayBuffer.ArrayBuffer ( empty
-                                    , byteLength
-                                    , slice
-                                    ) where
+module Data.ArrayBuffer.ArrayBuffer
+  ( empty
+  , byteLength
+  , slice
+  ) where
 
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 import Data.Function.Uncurried (Fn3, runFn3)
