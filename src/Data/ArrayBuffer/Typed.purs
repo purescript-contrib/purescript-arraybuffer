@@ -11,7 +11,7 @@ module Data.ArrayBuffer.Typed
   , bytesPer
   , length
   , class ValuesPer
-  , whole, remainder, part, empty, fromArray
+  , whole, remainder, part, empty, fromArray, all, any
   , copyWithin, copyWithin'
   , set
   , unsafeAt
@@ -80,6 +80,10 @@ foreign import newUint8ClampedArray2 :: EffectFn2 ArrayBuffer ByteOffset Uint8Cl
 foreign import newUint8ClampedArray3 :: EffectFn3 ArrayBuffer ByteOffset ByteLength Uint8ClampedArray
 
 
+foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
+foreign import someImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
+
+
 -- TODO use purescript-quotient
 class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | View mapping the whole `ArrayBuffer`.
@@ -92,6 +96,10 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   empty :: Int -> ArrayView a
   -- | Creates a typed array from an input array of values, to be binary serialized
   fromArray :: Array t -> ArrayView a
+  -- | Test a predicate to pass on all values
+  all :: (t -> Boolean) -> ArrayView a -> Boolean
+  -- | Test a predicate to pass on any value
+  any :: (t -> Boolean) -> ArrayView a -> Boolean
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
@@ -99,6 +107,8 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   part = runEffectFn3 newUint8ClampedArray3
   empty n = unsafePerformEffect (runEffectFn1 newUint8ClampedArray n)
   fromArray a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
+  all p a = runFn2 everyImpl a p
+  any p a = runFn2 someImpl a p
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int

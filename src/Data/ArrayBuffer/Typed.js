@@ -48,6 +48,14 @@ exports.newUint8ClampedArray3 = function newUint8ClampedArray3 (a,b,c) {
 };
 
 
+exports.everyImpl = function everyImpl (a,p) {
+    return a.every(p);
+};
+exports.someImpl = function someImpl (a,p) {
+    return a.some(p);
+};
+
+
 exports.copyWithinImpl = function copyWithinImpl (a,t,s) {
     a.copyWithin(t,s);
 };
