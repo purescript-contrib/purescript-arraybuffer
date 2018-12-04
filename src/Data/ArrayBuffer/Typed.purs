@@ -12,6 +12,7 @@ module Data.ArrayBuffer.Typed
   , length
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart, set, set'
+  , map'
   , copyWithin, copyWithinPart
   , reverse
   , setTyped, setTyped'
@@ -93,6 +94,8 @@ foreign import fillImpl :: forall a b. EffectFn2 (ArrayView a) b Unit
 foreign import fillImpl2 :: forall a b. EffectFn3 (ArrayView a) b ByteOffset Unit
 foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b ByteOffset ByteOffset Unit
 
+foreign import mapImpl :: forall a b. Fn2 (ArrayView a) (b -> b) (ArrayView a)
+
 
 -- TODO use purescript-quotient
 -- | Measured user-level values stored in each typed array
@@ -121,6 +124,8 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   set :: ArrayView a -> Array t -> Effect Unit
   -- | Stores multiple values into the typed array, with offset
   set' :: ArrayView a -> ByteOffset -> Array t -> Effect Unit
+  -- | Maps a new value over the typed array, creating a new buffer and typed array as well.
+  map' :: (t -> t) -> ArrayView a -> ArrayView a
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
@@ -135,6 +140,7 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   fillPart = runEffectFn4 fillImpl3
   set a x = runEffectFn3 setImpl a (toNullable Nothing) x
   set' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
+  map' f a = runFn2 mapImpl a f
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int
@@ -151,7 +157,6 @@ copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithin = runEffectFn3 copyWithinImpl
 copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithinPart = runEffectFn4 copyWithinImpl3
-
 
 foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 

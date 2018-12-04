@@ -67,6 +67,11 @@ exports.fillImpl3 = function fillImpl3 (a,x,s,e) {
 };
 
 
+exports.mapImpl = function mapImpl (a,f) {
+    return a.map(f);
+};
+
+
 exports.copyWithinImpl = function copyWithinImpl (a,t,s) {
     a.copyWithin(t,s);
 };
