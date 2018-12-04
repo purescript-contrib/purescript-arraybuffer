@@ -1,3 +1,6 @@
+-- | This module represents the functional bindings to JavaScript's `TypedArray` and other
+-- | objects. See [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) for details.
+
 module Data.ArrayBuffer.Typed
   ( polyFill
   , buffer
