@@ -11,13 +11,13 @@ module Data.ArrayBuffer.Typed
   , bytesPer
   , length
   , class ValuesPer
-  , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart
+  , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart, set, set'
   , copyWithin, copyWithinPart
+  , setTyped, setTyped'
   , copy, sliceRemainder, slice
   , sort
   , subArray, subArrayRemainder
   , toString
-  , set
   , unsafeAt
   , hasIndex
   , at
@@ -31,6 +31,7 @@ import Effect.Uncurried
   ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
   , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1)
 import Effect.Unsafe (unsafePerformEffect)
+import Data.Nullable (Nullable, toNullable)
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
   , Float64Array, Float32Array
@@ -115,6 +116,10 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   fillRemainder :: ArrayView a -> t -> ByteOffset -> Effect Unit
   -- | Fill part of the array with a value
   fillPart :: ArrayView a -> t -> ByteOffset -> ByteOffset -> Effect Unit
+  -- | Stores multiple values into the typed array
+  set :: ArrayView a -> Array t -> Effect Unit
+  -- | Stores multiple values into the typed array, with offset
+  set' :: ArrayView a -> ByteOffset -> Array t -> Effect Unit
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
@@ -127,6 +132,8 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   fill = runEffectFn2 fillImpl
   fillRemainder = runEffectFn3 fillImpl2
   fillPart = runEffectFn4 fillImpl3
+  set a x = runEffectFn3 setImpl a (toNullable Nothing) x
+  set' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int
@@ -143,6 +150,18 @@ copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithin = runEffectFn3 copyWithinImpl
 copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithinPart = runEffectFn4 copyWithinImpl3
+
+
+foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) (Nullable ByteOffset) b Unit
+
+
+-- | Stores multiple values in the typed array, reading input values from the second typed array.
+setTyped :: forall a. ArrayView a -> ArrayView a -> Effect Unit
+setTyped a x = runEffectFn3 setImpl a (toNullable Nothing) x
+
+-- | Stores multiple values in the typed array, reading input values from the second typed array, with offset.
+setTyped' :: forall a. ArrayView a -> ByteOffset -> ArrayView a -> Effect Unit
+setTyped' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
 
 
 -- | Copy the entire contents of the typed array into a new buffer.
@@ -179,13 +198,6 @@ subArrayRemainder = runFn2 subArrayImpl
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
 foreign import toString :: forall a. ArrayView a -> String
-
-
-foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Effect Unit)
-
--- | Stores multiple values in the last typed array, reading input values from ther first typed array.
-set :: forall a. ArrayView a -> ByteOffset -> ArrayView a -> Effect Unit
-set = runFn3 setImpl
 
 foreign import unsafeAtImpl :: forall a. EffectFn2 (ArrayView a) Int Number
 
