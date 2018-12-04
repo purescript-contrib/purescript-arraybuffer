@@ -1,7 +1,9 @@
 module Data.ArrayBuffer.Typed
-  ( buffer
+  ( polyFill
+  , buffer
   , byteOffset
   , byteLength
+  , AProxy (..)
   , class Bytes
   , bytesPer
   , length
@@ -15,16 +17,19 @@ module Data.ArrayBuffer.Typed
 
 import Prelude
 import Effect (Effect)
+import Effect.Uncurried (EffectFn2, runEffectFn2)
 import Data.ArrayBuffer.Types
-  ( ArrayView, ByteOffset
+  ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
   , Float64Array, Float32Array
   , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
   , Float64, Float32
   , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Maybe (Maybe(..))
-import Type.Proxy (Proxy(..))
 
+
+-- | Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
+foreign import polyFill :: Effect Unit
 
 -- | `ArrayBuffer` being mapped by the typed array.
 foreign import buffer :: forall a. ArrayView a -> ArrayBuffer
@@ -37,23 +42,25 @@ foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
 foreign import lengthImpl :: forall a. ArrayView a -> Int
 
-class Bytes a where
-  bytesPer :: Proxy a -> Int
+data AProxy (a :: ArrayViewType) = AProxy
+
+class Bytes (a :: ArrayViewType) where
+  bytesPer :: AProxy a -> Int
 
 instance bytesUint8Clamped :: Bytes Uint8Clamped where
-  bytesPer Proxy = 1
+  bytesPer AProxy = 1
 instance bytesUint32 :: Bytes Uint32 where
-  bytesPer Proxy = 4
+  bytesPer AProxy = 4
 instance bytesUint16 :: Bytes Uint16 where
-  bytesPer Proxy = 2
+  bytesPer AProxy = 2
 instance bytesUint8 :: Bytes Uint8 where
-  bytesPer Proxy = 1
+  bytesPer AProxy = 1
 instance bytesInt32 :: Bytes Int32 where
-  bytesPer Proxy = 4
+  bytesPer AProxy = 4
 instance bytesInt16 :: Bytes Int16 where
-  bytesPer Proxy = 2
+  bytesPer AProxy = 2
 instance bytesInt8 :: Bytes Int8 where
-  bytesPer Proxy = 1
+  bytesPer AProxy = 1
 
 length :: forall a. Bytes a => ArrayView a -> Int
 length = lengthImpl

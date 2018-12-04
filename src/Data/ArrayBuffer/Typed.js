@@ -1,15 +1,19 @@
 "use strict";
 
 
-// Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
-var typedArrayTypes = [Int8Array, Uint8Array, Uint8ClampedArray, Int16Array,
-                       Uint16Array, ​​​Int32Array, Uint32Array, ​​​Float32Array, Float64Array];
+exports.polyFill = function () {
+    var typedArrayTypes =
+        [ Int8Array, Uint8Array, Uint8ClampedArray, Int16Array
+        , Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array
+        ];
 
-for (var k in typedArrayTypes)
-    for (var v in Array.prototype)
-        if (Array.prototype.hasOwnProperty(v) &&
-            !typedArrayTypes[k].prototype.hasOwnProperty(v))
-            typedArrayTypes[k].prototype[v] = Array.prototype[v];
+    for (var k in typedArrayTypes) {
+        for (var v in Array.prototype) {
+            if (Array.prototype.hasOwnProperty(v) && !typedArrayTypes[k].prototype.hasOwnProperty(v))
+                typedArrayTypes[k].prototype[v] = Array.prototype[v];
+        }
+    }
+};
 
 
 // module Data.ArrayBuffer.Typed
