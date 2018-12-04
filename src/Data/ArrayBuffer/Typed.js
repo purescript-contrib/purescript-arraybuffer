@@ -79,6 +79,19 @@ exports.filterImpl = function filterImpl (a,p) {
     return a.filter(p);
 };
 
+exports.reduceImpl = function reduceImpl (a,f,i) {
+    return a.reduce(f,i);
+};
+exports.reduce1Impl = function reduce1Impl (a,f) {
+    return a.reduce(f);
+};
+exports.reduceRightImpl = function reduceRightImpl (a,f,i) {
+    return a.reduceRight(f,i);
+};
+exports.reduceRight1Impl = function reduceRight1Impl (a,f) {
+    return a.reduceRight(f);
+};
+
 
 exports.copyWithinImpl = function copyWithinImpl (a,t,s) {
     a.copyWithin(t,s);

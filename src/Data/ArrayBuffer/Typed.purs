@@ -8,12 +8,12 @@ module Data.ArrayBuffer.Typed
   , byteOffset
   , byteLength
   , AProxy (..)
-  , class BytesPer
-  , bytesPer
+  , class BytesPerValue
+  , bytesPerValue
   , length
-  , class ValuesPer
+  , class TypedArray
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart, set, set'
-  , map', traverse', traverse_', filter
+  , map', traverse', traverse_', filter, foldlM', foldl', foldl1', foldrM', foldr', foldr1'
   , copyWithin, copyWithinPart
   , reverse
   , setTyped, setTyped'
@@ -33,7 +33,7 @@ import Effect (Effect)
 import Effect.Uncurried
   ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
   , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1
-  , mkEffectFn1)
+  , mkEffectFn1, mkEffectFn2)
 import Effect.Unsafe (unsafePerformEffect)
 import Data.Nullable (Nullable, toNullable)
 import Data.ArrayBuffer.Types
@@ -42,7 +42,7 @@ import Data.ArrayBuffer.Types
   , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
   , Float64, Float32
   , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
-import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
+import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3, mkFn2)
 import Data.Maybe (Maybe(..))
 
 
@@ -62,32 +62,36 @@ foreign import lengthImpl :: forall a. ArrayView a -> Length
 
 data AProxy (a :: ArrayViewType) = AProxy
 
-class BytesPer (a :: ArrayViewType) where
-  bytesPer :: AProxy a -> Int
+class BytesPerValue (a :: ArrayViewType) where
+  bytesPerValue :: AProxy a -> Int
 
-instance bytesPerUint8Clamped :: BytesPer Uint8Clamped where
-  bytesPer AProxy = 1
-instance bytesPerUint32 :: BytesPer Uint32 where
-  bytesPer AProxy = 4
-instance bytesPerUint16 :: BytesPer Uint16 where
-  bytesPer AProxy = 2
-instance bytesPerUint8 :: BytesPer Uint8 where
-  bytesPer AProxy = 1
-instance bytesPerInt32 :: BytesPer Int32 where
-  bytesPer AProxy = 4
-instance bytesPerInt16 :: BytesPer Int16 where
-  bytesPer AProxy = 2
-instance bytesPerInt8 :: BytesPer Int8 where
-  bytesPer AProxy = 1
+instance bytesPerValueUint8Clamped :: BytesPerValue Uint8Clamped where
+  bytesPerValue AProxy = 1
+instance bytesPerValueUint32 :: BytesPerValue Uint32 where
+  bytesPerValue AProxy = 4
+instance bytesPerValueUint16 :: BytesPerValue Uint16 where
+  bytesPerValue AProxy = 2
+instance bytesPerValueUint8 :: BytesPerValue Uint8 where
+  bytesPerValue AProxy = 1
+instance bytesPerValueInt32 :: BytesPerValue Int32 where
+  bytesPerValue AProxy = 4
+instance bytesPerValueInt16 :: BytesPerValue Int16 where
+  bytesPerValue AProxy = 2
+instance bytesPerValueInt8 :: BytesPerValue Int8 where
+  bytesPerValue AProxy = 1
 
-length :: forall a. BytesPer a => ArrayView a -> Int
+length :: forall a. BytesPerValue a => ArrayView a -> Int
 length = lengthImpl
 
+
+-- object creator implementations for each typed array
 
 foreign import newUint8ClampedArray :: forall a. EffectFn1 a Uint8ClampedArray
 foreign import newUint8ClampedArray2 :: EffectFn2 ArrayBuffer ByteOffset Uint8ClampedArray
 foreign import newUint8ClampedArray3 :: EffectFn3 ArrayBuffer ByteOffset ByteLength Uint8ClampedArray
 
+
+-- ----
 
 foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
 foreign import someImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
@@ -99,6 +103,10 @@ foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b Offset Offset 
 foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b b) (ArrayView a)
 foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b Unit) Unit
 foreign import filterImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) (ArrayView a)
+foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn2 c b c) c c
+foreign import reduce1Impl :: forall a b. Fn2 (ArrayView a) (Fn2 b b b) b
+foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn2 c b c) c c
+foreign import reduceRight1Impl :: forall a b. Fn2 (ArrayView a) (Fn2 b b b) b
 
 
 -- | Value-oriented array offset
@@ -109,7 +117,7 @@ type Length = Int
 
 -- TODO use purescript-quotient
 -- | Measured user-level values stored in each typed array
-class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
+class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | View mapping the whole `ArrayBuffer`.
   whole :: ArrayBuffer -> ArrayView a
   -- | View mapping the rest of an `ArrayBuffer` after an index.
@@ -144,8 +152,16 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   filter :: (t -> Boolean) -> ArrayView a -> ArrayView a
   -- | Fetch element at index.
   unsafeAt :: ArrayView a -> Offset -> Effect t
+  -- | Folding from the left
+  foldlM' :: forall b. ArrayView a -> (b -> t -> Effect b) -> b -> Effect b
+  -- | Assumes the typed array is non-empty
+  foldl1' :: ArrayView a -> (t -> t -> t) -> t
+  -- | Folding from the right
+  foldrM' :: forall b. ArrayView a -> (t -> b -> Effect b) -> b -> Effect b
+  -- | Assumes the typed array is non-empty
+  foldr1' :: ArrayView a -> (t -> t -> t) -> t
 
-instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
+instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
   remainder = runEffectFn2 newUint8ClampedArray2
   part = runEffectFn3 newUint8ClampedArray3
@@ -163,12 +179,23 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   traverse_' f a = runEffectFn2 forEachImpl a (mkEffectFn1 f)
   filter p a = runFn2 filterImpl a p
   unsafeAt = runEffectFn2 unsafeAtImpl
--- instance valuesPerUint32 :: ValuesPer Uint32 Number
--- instance valuesPerUint16 :: ValuesPer Uint16 Int
--- instance valuesPerUint8 :: ValuesPer Uint8 Int
--- instance valuesPerInt32 :: ValuesPer Int32 Number
--- instance valuesPerInt16 :: ValuesPer Int16 Int
--- instance valuesPerInt8 :: ValuesPer Int8 Int
+  foldlM' a f = runEffectFn3 reduceImpl a (mkEffectFn2 f)
+  foldl1' a f = runFn2 reduce1Impl a (mkFn2 f)
+  foldrM' a f = runEffectFn3 reduceRightImpl a (mkEffectFn2 (flip f))
+  foldr1' a f = runFn2 reduceRight1Impl a (mkFn2 (flip f))
+-- instance typedArrayUint32 :: TypedArray Uint32 Number
+-- instance typedArrayUint16 :: TypedArray Uint16 Int
+-- instance typedArrayUint8 :: TypedArray Uint8 Int
+-- instance typedArrayInt32 :: TypedArray Int32 Number
+-- instance typedArrayInt16 :: TypedArray Int16 Int
+-- instance typedArrayInt8 :: TypedArray Int8 Int
+
+
+foldl' :: forall a b t. TypedArray a t => ArrayView a -> (b -> t -> b) -> b -> b
+foldl' a f i = unsafePerformEffect (foldlM' a (\acc x -> pure (f acc x)) i)
+
+foldr' :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> b) -> b -> b
+foldr' a f i = unsafePerformEffect (foldrM' a (\x acc -> pure (f x acc)) i)
 
 
 foreign import copyWithinImpl :: forall a. EffectFn3 (ArrayView a) Offset Offset Unit
@@ -249,7 +276,7 @@ hasIndex :: forall a. ArrayView a -> Offset -> Boolean
 hasIndex = runFn2 hasIndexImpl
 
 -- | Fetch element at index.
-at :: forall a t. ValuesPer a t => ArrayView a -> Offset -> Maybe t
+at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
 at a n = do
   if a `hasIndex` n
     then Just (unsafePerformEffect (unsafeAt a n))
@@ -258,5 +285,5 @@ at a n = do
 foreign import toArrayImpl :: forall a b. ArrayView a -> Array b
 
 -- | Turn typed array into an array.
-toArray :: forall a t. ValuesPer a t => ArrayView a -> Array t
+toArray :: forall a t. TypedArray a t => ArrayView a -> Array t
 toArray = toArrayImpl
