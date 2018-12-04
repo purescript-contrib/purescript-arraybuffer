@@ -3,23 +3,15 @@
 
 module Data.ArrayBuffer.Typed
   ( polyFill
-  , buffer
   , Offset, Length
-  , byteOffset
-  , byteLength
+  , buffer, byteOffset, byteLength, length
   , AProxy (..)
   , class BytesPerValue
   , bytesPerValue
-  , length
   , class TypedArray
   , whole, remainder, part, empty, fromArray, all, any, fill, set
   , map, traverse, traverse_, filter, elem, foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
-  , copyWithin
-  , reverse
-  , setTyped
-  , slice
-  , sort
-  , subArray
+  , setTyped, copyWithin, slice, sort, subArray, reverse
   , toString, toString'
   , unsafeAt, hasIndex, at
   , toArray

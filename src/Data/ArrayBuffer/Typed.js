@@ -1,7 +1,7 @@
 "use strict";
 
 
-exports.polyFill = function () {
+exports.polyFill = function polyFill () {
     var typedArrayTypes =
         [ Int8Array, Uint8Array, Uint8ClampedArray, Int16Array
         , Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array
