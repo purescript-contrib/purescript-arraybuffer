@@ -122,6 +122,10 @@ exports.toString = function toString (a) {
     return a.toString();
 };
 
+exports.joinImpl = function joinImpl (a,s) {
+    return a.join(s);
+};
+
 exports.unsafeAtImpl = function(a, i) {
     return a[i];
 }

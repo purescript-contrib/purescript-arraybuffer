@@ -20,6 +20,7 @@ module Data.ArrayBuffer.Typed
   , sort
   , subArray, subArrayRemainder
   , toString
+  , toString'
   , unsafeAt
   , hasIndex
   , at
@@ -210,6 +211,12 @@ subArrayRemainder = runFn2 subArrayImpl
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
 foreign import toString :: forall a. ArrayView a -> String
+
+foreign import joinImpl :: forall a. Fn2 (ArrayView a) String String
+
+-- | Prints array to a delimiter-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join) for details.
+toString' :: forall a. ArrayView a -> String -> String
+toString' = runFn2 joinImpl
 
 foreign import unsafeAtImpl :: forall a. EffectFn2 (ArrayView a) Int Number
 
