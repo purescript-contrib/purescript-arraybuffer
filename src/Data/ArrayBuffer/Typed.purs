@@ -12,19 +12,16 @@ module Data.ArrayBuffer.Typed
   , bytesPerValue
   , length
   , class TypedArray
-  , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart, set, set'
-  , map', traverse', traverse_', filter, foldlM', foldl', foldl1', foldrM', foldr', foldr1'
-  , copyWithin, copyWithinPart
+  , whole, remainder, part, empty, fromArray, all, any, fill, set
+  , map, traverse, traverse_, filter, elem, foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
+  , copyWithin
   , reverse
-  , setTyped, setTyped'
-  , copy, sliceRemainder, slice
+  , setTyped
+  , slice
   , sort
-  , subArray, subArrayRemainder
-  , toString
-  , toString'
-  , unsafeAt
-  , hasIndex
-  , at
+  , subArray
+  , toString, toString'
+  , unsafeAt, hasIndex, at
   , toArray
   ) where
 
@@ -33,8 +30,9 @@ import Effect (Effect)
 import Effect.Uncurried
   ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
   , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1
-  , mkEffectFn1, mkEffectFn2)
+  , mkEffectFn1, mkEffectFn2, mkEffectFn3)
 import Effect.Unsafe (unsafePerformEffect)
+import Data.Tuple (Tuple (..))
 import Data.Nullable (Nullable, toNullable)
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
@@ -86,27 +84,24 @@ length = lengthImpl
 
 -- object creator implementations for each typed array
 
-foreign import newUint8ClampedArray :: forall a. EffectFn1 a Uint8ClampedArray
-foreign import newUint8ClampedArray2 :: EffectFn2 ArrayBuffer ByteOffset Uint8ClampedArray
-foreign import newUint8ClampedArray3 :: EffectFn3 ArrayBuffer ByteOffset ByteLength Uint8ClampedArray
+foreign import newUint8ClampedArray :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8ClampedArray
 
 
 -- ----
 
-foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
-foreign import someImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
+foreign import everyImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Boolean) Boolean
+foreign import someImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Boolean) Boolean
 
-foreign import fillImpl :: forall a b. EffectFn2 (ArrayView a) b Unit
-foreign import fillImpl2 :: forall a b. EffectFn3 (ArrayView a) b Offset Unit
-foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b Offset Offset Unit
+foreign import fillImpl :: forall a b. EffectFn4 (ArrayView a) b (Nullable Offset) (Nullable Offset) Unit
 
-foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b b) (ArrayView a)
-foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b Unit) Unit
-foreign import filterImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) (ArrayView a)
-foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn2 c b c) c c
-foreign import reduce1Impl :: forall a b. Fn2 (ArrayView a) (Fn2 b b b) b
-foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn2 c b c) c c
-foreign import reduceRight1Impl :: forall a b. Fn2 (ArrayView a) (Fn2 b b b) b
+foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset b) (ArrayView a)
+foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Unit) Unit
+foreign import filterImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Boolean) (ArrayView a)
+foreign import includesImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offset) Boolean
+foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
+foreign import reduce1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
+foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
+foreign import reduceRight1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
 
 
 -- | Value-oriented array offset
@@ -129,60 +124,58 @@ class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | Creates a typed array from an input array of values, to be binary serialized
   fromArray :: Array t -> ArrayView a
   -- | Test a predicate to pass on all values
-  all :: (t -> Boolean) -> ArrayView a -> Boolean
+  all :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
   -- | Test a predicate to pass on any value
-  any :: (t -> Boolean) -> ArrayView a -> Boolean
+  any :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
   -- | Fill the array with a value
-  fill :: ArrayView a -> t -> Effect Unit
-  -- | Fill the remainder of the array with a value
-  fillRemainder :: ArrayView a -> t -> Offset -> Effect Unit
-  -- | Fill part of the array with a value
-  fillPart :: ArrayView a -> t -> Offset -> Offset -> Effect Unit
+  fill :: ArrayView a -> t -> Maybe (Tuple Offset (Maybe Offset)) -> Effect Unit
   -- | Stores multiple values into the typed array
-  set :: ArrayView a -> Array t -> Effect Unit
-  -- | Stores multiple values into the typed array, with offset
-  set' :: ArrayView a -> Offset -> Array t -> Effect Unit
+  set :: ArrayView a -> Maybe Offset -> Array t -> Effect Unit
   -- | Maps a new value over the typed array, creating a new buffer and typed array as well.
-  map' :: (t -> t) -> ArrayView a -> ArrayView a
+  map :: (t -> Offset -> t) -> ArrayView a -> ArrayView a
   -- | Traverses over each value, returning a new one
-  traverse' :: (t -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+  traverse :: (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
   -- | Traverses over each value
-  traverse_' :: (t -> Effect Unit) -> ArrayView a -> Effect Unit
+  traverse_ :: (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
   -- | Returns a new typed array with all values that pass the predicate
-  filter :: (t -> Boolean) -> ArrayView a -> ArrayView a
+  filter :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect (ArrayView a)
+  -- | Tests if a value is an element of the typed array
+  elem :: t -> Maybe Offset -> ArrayView a -> Boolean
   -- | Fetch element at index.
   unsafeAt :: ArrayView a -> Offset -> Effect t
   -- | Folding from the left
-  foldlM' :: forall b. ArrayView a -> (b -> t -> Effect b) -> b -> Effect b
+  foldlM :: forall b. ArrayView a -> (b -> t -> Offset -> Effect b) -> b -> Effect b
   -- | Assumes the typed array is non-empty
-  foldl1' :: ArrayView a -> (t -> t -> t) -> t
+  foldl1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
   -- | Folding from the right
-  foldrM' :: forall b. ArrayView a -> (t -> b -> Effect b) -> b -> Effect b
+  foldrM :: forall b. ArrayView a -> (t -> b -> Offset -> Effect b) -> b -> Effect b
   -- | Assumes the typed array is non-empty
-  foldr1' :: ArrayView a -> (t -> t -> t) -> t
+  foldr1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
 
 instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
-  whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
-  remainder = runEffectFn2 newUint8ClampedArray2
-  part = runEffectFn3 newUint8ClampedArray3
-  empty n = unsafePerformEffect (runEffectFn1 newUint8ClampedArray n)
-  fromArray a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
-  all p a = runFn2 everyImpl a p
-  any p a = runFn2 someImpl a p
-  fill = runEffectFn2 fillImpl
-  fillRemainder = runEffectFn3 fillImpl2
-  fillPart = runEffectFn4 fillImpl3
-  set a x = runEffectFn3 setImpl a (toNullable Nothing) x
-  set' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
-  map' f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn1 (pure <<< f)))
-  traverse' f a = runEffectFn2 mapImpl a (mkEffectFn1 f)
-  traverse_' f a = runEffectFn2 forEachImpl a (mkEffectFn1 f)
-  filter p a = runFn2 filterImpl a p
+  whole a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newUint8ClampedArray a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newUint8ClampedArray a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newUint8ClampedArray n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
   unsafeAt = runEffectFn2 unsafeAtImpl
-  foldlM' a f = runEffectFn3 reduceImpl a (mkEffectFn2 f)
-  foldl1' a f = runFn2 reduce1Impl a (mkFn2 f)
-  foldrM' a f = runEffectFn3 reduceRightImpl a (mkEffectFn2 (flip f))
-  foldr1' a f = runFn2 reduceRight1Impl a (mkFn2 (flip f))
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
 -- instance typedArrayUint32 :: TypedArray Uint32 Number
 -- instance typedArrayUint16 :: TypedArray Uint16 Int
 -- instance typedArrayUint8 :: TypedArray Uint8 Int
@@ -191,21 +184,24 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
 -- instance typedArrayInt8 :: TypedArray Int8 Int
 
 
-foldl' :: forall a b t. TypedArray a t => ArrayView a -> (b -> t -> b) -> b -> b
-foldl' a f i = unsafePerformEffect (foldlM' a (\acc x -> pure (f acc x)) i)
+foldl :: forall a b t. TypedArray a t => ArrayView a -> (b -> t -> Offset -> b) -> b -> b
+foldl a f i = unsafePerformEffect (foldlM a (\acc x o -> pure (f acc x o)) i)
 
-foldr' :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> b) -> b -> b
-foldr' a f i = unsafePerformEffect (foldrM' a (\x acc -> pure (f x acc)) i)
+foldr :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> Offset -> b) -> b -> b
+foldr a f i = unsafePerformEffect (foldrM a (\x acc o -> pure (f x acc o)) i)
+
+foldl1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
+foldl1 a f = unsafePerformEffect (foldl1M a (\acc x o -> pure (f acc x o)))
+
+foldr1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
+foldr1 a f = unsafePerformEffect (foldr1M a (\x acc o -> pure (f x acc o)))
 
 
-foreign import copyWithinImpl :: forall a. EffectFn3 (ArrayView a) Offset Offset Unit
-foreign import copyWithinImpl3 :: forall a. EffectFn4 (ArrayView a) Offset Offset Offset Unit
+foreign import copyWithinImpl :: forall a. EffectFn4 (ArrayView a) Offset Offset (Nullable Offset) Unit
 
 -- | Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
-copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Effect Unit
-copyWithin = runEffectFn3 copyWithinImpl
-copyWithinPart :: forall a. ArrayView a -> Offset -> Offset -> Offset -> Effect Unit
-copyWithinPart = runEffectFn4 copyWithinImpl3
+copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Maybe Offset -> Effect Unit
+copyWithin a t s me = runEffectFn4 copyWithinImpl a t s (toNullable me)
 
 foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
@@ -217,25 +213,20 @@ foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) (Nullable Offset) 
 
 
 -- | Stores multiple values in the typed array, reading input values from the second typed array.
-setTyped :: forall a. ArrayView a -> ArrayView a -> Effect Unit
-setTyped a x = runEffectFn3 setImpl a (toNullable Nothing) x
-
--- | Stores multiple values in the typed array, reading input values from the second typed array, with offset.
-setTyped' :: forall a. ArrayView a -> Offset -> ArrayView a -> Effect Unit
-setTyped' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
+setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Unit
+setTyped a mo x = runEffectFn3 setImpl a (toNullable mo) x
 
 
 -- | Copy the entire contents of the typed array into a new buffer.
-foreign import copy :: forall a. ArrayView a -> ArrayView a
-foreign import sliceRemainderImpl :: forall a. Fn2 (ArrayView a) Offset (ArrayView a)
-foreign import sliceImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
+foreign import sliceImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
 
--- | Copy the remainder of contents of the typed array into a new buffer, after some start index.
-sliceRemainder :: forall a. ArrayView a -> Offset -> ArrayView a
-sliceRemainder = runFn2 sliceRemainderImpl
 -- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
-slice :: forall a. ArrayView a -> Offset -> Offset -> ArrayView a
-slice = runFn3 sliceImpl
+slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
+slice a mz = case mz of
+  Nothing -> runFn3 sliceImpl a (toNullable Nothing) (toNullable Nothing)
+  Just (Tuple s me) -> case me of
+    Nothing -> runFn3 sliceImpl a (toNullable (Just s)) (toNullable Nothing)
+    Just e -> runFn3 sliceImpl a (toNullable (Just s)) (toNullable (Just e))
 
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
@@ -245,16 +236,11 @@ sort :: forall a. ArrayView a -> Effect Unit
 sort = runEffectFn1 sortImpl
 
 
-foreign import subArrayImpl :: forall a. Fn2 (ArrayView a) Offset (ArrayView a)
-foreign import subArrayImpl2 :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
-
+foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset (Nullable Offset) (ArrayView a)
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
-subArray :: forall a. ArrayView a -> Offset -> Offset -> ArrayView a
-subArray = runFn3 subArrayImpl2
--- | Returns a new typed array view of the same buffer, beginning at the index
-subArrayRemainder :: forall a. ArrayView a -> Offset -> ArrayView a
-subArrayRemainder = runFn2 subArrayImpl
+subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
+subArray a o mo = runFn3 subArrayImpl a o (toNullable mo)
 
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.

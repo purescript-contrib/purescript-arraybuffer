@@ -37,14 +37,16 @@ exports.lengthImpl = function lemgthImpl (v) {
 
 // Uint8Clamped
 
-exports.newUint8ClampedArray = function newUint8ClampedArray (a) {
-    return new Uint8ClampedArray(a);
-};
-exports.newUint8ClampedArray2 = function newUint8ClampedArray2 (a,b) {
-    return new Uint8ClampedArray(a,b);
-};
-exports.newUint8ClampedArray3 = function newUint8ClampedArray3 (a,b,c) {
-    return new Uint8ClampedArray(a,b,c);
+exports.newUint8ClampedArray = function newUint8ClampedArray (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Uint8ClampedArray(a);
+        } else {
+            return new Uint8ClampedArray(a,mb);
+        }
+    } else {
+        return new Uint8ClampedArray(a,mb,mc);
+    }
 };
 
 
@@ -56,14 +58,16 @@ exports.someImpl = function someImpl (a,p) {
 };
 
 
-exports.fillImpl = function fillImpl (a,x) {
-    return a.fill(x);
-};
-exports.fillImpl2 = function fillImpl2 (a,x,s) {
-    return a.fill(x,s);
-};
-exports.fillImpl3 = function fillImpl3 (a,x,s,e) {
-    return a.fill(x,s,e);
+exports.fillImpl = function fillImpl (a,x,ms,me) {
+    if (me === null) {
+        if (ms === null) {
+            return a.fill(x);
+        } else {
+            return a.fill(x,ms);
+        }
+    } else {
+        return a.fill(x,ms,me);
+    }
 };
 
 
@@ -77,6 +81,14 @@ exports.forEachImpl = function forEachImpl (a,f) {
 
 exports.filterImpl = function filterImpl (a,p) {
     return a.filter(p);
+};
+
+exports.includesImpl = function includesImpl (a,x,mo) {
+    if (mo === null) {
+        return a.includes(x);
+    } else {
+        return a.includes(x,mo);
+    }
 };
 
 exports.reduceImpl = function reduceImpl (a,f,i) {
@@ -93,11 +105,12 @@ exports.reduceRight1Impl = function reduceRight1Impl (a,f) {
 };
 
 
-exports.copyWithinImpl = function copyWithinImpl (a,t,s) {
-    a.copyWithin(t,s);
-};
-exports.copyWithinImpl3 = function copyWithinImpl (a,t,s,e) {
-    a.copyWithin(t,s,e);
+exports.copyWithinImpl = function copyWithinImpl (a,t,s,me) {
+    if (me === null) {
+        a.copyWithin(t,s);
+    } else {
+        a.copyWithin(t,s,me);
+    }
 };
 
 
@@ -115,14 +128,16 @@ exports.setImpl = function setImpl (a, off, b) {
 };
 
 
-exports.copy = function copy (a) {
-    return a.slice();
-};
-exports.sliceRemainderImpl = function sliceRemainderImpl (a,s) {
-    return a.slice(s);
-};
-exports.sliceImpl = function sliceImpl (a,s,e) {
-    return a.slice(s,e);
+exports.sliceImpl = function sliceImpl (a,ms,me) {
+    if (me === null) {
+        if (ms === null) {
+            return a.slice();
+        } else {
+            return a.slice(ms);
+        }
+    } else {
+        return a.slice(s,e);
+    }
 };
 
 
@@ -131,11 +146,12 @@ exports.sortImpl = function sortImpl (a) {
 };
 
 
-exports.subArrayImpl = function subArrayImpl (a,s) {
-    return a.subarray(s);
-};
-exports.subArrayImpl2 = function subArrayImpl2 (a,s,e) {
-    return a.subarray(s,e);
+exports.subArrayImpl = function subArrayImpl (a,s,me) {
+    if (me === null) {
+        return a.subarray(s);
+    } else {
+        return a.subarray(s,me);
+    }
 };
 
 
