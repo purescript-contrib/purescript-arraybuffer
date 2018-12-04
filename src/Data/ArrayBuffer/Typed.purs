@@ -11,7 +11,7 @@ module Data.ArrayBuffer.Typed
   , bytesPer
   , length
   , class ValuesPer
-  , whole, remainder, part, empty, fromArray, all, any
+  , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart
   , copyWithin, copyWithin'
   , set
   , unsafeAt
@@ -83,6 +83,10 @@ foreign import newUint8ClampedArray3 :: EffectFn3 ArrayBuffer ByteOffset ByteLen
 foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
 foreign import someImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
 
+foreign import fillImpl :: forall a b. EffectFn2 (ArrayView a) b Unit
+foreign import fillImpl2 :: forall a b. EffectFn3 (ArrayView a) b ByteOffset Unit
+foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b ByteOffset ByteOffset Unit
+
 
 -- TODO use purescript-quotient
 class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
@@ -100,6 +104,12 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   all :: (t -> Boolean) -> ArrayView a -> Boolean
   -- | Test a predicate to pass on any value
   any :: (t -> Boolean) -> ArrayView a -> Boolean
+  -- | Fill the array with a value
+  fill :: ArrayView a -> t -> Effect Unit
+  -- | Fill the remainder of the array with a value
+  fillRemainder :: ArrayView a -> t -> ByteOffset -> Effect Unit
+  -- | Fill part of the array with a value
+  fillPart :: ArrayView a -> t -> ByteOffset -> ByteOffset -> Effect Unit
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
@@ -109,6 +119,9 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   fromArray a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
   all p a = runFn2 everyImpl a p
   any p a = runFn2 someImpl a p
+  fill = runEffectFn2 fillImpl
+  fillRemainder = runEffectFn3 fillImpl2
+  fillPart = runEffectFn4 fillImpl3
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int
