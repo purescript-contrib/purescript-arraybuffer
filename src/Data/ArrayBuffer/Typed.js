@@ -48,6 +48,14 @@ exports.newUint8ClampedArray3 = function newUint8ClampedArray3 (a,b,c) {
 };
 
 
+exports.copyWithinImpl = function copyWithinImpl (a,t,s) {
+    a.copyWithin(t,s);
+};
+exports.copyWithinImpl3 = function copyWithinImpl (a,t,s,e) {
+    a.copyWithin(t,s,e);
+};
+
+
 exports.setImpl = function(ra, off, a) {
   return function() {
     a.set(ra, off);

@@ -10,9 +10,9 @@ module Data.ArrayBuffer.Typed
   , class BytesPer
   , bytesPer
   , length
-  , whole, remainder, part
   , class ValuesPer
-  , empty, fromArray
+  , whole, remainder, part, empty, fromArray
+  , copyWithin, copyWithin'
   , set
   , unsafeAt
   , hasIndex
@@ -23,7 +23,9 @@ module Data.ArrayBuffer.Typed
 
 import Prelude
 import Effect (Effect)
-import Effect.Uncurried (EffectFn3, EffectFn2, EffectFn1, runEffectFn3, runEffectFn2, runEffectFn1)
+import Effect.Uncurried
+  ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
+  , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1)
 import Effect.Unsafe (unsafePerformEffect)
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
@@ -88,20 +90,31 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect (ArrayView a)
   -- | Creates an empty typed array, where each value is assigned 0
   empty :: Int -> ArrayView a
-  fromArray :: Array t -> Effect (ArrayView a)
+  -- | Creates a typed array from an input array of values, to be binary serialized
+  fromArray :: Array t -> ArrayView a
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
   remainder = runEffectFn2 newUint8ClampedArray2
   part = runEffectFn3 newUint8ClampedArray3
   empty n = unsafePerformEffect (runEffectFn1 newUint8ClampedArray n)
-  fromArray = runEffectFn1 newUint8ClampedArray
+  fromArray a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int
 -- instance valuesPerInt32 :: ValuesPer Int32 Number
 -- instance valuesPerInt16 :: ValuesPer Int16 Int
 -- instance valuesPerInt8 :: ValuesPer Int8 Int
+
+
+foreign import copyWithinImpl :: forall a. EffectFn3 (ArrayView a) ByteOffset ByteOffset Unit
+foreign import copyWithinImpl3 :: forall a. EffectFn4 (ArrayView a) ByteOffset ByteOffset ByteOffset Unit
+
+-- | Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
+copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
+copyWithin = runEffectFn3 copyWithinImpl
+copyWithin' :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
+copyWithin' = runEffectFn4 copyWithinImpl3
 
 
 foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Effect Unit)
