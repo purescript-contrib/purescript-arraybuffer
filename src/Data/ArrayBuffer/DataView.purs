@@ -1,3 +1,6 @@
+-- | This module represents the functional bindings to JavaScript's `DataView`
+-- | objects. See [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView) for details.
+
 module Data.ArrayBuffer.DataView
   ( whole
   , part

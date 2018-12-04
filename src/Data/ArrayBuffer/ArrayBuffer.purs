@@ -1,3 +1,6 @@
+-- | This module represents the functional bindings to JavaScript's `ArrayBuffer`
+-- | objects. See [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) for details.
+
 module Data.ArrayBuffer.ArrayBuffer ( empty
                                     , byteLength
                                     , slice
