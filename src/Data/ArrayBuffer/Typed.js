@@ -75,6 +75,11 @@ exports.copyWithinImpl3 = function copyWithinImpl (a,t,s,e) {
 };
 
 
+exports.toString = function toString (a) {
+    return a.toString();
+};
+
+
 exports.setImpl = function(ra, off, a) {
   return function() {
     a.set(ra, off);

@@ -12,7 +12,8 @@ module Data.ArrayBuffer.Typed
   , length
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart
-  , copyWithin, copyWithin'
+  , copyWithin, copyWithinPart
+  , toString
   , set
   , unsafeAt
   , hasIndex
@@ -89,6 +90,7 @@ foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b ByteOffset Byt
 
 
 -- TODO use purescript-quotient
+-- | Measured user-level values stored in each typed array
 class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | View mapping the whole `ArrayBuffer`.
   whole :: ArrayBuffer -> ArrayView a
@@ -136,8 +138,12 @@ foreign import copyWithinImpl3 :: forall a. EffectFn4 (ArrayView a) ByteOffset B
 -- | Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
 copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithin = runEffectFn3 copyWithinImpl
-copyWithin' :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
-copyWithin' = runEffectFn4 copyWithinImpl3
+copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
+copyWithinPart = runEffectFn4 copyWithinImpl3
+
+
+-- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
+foreign import toString :: forall a. ArrayView a -> String
 
 
 foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Effect Unit)
