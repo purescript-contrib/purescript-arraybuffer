@@ -13,6 +13,7 @@ module Data.ArrayBuffer.Typed
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart
   , copyWithin, copyWithinPart
+  , copy, sliceRemainder, slice
   , sort
   , subArray, subArrayRemainder
   , toString
@@ -142,6 +143,19 @@ copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithin = runEffectFn3 copyWithinImpl
 copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithinPart = runEffectFn4 copyWithinImpl3
+
+
+-- | Copy the entire contents of the typed array into a new buffer.
+foreign import copy :: forall a. ArrayView a -> ArrayView a
+foreign import sliceRemainderImpl :: forall a. Fn2 (ArrayView a) ByteOffset (ArrayView a)
+foreign import sliceImpl :: forall a. Fn3 (ArrayView a) ByteOffset ByteOffset (ArrayView a)
+
+-- | Copy the remainder of contents of the typed array into a new buffer, after some start index.
+sliceRemainder :: forall a. ArrayView a -> ByteOffset -> ArrayView a
+sliceRemainder = runFn2 sliceRemainderImpl
+-- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
+slice :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ArrayView a
+slice = runFn3 sliceImpl
 
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit

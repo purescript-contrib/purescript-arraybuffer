@@ -75,6 +75,17 @@ exports.copyWithinImpl3 = function copyWithinImpl (a,t,s,e) {
 };
 
 
+exports.copy = function copy (a) {
+    return a.slice();
+};
+exports.sliceRemainderImpl = function sliceRemainderImpl (a,s) {
+    return a.slice(s);
+};
+exports.sliceImpl = function sliceImpl (a,s,e) {
+    return a.slice(s,e);
+};
+
+
 exports.sortImpl = function sortImpl (a) {
     a.sort();
 };
