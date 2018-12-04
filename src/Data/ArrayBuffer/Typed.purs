@@ -12,7 +12,7 @@ module Data.ArrayBuffer.Typed
   , length
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart, set, set'
-  , map'
+  , map', traverse', traverse_', filter
   , copyWithin, copyWithinPart
   , reverse
   , setTyped, setTyped'
@@ -32,7 +32,8 @@ import Prelude
 import Effect (Effect)
 import Effect.Uncurried
   ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
-  , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1)
+  , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1
+  , mkEffectFn1)
 import Effect.Unsafe (unsafePerformEffect)
 import Data.Nullable (Nullable, toNullable)
 import Data.ArrayBuffer.Types
@@ -95,7 +96,9 @@ foreign import fillImpl :: forall a b. EffectFn2 (ArrayView a) b Unit
 foreign import fillImpl2 :: forall a b. EffectFn3 (ArrayView a) b ByteOffset Unit
 foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b ByteOffset ByteOffset Unit
 
-foreign import mapImpl :: forall a b. Fn2 (ArrayView a) (b -> b) (ArrayView a)
+foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b b) (ArrayView a)
+foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b Unit) Unit
+foreign import filterImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) (ArrayView a)
 
 
 -- TODO use purescript-quotient
@@ -127,6 +130,12 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   set' :: ArrayView a -> ByteOffset -> Array t -> Effect Unit
   -- | Maps a new value over the typed array, creating a new buffer and typed array as well.
   map' :: (t -> t) -> ArrayView a -> ArrayView a
+  -- | Traverses over each value, returning a new one
+  traverse' :: (t -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+  -- | Traverses over each value
+  traverse_' :: (t -> Effect Unit) -> ArrayView a -> Effect Unit
+  -- | Returns a new typed array with all values that pass the predicate
+  filter :: (t -> Boolean) -> ArrayView a -> ArrayView a
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
@@ -141,7 +150,10 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   fillPart = runEffectFn4 fillImpl3
   set a x = runEffectFn3 setImpl a (toNullable Nothing) x
   set' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
-  map' f a = runFn2 mapImpl a f
+  map' f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn1 (pure <<< f)))
+  traverse' f a = runEffectFn2 mapImpl a (mkEffectFn1 f)
+  traverse_' f a = runEffectFn2 forEachImpl a (mkEffectFn1 f)
+  filter p a = runFn2 filterImpl a p
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int

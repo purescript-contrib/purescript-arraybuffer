@@ -71,6 +71,14 @@ exports.mapImpl = function mapImpl (a,f) {
     return a.map(f);
 };
 
+exports.forEachImpl = function forEachImpl (a,f) {
+    a.forEach(f);
+};
+
+exports.filterImpl = function filterImpl (a,p) {
+    return a.filter(p);
+};
+
 
 exports.copyWithinImpl = function copyWithinImpl (a,t,s) {
     a.copyWithin(t,s);
