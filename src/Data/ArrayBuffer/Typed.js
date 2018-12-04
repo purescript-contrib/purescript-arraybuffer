@@ -75,13 +75,18 @@ exports.copyWithinImpl3 = function copyWithinImpl (a,t,s,e) {
 };
 
 
-exports.setImpl = function(a, off, b) {
+exports.reverseImpl = function reverseImpl (a) {
+    a.reverse();
+};
+
+
+exports.setImpl = function setImpl (a, off, b) {
     if (off === null) {
         a.set(b);
     } else {
         a.set(b,off);
     }
-}
+};
 
 
 exports.copy = function copy (a) {

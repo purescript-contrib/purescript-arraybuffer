@@ -13,6 +13,7 @@ module Data.ArrayBuffer.Typed
   , class ValuesPer
   , whole, remainder, part, empty, fromArray, all, any, fill, fillRemainder, fillPart, set, set'
   , copyWithin, copyWithinPart
+  , reverse
   , setTyped, setTyped'
   , copy, sliceRemainder, slice
   , sort
@@ -151,6 +152,12 @@ copyWithin = runEffectFn3 copyWithinImpl
 copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
 copyWithinPart = runEffectFn4 copyWithinImpl3
 
+
+foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
+
+-- | Reverses a typed array in-place.
+reverse :: forall a. ArrayView a -> Effect Unit
+reverse = runEffectFn1 reverseImpl
 
 foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) (Nullable ByteOffset) b Unit
 
