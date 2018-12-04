@@ -2,6 +2,6 @@
 
 // module Show
 
-exports.showImpl = function(a) {
+exports.showViaInspect = function showViaInspect (a) {
   return require('util').inspect(a);
 }
