@@ -4,6 +4,7 @@
 module Data.ArrayBuffer.Typed
   ( polyFill
   , buffer
+  , Offset, Length
   , byteOffset
   , byteLength
   , AProxy (..)
@@ -25,7 +26,6 @@ module Data.ArrayBuffer.Typed
   , hasIndex
   , at
   , toArray
-  , toIntArray
   ) where
 
 import Prelude
@@ -58,7 +58,7 @@ foreign import byteOffset :: forall a. ArrayView a -> ByteOffset
 -- | Represents the length of this typed array, in bytes.
 foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
-foreign import lengthImpl :: forall a. ArrayView a -> Int
+foreign import lengthImpl :: forall a. ArrayView a -> Length
 
 data AProxy (a :: ArrayViewType) = AProxy
 
@@ -93,12 +93,18 @@ foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
 foreign import someImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) Boolean
 
 foreign import fillImpl :: forall a b. EffectFn2 (ArrayView a) b Unit
-foreign import fillImpl2 :: forall a b. EffectFn3 (ArrayView a) b ByteOffset Unit
-foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b ByteOffset ByteOffset Unit
+foreign import fillImpl2 :: forall a b. EffectFn3 (ArrayView a) b Offset Unit
+foreign import fillImpl3 :: forall a b. EffectFn4 (ArrayView a) b Offset Offset Unit
 
 foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b b) (ArrayView a)
 foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn1 b Unit) Unit
 foreign import filterImpl :: forall a b. Fn2 (ArrayView a) (b -> Boolean) (ArrayView a)
+
+
+-- | Value-oriented array offset
+type Offset = Int
+-- | Value-oriented array length
+type Length = Int
 
 
 -- TODO use purescript-quotient
@@ -107,11 +113,11 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | View mapping the whole `ArrayBuffer`.
   whole :: ArrayBuffer -> ArrayView a
   -- | View mapping the rest of an `ArrayBuffer` after an index.
-  remainder :: ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
+  remainder :: ArrayBuffer -> Offset -> Effect (ArrayView a)
   -- | View mapping a region of the `ArrayBuffer`.
-  part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect (ArrayView a)
+  part :: ArrayBuffer -> Offset -> Length -> Effect (ArrayView a)
   -- | Creates an empty typed array, where each value is assigned 0
-  empty :: Int -> ArrayView a
+  empty :: Length -> ArrayView a
   -- | Creates a typed array from an input array of values, to be binary serialized
   fromArray :: Array t -> ArrayView a
   -- | Test a predicate to pass on all values
@@ -121,13 +127,13 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | Fill the array with a value
   fill :: ArrayView a -> t -> Effect Unit
   -- | Fill the remainder of the array with a value
-  fillRemainder :: ArrayView a -> t -> ByteOffset -> Effect Unit
+  fillRemainder :: ArrayView a -> t -> Offset -> Effect Unit
   -- | Fill part of the array with a value
-  fillPart :: ArrayView a -> t -> ByteOffset -> ByteOffset -> Effect Unit
+  fillPart :: ArrayView a -> t -> Offset -> Offset -> Effect Unit
   -- | Stores multiple values into the typed array
   set :: ArrayView a -> Array t -> Effect Unit
   -- | Stores multiple values into the typed array, with offset
-  set' :: ArrayView a -> ByteOffset -> Array t -> Effect Unit
+  set' :: ArrayView a -> Offset -> Array t -> Effect Unit
   -- | Maps a new value over the typed array, creating a new buffer and typed array as well.
   map' :: (t -> t) -> ArrayView a -> ArrayView a
   -- | Traverses over each value, returning a new one
@@ -136,6 +142,8 @@ class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
   traverse_' :: (t -> Effect Unit) -> ArrayView a -> Effect Unit
   -- | Returns a new typed array with all values that pass the predicate
   filter :: (t -> Boolean) -> ArrayView a -> ArrayView a
+  -- | Fetch element at index.
+  unsafeAt :: ArrayView a -> Offset -> Effect t
 
 instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
@@ -154,6 +162,7 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
   traverse' f a = runEffectFn2 mapImpl a (mkEffectFn1 f)
   traverse_' f a = runEffectFn2 forEachImpl a (mkEffectFn1 f)
   filter p a = runFn2 filterImpl a p
+  unsafeAt = runEffectFn2 unsafeAtImpl
 -- instance valuesPerUint32 :: ValuesPer Uint32 Number
 -- instance valuesPerUint16 :: ValuesPer Uint16 Int
 -- instance valuesPerUint8 :: ValuesPer Uint8 Int
@@ -162,13 +171,13 @@ instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
 -- instance valuesPerInt8 :: ValuesPer Int8 Int
 
 
-foreign import copyWithinImpl :: forall a. EffectFn3 (ArrayView a) ByteOffset ByteOffset Unit
-foreign import copyWithinImpl3 :: forall a. EffectFn4 (ArrayView a) ByteOffset ByteOffset ByteOffset Unit
+foreign import copyWithinImpl :: forall a. EffectFn3 (ArrayView a) Offset Offset Unit
+foreign import copyWithinImpl3 :: forall a. EffectFn4 (ArrayView a) Offset Offset Offset Unit
 
 -- | Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
-copyWithin :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> Effect Unit
+copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Effect Unit
 copyWithin = runEffectFn3 copyWithinImpl
-copyWithinPart :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ByteOffset -> Effect Unit
+copyWithinPart :: forall a. ArrayView a -> Offset -> Offset -> Offset -> Effect Unit
 copyWithinPart = runEffectFn4 copyWithinImpl3
 
 foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
@@ -177,7 +186,7 @@ foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 reverse :: forall a. ArrayView a -> Effect Unit
 reverse = runEffectFn1 reverseImpl
 
-foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) (Nullable ByteOffset) b Unit
+foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) (Nullable Offset) b Unit
 
 
 -- | Stores multiple values in the typed array, reading input values from the second typed array.
@@ -185,20 +194,20 @@ setTyped :: forall a. ArrayView a -> ArrayView a -> Effect Unit
 setTyped a x = runEffectFn3 setImpl a (toNullable Nothing) x
 
 -- | Stores multiple values in the typed array, reading input values from the second typed array, with offset.
-setTyped' :: forall a. ArrayView a -> ByteOffset -> ArrayView a -> Effect Unit
+setTyped' :: forall a. ArrayView a -> Offset -> ArrayView a -> Effect Unit
 setTyped' a o x = runEffectFn3 setImpl a (toNullable (Just o)) x
 
 
 -- | Copy the entire contents of the typed array into a new buffer.
 foreign import copy :: forall a. ArrayView a -> ArrayView a
-foreign import sliceRemainderImpl :: forall a. Fn2 (ArrayView a) ByteOffset (ArrayView a)
-foreign import sliceImpl :: forall a. Fn3 (ArrayView a) ByteOffset ByteOffset (ArrayView a)
+foreign import sliceRemainderImpl :: forall a. Fn2 (ArrayView a) Offset (ArrayView a)
+foreign import sliceImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
 
 -- | Copy the remainder of contents of the typed array into a new buffer, after some start index.
-sliceRemainder :: forall a. ArrayView a -> ByteOffset -> ArrayView a
+sliceRemainder :: forall a. ArrayView a -> Offset -> ArrayView a
 sliceRemainder = runFn2 sliceRemainderImpl
 -- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
-slice :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ArrayView a
+slice :: forall a. ArrayView a -> Offset -> Offset -> ArrayView a
 slice = runFn3 sliceImpl
 
 
@@ -209,15 +218,15 @@ sort :: forall a. ArrayView a -> Effect Unit
 sort = runEffectFn1 sortImpl
 
 
-foreign import subArrayImpl :: forall a. Fn2 (ArrayView a) ByteOffset (ArrayView a)
-foreign import subArrayImpl2 :: forall a. Fn3 (ArrayView a) ByteOffset ByteOffset (ArrayView a)
+foreign import subArrayImpl :: forall a. Fn2 (ArrayView a) Offset (ArrayView a)
+foreign import subArrayImpl2 :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
 
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
-subArray :: forall a. ArrayView a -> ByteOffset -> ByteOffset -> ArrayView a
+subArray :: forall a. ArrayView a -> Offset -> Offset -> ArrayView a
 subArray = runFn3 subArrayImpl2
 -- | Returns a new typed array view of the same buffer, beginning at the index
-subArrayRemainder :: forall a. ArrayView a -> ByteOffset -> ArrayView a
+subArrayRemainder :: forall a. ArrayView a -> Offset -> ArrayView a
 subArrayRemainder = runFn2 subArrayImpl
 
 
@@ -230,30 +239,24 @@ foreign import joinImpl :: forall a. Fn2 (ArrayView a) String String
 toString' :: forall a. ArrayView a -> String -> String
 toString' = runFn2 joinImpl
 
-foreign import unsafeAtImpl :: forall a. EffectFn2 (ArrayView a) Int Number
 
--- | Fetch element at index.
-unsafeAt :: forall a. ArrayView a -> Int -> Effect Number
-unsafeAt = runEffectFn2 unsafeAtImpl
+foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
 
-foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Int Boolean
+foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
 
 -- | Determine if a certain index is valid.
-hasIndex :: forall a. ArrayView a -> Int -> Boolean
+hasIndex :: forall a. ArrayView a -> Offset -> Boolean
 hasIndex = runFn2 hasIndexImpl
 
 -- | Fetch element at index.
-at :: forall a. ArrayView a -> Int -> Effect (Maybe Number)
+at :: forall a t. ValuesPer a t => ArrayView a -> Offset -> Maybe t
 at a n = do
   if a `hasIndex` n
-    then do
-      element <- unsafeAt a n
-      pure $ Just element
-    else
-      pure Nothing
+    then Just (unsafePerformEffect (unsafeAt a n))
+    else Nothing
+
+foreign import toArrayImpl :: forall a b. ArrayView a -> Array b
 
 -- | Turn typed array into an array.
-foreign import toArray :: forall a. ArrayView a -> Array Number
-
--- | Turn typed array into integer array.
-foreign import toIntArray :: forall a. ArrayView a -> Array Int
+toArray :: forall a t. ValuesPer a t => ArrayView a -> Array t
+toArray = toArrayImpl

@@ -142,18 +142,10 @@ exports.hasIndexImpl = function(a, i) {
   return i in a;
 }
 
-exports.toArray = function(a) {
+exports.toArrayImpl = function(a) {
   var l = a.length;
   var ret = new Array(l);
   for (var i = 0; i < l; i++)
     ret[i] = a[i];
-  return ret;
-}
-
-exports.toIntArray = function(a) {
-  var l = a.length;
-  var ret = new Array(l);
-  for (var i = 0; i < l; i++)
-    ret[i] = a[i] | 0;
   return ret;
 }
