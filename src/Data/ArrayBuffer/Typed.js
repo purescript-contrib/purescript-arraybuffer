@@ -35,6 +35,19 @@ exports.lengthImpl = function lemgthImpl (v) {
 };
 
 
+// Uint8Clamped
+
+exports.newUint8ClampedArray = function newUint8ClampedArray (a) {
+    return new Uint8ClampedArray(a);
+};
+exports.newUint8ClampedArray2 = function newUint8ClampedArray2 (a,b) {
+    return new Uint8ClampedArray(a,b);
+};
+exports.newUint8ClampedArray3 = function newUint8ClampedArray3 (a,b,c) {
+    return new Uint8ClampedArray(a,b,c);
+};
+
+
 exports.setImpl = function(ra, off, a) {
   return function() {
     a.set(ra, off);

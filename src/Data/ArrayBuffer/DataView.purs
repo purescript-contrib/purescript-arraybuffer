@@ -3,6 +3,7 @@
 
 module Data.ArrayBuffer.DataView
   ( whole
+  , remainder
   , part
   , buffer
   , byteOffset
@@ -44,7 +45,7 @@ import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Exception (catchException)
-import Effect.Uncurried (EffectFn5, EffectFn3, runEffectFn5, runEffectFn3)
+import Effect.Uncurried (EffectFn5, EffectFn3, EffectFn2, runEffectFn5, runEffectFn3, runEffectFn2)
 import Data.UInt (UInt)
 
 -- | Type for all fetching functions.
@@ -55,6 +56,12 @@ type Setter r = DataView -> r -> ByteOffset -> Effect Unit
 
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
+
+foreign import remainderImpl :: EffectFn2 ArrayBuffer ByteOffset DataView
+
+-- | View mapping the rest of an `ArrayBuffer` after an index.
+remainder :: ArrayBuffer -> ByteOffset -> Effect DataView
+remainder = runEffectFn2 remainderImpl
 
 foreign import partImpl :: EffectFn3 ArrayBuffer ByteOffset ByteLength DataView
 

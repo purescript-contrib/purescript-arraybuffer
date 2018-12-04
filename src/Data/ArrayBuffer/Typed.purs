@@ -7,9 +7,12 @@ module Data.ArrayBuffer.Typed
   , byteOffset
   , byteLength
   , AProxy (..)
-  , class Bytes
+  , class BytesPer
   , bytesPer
   , length
+  , whole, remainder, part
+  , class ValuesPer
+  , empty, fromArray
   , set
   , unsafeAt
   , hasIndex
@@ -20,7 +23,8 @@ module Data.ArrayBuffer.Typed
 
 import Prelude
 import Effect (Effect)
-import Effect.Uncurried (EffectFn2, runEffectFn2)
+import Effect.Uncurried (EffectFn3, EffectFn2, EffectFn1, runEffectFn3, runEffectFn2, runEffectFn1)
+import Effect.Unsafe (unsafePerformEffect)
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
   , Float64Array, Float32Array
@@ -47,26 +51,57 @@ foreign import lengthImpl :: forall a. ArrayView a -> Int
 
 data AProxy (a :: ArrayViewType) = AProxy
 
-class Bytes (a :: ArrayViewType) where
+class BytesPer (a :: ArrayViewType) where
   bytesPer :: AProxy a -> Int
 
-instance bytesUint8Clamped :: Bytes Uint8Clamped where
+instance bytesPerUint8Clamped :: BytesPer Uint8Clamped where
   bytesPer AProxy = 1
-instance bytesUint32 :: Bytes Uint32 where
+instance bytesPerUint32 :: BytesPer Uint32 where
   bytesPer AProxy = 4
-instance bytesUint16 :: Bytes Uint16 where
+instance bytesPerUint16 :: BytesPer Uint16 where
   bytesPer AProxy = 2
-instance bytesUint8 :: Bytes Uint8 where
+instance bytesPerUint8 :: BytesPer Uint8 where
   bytesPer AProxy = 1
-instance bytesInt32 :: Bytes Int32 where
+instance bytesPerInt32 :: BytesPer Int32 where
   bytesPer AProxy = 4
-instance bytesInt16 :: Bytes Int16 where
+instance bytesPerInt16 :: BytesPer Int16 where
   bytesPer AProxy = 2
-instance bytesInt8 :: Bytes Int8 where
+instance bytesPerInt8 :: BytesPer Int8 where
   bytesPer AProxy = 1
 
-length :: forall a. Bytes a => ArrayView a -> Int
+length :: forall a. BytesPer a => ArrayView a -> Int
 length = lengthImpl
+
+
+foreign import newUint8ClampedArray :: forall a. EffectFn1 a Uint8ClampedArray
+foreign import newUint8ClampedArray2 :: EffectFn2 ArrayBuffer ByteOffset Uint8ClampedArray
+foreign import newUint8ClampedArray3 :: EffectFn3 ArrayBuffer ByteOffset ByteLength Uint8ClampedArray
+
+
+-- TODO use purescript-quotient
+class ValuesPer (a :: ArrayViewType) (t :: Type) | a -> t where
+  -- | View mapping the whole `ArrayBuffer`.
+  whole :: ArrayBuffer -> ArrayView a
+  -- | View mapping the rest of an `ArrayBuffer` after an index.
+  remainder :: ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
+  -- | View mapping a region of the `ArrayBuffer`.
+  part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect (ArrayView a)
+  -- | Creates an empty typed array, where each value is assigned 0
+  empty :: Int -> ArrayView a
+  fromArray :: Array t -> Effect (ArrayView a)
+
+instance valuesPerUint8Clamped :: ValuesPer Uint8Clamped Int where
+  whole a = unsafePerformEffect (runEffectFn1 newUint8ClampedArray a)
+  remainder = runEffectFn2 newUint8ClampedArray2
+  part = runEffectFn3 newUint8ClampedArray3
+  empty n = unsafePerformEffect (runEffectFn1 newUint8ClampedArray n)
+  fromArray = runEffectFn1 newUint8ClampedArray
+-- instance valuesPerUint32 :: ValuesPer Uint32 Number
+-- instance valuesPerUint16 :: ValuesPer Uint16 Int
+-- instance valuesPerUint8 :: ValuesPer Uint8 Int
+-- instance valuesPerInt32 :: ValuesPer Int32 Number
+-- instance valuesPerInt16 :: ValuesPer Int16 Int
+-- instance valuesPerInt8 :: ValuesPer Int8 Int
 
 
 foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Effect Unit)

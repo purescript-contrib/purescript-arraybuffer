@@ -7,6 +7,10 @@ exports.whole = function whole (b) {
     return new DataView(b);
 };
 
+exports.remainderImpl = function remainderImpl (b,i) {
+    return new DataView(b,i);
+};
+
 exports.partImpl = function partImpl (b,i,j) {
     return new DataView(b,i,j);
 };
