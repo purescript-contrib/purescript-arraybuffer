@@ -1,56 +1,63 @@
-module Data.ArrayBuffer.Typed( asInt8Array
-                             , asInt16Array
-                             , asInt32Array
-                             , asUint8Array
-                             , asUint16Array
-                             , asUint32Array
-                             , asUint8ClampedArray
-                             , asFloat32Array
-                             , asFloat64Array
-                             , dataView
-                             , set
-                             , unsafeAt
-                             , hasIndex
-                             , at
-                             , toArray
-                             , toIntArray
-                             ) where
+module Data.ArrayBuffer.Typed
+  ( buffer
+  , byteOffset
+  , byteLength
+  , class Bytes
+  , bytesPer
+  , length
+  , set
+  , unsafeAt
+  , hasIndex
+  , at
+  , toArray
+  , toIntArray
+  ) where
 
 import Prelude
 import Effect (Effect)
-import Data.ArrayBuffer.Types (ArrayView, ByteOffset, DataView, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array)
+import Data.ArrayBuffer.Types
+  ( ArrayView, ByteOffset
+  , Float64Array, Float32Array
+  , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
+  , Float64, Float32
+  , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Maybe (Maybe(..))
+import Type.Proxy (Proxy(..))
 
--- | Create typed int8 array viewing the buffer mapped by the `DataView`
-foreign import asInt8Array :: DataView -> Int8Array
 
--- | Create typed int16 array viewing the buffer mapped by the `DataView`
-foreign import asInt16Array :: DataView -> Int16Array
+-- | `ArrayBuffer` being mapped by the typed array.
+foreign import buffer :: forall a. ArrayView a -> ArrayBuffer
 
--- | Create typed int32 array viewing the buffer mapped by the `DataView`
-foreign import asInt32Array :: DataView -> Int32Array
+-- | Represents the offset of this view from the start of its `ArrayBuffer`.
+foreign import byteOffset :: forall a. ArrayView a -> ByteOffset
 
--- | Create typed uint8 array viewing the buffer mapped by the `DataView`
-foreign import asUint8Array :: DataView -> Uint8Array
+-- | Represents the length of this typed array, in bytes.
+foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
--- | Create typed uint16 array viewing the buffer mapped by the `DataView`
-foreign import asUint16Array :: DataView -> Uint16Array
+foreign import lengthImpl :: forall a. ArrayView a -> Int
 
--- | Create typed uint32 array viewing the buffer mapped by the `DataView`
-foreign import asUint32Array :: DataView -> Uint32Array
+class Bytes a where
+  bytesPer :: Proxy a -> Int
 
--- | Create typed uint8 clamped array viewing the buffer mapped by the `DataView`
-foreign import asUint8ClampedArray :: DataView -> Uint8ClampedArray
+instance bytesUint8Clamped :: Bytes Uint8Clamped where
+  bytesPer Proxy = 1
+instance bytesUint32 :: Bytes Uint32 where
+  bytesPer Proxy = 4
+instance bytesUint16 :: Bytes Uint16 where
+  bytesPer Proxy = 2
+instance bytesUint8 :: Bytes Uint8 where
+  bytesPer Proxy = 1
+instance bytesInt32 :: Bytes Int32 where
+  bytesPer Proxy = 4
+instance bytesInt16 :: Bytes Int16 where
+  bytesPer Proxy = 2
+instance bytesInt8 :: Bytes Int8 where
+  bytesPer Proxy = 1
 
--- | Create typed float32 array viewing the buffer mapped by the `DataView`
-foreign import asFloat32Array :: DataView -> Float32Array
+length :: forall a. Bytes a => ArrayView a -> Int
+length = lengthImpl
 
--- | Create typed float64 array viewing the buffer mapped by the `DataView`
-foreign import asFloat64Array :: DataView -> Float64Array
-
--- | Interpret typed array as a `DataView`.
-foreign import dataView :: forall a. ArrayView a -> DataView
 
 foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (Effect Unit)
 
@@ -58,11 +65,11 @@ foreign import setImpl :: forall a. Fn3 (ArrayView a) ByteOffset (ArrayView a) (
 set :: forall a. ArrayView a -> ByteOffset -> ArrayView a -> Effect Unit
 set = runFn3 setImpl
 
-foreign import unsafeAtImpl :: forall a. Fn2 (ArrayView a) Int (Effect Number)
+foreign import unsafeAtImpl :: forall a. EffectFn2 (ArrayView a) Int Number
 
 -- | Fetch element at index.
 unsafeAt :: forall a. ArrayView a -> Int -> Effect Number
-unsafeAt = runFn2 unsafeAtImpl
+unsafeAt = runEffectFn2 unsafeAtImpl
 
 foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Int Boolean
 

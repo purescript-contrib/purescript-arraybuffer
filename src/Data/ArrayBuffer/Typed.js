@@ -1,46 +1,35 @@
 "use strict";
 
+
+// Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
+var typedArrayTypes = [Int8Array, Uint8Array, Uint8ClampedArray, Int16Array,
+                       Uint16Array, ​​​Int32Array, Uint32Array, ​​​Float32Array, Float64Array];
+
+for (var k in typedArrayTypes)
+    for (var v in Array.prototype)
+        if (Array.prototype.hasOwnProperty(v) &&
+            !typedArrayTypes[k].prototype.hasOwnProperty(v))
+            typedArrayTypes[k].prototype[v] = Array.prototype[v];
+
+
 // module Data.ArrayBuffer.Typed
 
-exports.asInt8Array = function(v) {
-  return new Int8Array(v.buffer, v.byteOffset, v.byteLength);
-}
+exports.buffer = function buffer (v) {
+    return v.buffer;
+};
 
-exports.asInt16Array = function(v) {
-  return new Int16Array(v.buffer, v.byteOffset, v.byteLength >>> 1);
-}
+exports.byteOffset = function byteOffset (v) {
+    return v.byteOffset;
+};
 
-exports.asInt32Array = function(v) {
-  return new Int32Array(v.buffer, v.byteOffset, v.byteLength >>> 2);
-}
+exports.byteLength = function byteLength (v) {
+    return v.byteLength;
+};
 
-exports.asUint8Array = function(v) {
-  return new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
-}
+exports.lengthImpl = function lemgthImpl (v) {
+    return v.length;
+};
 
-exports.asUint16Array = function(v) {
-  return new Uint16Array(v.buffer, v.byteOffset, v.byteLength >>> 1);
-}
-
-exports.asUint32Array = function(v) {
-  return new Uint32Array(v.buffer, v.byteOffset, v.byteLength >>> 2);
-}
-
-exports.asUint8ClampedArray = function(v) {
-  return new Uint8ClampedArray(v.buffer, v.byteOffset, v.byteLength);
-}
-
-exports.asFloat32Array = function(v) {
-  return new Float32Array(v.buffer, v.byteOffset, v.byteLength >>> 2);
-}
-
-exports.asFloat64Array = function(v) {
-  return new Float64Array(v.buffer, v.byteOffset, v.byteLength >>> 3);
-}
-
-exports.dataView = function(a) {
-  return new DataView(a.buffer);
-}
 
 exports.setImpl = function(ra, off, a) {
   return function() {
@@ -49,9 +38,7 @@ exports.setImpl = function(ra, off, a) {
 }
 
 exports.unsafeAtImpl = function(a, i) {
-  return function() {
-   return a[i];
-  };
+    return a[i];
 }
 
 exports.hasIndexImpl = function(a, i) {
