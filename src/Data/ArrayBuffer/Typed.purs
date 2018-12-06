@@ -10,7 +10,9 @@ module Data.ArrayBuffer.Typed
   , bytesPerValue
   , class TypedArray
   , whole, remainder, part, empty, fromArray, all, any, fill, set
-  , map, traverse, traverse_, filter, elem, foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
+  , map, traverse, traverse_, filter, elem
+  , foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
+  , find, findIndex, indexOf, lastIndexOf
   , setTyped, copyWithin, slice, sort, subArray, reverse
   , toString, toString'
   , unsafeAt, hasIndex, at
@@ -25,7 +27,7 @@ import Effect.Uncurried
   , mkEffectFn1, mkEffectFn2, mkEffectFn3)
 import Effect.Unsafe (unsafePerformEffect)
 import Data.Tuple (Tuple (..))
-import Data.Nullable (Nullable, toNullable)
+import Data.Nullable (Nullable, toNullable, toMaybe)
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
   , Float64Array, Float32Array
@@ -94,6 +96,10 @@ foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c 
 foreign import reduce1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
 foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
 foreign import reduceRight1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
+foreign import findImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Boolean) (Nullable b)
+foreign import findIndexImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Boolean) (Nullable Offset)
+foreign import indexOfImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
+foreign import lastIndexOfImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
 
 
 -- | Value-oriented array offset
@@ -143,6 +149,15 @@ class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   foldrM :: forall b. ArrayView a -> (t -> b -> Offset -> Effect b) -> b -> Effect b
   -- | Assumes the typed array is non-empty
   foldr1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
+  -- | Returns the first value satisfying the predicate
+  find :: ArrayView a -> (t -> Offset -> Effect Boolean) -> Effect (Maybe t)
+  -- | Returns the first index of the value satisfying the predicate
+  findIndex :: ArrayView a -> (t -> Offset -> Effect Boolean) -> Effect (Maybe Offset)
+  -- | Returns the first index of the element, if it exists, from the left
+  indexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
+  -- | Returns the first index of the element, if it exists, from the right
+  lastIndexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
+
 
 instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
   whole a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a (toNullable Nothing) (toNullable Nothing))
@@ -168,6 +183,10 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
   foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
   foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
   foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 -- instance typedArrayUint32 :: TypedArray Uint32 Number
 -- instance typedArrayUint16 :: TypedArray Uint16 Int
 -- instance typedArrayUint8 :: TypedArray Uint8 Int

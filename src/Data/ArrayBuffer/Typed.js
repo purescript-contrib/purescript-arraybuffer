@@ -104,6 +104,34 @@ exports.reduceRight1Impl = function reduceRight1Impl (a,f) {
     return a.reduceRight(f);
 };
 
+exports.findImpl = function findImpl (a,f) {
+    var x = a.find(f);
+    return (x === undefined) ? null : x;
+};
+exports.findIndexImpl = function findIndexImpl (a,f) {
+    var x = a.findIndex(f);
+    return (x === -1) ? null : x;
+};
+exports.indexOfImpl = function indexOfImpl (a,x,mo) {
+    var r;
+    if (mo === null) {
+        r = a.indexOf(x);
+    } else {
+        r = a.indexOf(x,mo);
+    }
+    return r === -1 ? null : r;
+};
+exports.lastIndexOfImpl = function lastIndexOfImpl (a,x,mo) {
+    var r;
+    if (mo === null) {
+        r = a.lastIndexOf(x);
+    } else {
+        r = a.lastIndexOf(x,mo);
+    }
+    return r === -1 ? null : r;
+};
+
+
 
 exports.copyWithinImpl = function copyWithinImpl (a,t,s,me) {
     if (me === null) {
