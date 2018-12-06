@@ -11,10 +11,14 @@ import Data.ArrayBuffer.Typed as TA
 
 import Prelude
 import Math as M
+import Data.Maybe (Maybe (..))
 import Data.List.Lazy (replicateM)
 import Data.Int as I
+import Data.String.CodeUnits as S
+import Data.Float.Parse (parseFloat)
 import Data.Array as Array
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
+import Partial.Unsafe (unsafePartial)
 
 
 arbitraryUint8ClampedArray :: forall m. MonadGen m => m Uint8ClampedArray
@@ -62,4 +66,16 @@ arbitraryFloat32 :: forall m. MonadGen m => m Number
 arbitraryFloat32 =
   let maxFloat32 = (2.0 - (M.pow 2.0 (-23.0))) * (M.pow 2.0 127.0)
       minFloat32 = -maxFloat32 -- because of sign bit
-  in  chooseFloat minFloat32 maxFloat32 -- roughly estimated because of variable precision between 6 and 9 digs
+      reformat :: String -> String
+      reformat s =
+        let pre = S.takeWhile (\c -> c /= '.') s
+            suf = S.dropWhile (\c -> c /= '.') s
+        in  pre <> "." <> S.take 6 suf
+      fix :: Number -> Number
+      fix x = unsafePartial $ case parseFloat (reformat (show x)) of
+        Just y -> y
+  in  fix <$> chooseFloat minFloat32 maxFloat32
+  -- roughly estimated because of variable precision between 6 and 9 digs
+
+arbitraryFloat64 :: forall m. MonadGen m => m Number
+arbitraryFloat64 = chooseFloat (-1.7e308) 1.7e308

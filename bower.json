@@ -17,7 +17,8 @@
     "purescript-maybe": "^4.0.0",
     "purescript-effect": "^2.0.0",
     "purescript-nullable": "^4.1.0",
-    "purescript-typelevel": "^4.0.0"
+    "purescript-typelevel": "^4.0.0",
+    "purescript-parseint": "^1.1.0"
   },
   "devDependencies": {
     "purescript-debug": "^4.0.0",
