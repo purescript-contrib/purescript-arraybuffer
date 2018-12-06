@@ -64,7 +64,7 @@ arbitraryWord =
 
 arbitraryFloat32 :: forall m. MonadGen m => m Number
 arbitraryFloat32 =
-  let maxFloat32 = (2.0 - (M.pow 2.0 (-23.0))) * (M.pow 2.0 127.0)
+  let maxFloat32 = (1.0 - (M.pow 2.0 (-24.0))) * (M.pow 2.0 128.0)
       minFloat32 = -maxFloat32 -- because of sign bit
       reformat :: String -> String
       reformat s =
