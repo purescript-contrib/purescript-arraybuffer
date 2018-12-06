@@ -1,14 +1,18 @@
 module Test.Main where
 
-import Prelude
+import Test.Properties.TypedArray as TATests
 
+import Prelude
 import Effect (Effect)
+import Effect.Console (log)
 
 
 
 
 main :: Effect Unit
-main = pure unit
+main = do
+  log "Starting tests..."
+  TATests.byteLengthDivBytesPerValueTests
 
 
 -- import Data.ArrayBuffer.ArrayBuffer as AB
