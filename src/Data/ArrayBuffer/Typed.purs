@@ -5,9 +5,7 @@ module Data.ArrayBuffer.Typed
   ( polyFill
   , Offset, Length
   , buffer, byteOffset, byteLength, length
-  , AProxy (..)
   , class BytesPerValue
-  , bytesPerValue
   , class TypedArray
   , whole, remainder, part, empty, fromArray, all, any, fill, set
   , map, traverse, traverse_, filter, elem
@@ -24,7 +22,7 @@ import Effect (Effect)
 import Effect.Uncurried
   ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
   , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1
-  , mkEffectFn1, mkEffectFn2, mkEffectFn3)
+  , mkEffectFn2, mkEffectFn3)
 import Effect.Unsafe (unsafePerformEffect)
 import Data.Tuple (Tuple (..))
 import Data.Nullable (Nullable, toNullable, toMaybe)
@@ -34,8 +32,9 @@ import Data.ArrayBuffer.Types
   , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
   , Float64, Float32
   , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
-import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3, mkFn2)
+import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Maybe (Maybe(..))
+import Data.Typelevel.Num (D1,D2,D4,D8)
 
 
 -- | Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
@@ -52,27 +51,19 @@ foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
 foreign import lengthImpl :: forall a. ArrayView a -> Length
 
-data AProxy (a :: ArrayViewType) = AProxy
+class BytesPerValue (a :: ArrayViewType) (b :: Type) | a -> b
 
-class BytesPerValue (a :: ArrayViewType) where
-  bytesPerValue :: AProxy a -> Int
+instance bytesPerValueUint8Clamped :: BytesPerValue Uint8Clamped D1
+instance bytesPerValueUint32 :: BytesPerValue Uint32 D4
+instance bytesPerValueUint16 :: BytesPerValue Uint16 D2
+instance bytesPerValueUint8 :: BytesPerValue Uint8 D1
+instance bytesPerValueInt32 :: BytesPerValue Int32 D4
+instance bytesPerValueInt16 :: BytesPerValue Int16 D2
+instance bytesPerValueInt8 :: BytesPerValue Int8 D1
+instance bytesPerValueFloat32 :: BytesPerValue Float32 D4
+instance bytesPerValueFloat64 :: BytesPerValue Float64 D8
 
-instance bytesPerValueUint8Clamped :: BytesPerValue Uint8Clamped where
-  bytesPerValue AProxy = 1
-instance bytesPerValueUint32 :: BytesPerValue Uint32 where
-  bytesPerValue AProxy = 4
-instance bytesPerValueUint16 :: BytesPerValue Uint16 where
-  bytesPerValue AProxy = 2
-instance bytesPerValueUint8 :: BytesPerValue Uint8 where
-  bytesPerValue AProxy = 1
-instance bytesPerValueInt32 :: BytesPerValue Int32 where
-  bytesPerValue AProxy = 4
-instance bytesPerValueInt16 :: BytesPerValue Int16 where
-  bytesPerValue AProxy = 2
-instance bytesPerValueInt8 :: BytesPerValue Int8 where
-  bytesPerValue AProxy = 1
-
-length :: forall a. BytesPerValue a => ArrayView a -> Int
+length :: forall a b. BytesPerValue a b => ArrayView a -> Int
 length = lengthImpl
 
 
@@ -85,6 +76,8 @@ foreign import newUint8Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nul
 foreign import newInt32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int32Array
 foreign import newInt16Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int16Array
 foreign import newInt8Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int8Array
+foreign import newFloat32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Float32Array
+foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Float64Array
 
 
 -- ----
@@ -339,6 +332,62 @@ instance typedArrayInt8 :: TypedArray Int8 Int where
   part a x y = runEffectFn3 newInt8Array a (toNullable (Just x)) (toNullable (Just y))
   empty n = unsafePerformEffect (runEffectFn3 newInt8Array n (toNullable Nothing) (toNullable Nothing))
   fromArray a = unsafePerformEffect (runEffectFn3 newInt8Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayFloat32 :: TypedArray Float32 Number where
+  whole a = unsafePerformEffect (runEffectFn3 newFloat32Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newFloat32Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newFloat32Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newFloat32Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newFloat32Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayFloat64 :: TypedArray Float64 Number where
+  whole a = unsafePerformEffect (runEffectFn3 newFloat64Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newFloat64Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newFloat64Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newFloat64Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newFloat64Array a (toNullable Nothing) (toNullable Nothing))
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
   any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
   fill a x mz = case mz of

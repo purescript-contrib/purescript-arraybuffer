@@ -114,6 +114,28 @@ exports.newInt8Array = function newInt8Array (a,mb,mc) {
         return new Int8Array(a,mb,mc);
     }
 };
+exports.newFloat32Array = function newFloat32Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Float32Array(a);
+        } else {
+            return new Float32Array(a,mb);
+        }
+    } else {
+        return new Float32Array(a,mb,mc);
+    }
+};
+exports.newFloat64Array = function newFloat64Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Float64Array(a);
+        } else {
+            return new Float64Array(a,mb);
+        }
+    } else {
+        return new Float64Array(a,mb,mc);
+    }
+};
 
 
 // ------
