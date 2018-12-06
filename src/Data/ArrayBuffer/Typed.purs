@@ -25,6 +25,7 @@ import Effect.Uncurried
   , mkEffectFn2, mkEffectFn3)
 import Effect.Unsafe (unsafePerformEffect)
 import Data.Tuple (Tuple (..))
+import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toNullable, toMaybe)
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
@@ -33,7 +34,6 @@ import Data.ArrayBuffer.Types
   , Float64, Float32
   , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
-import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (D1,D2,D4,D8)
 
 
