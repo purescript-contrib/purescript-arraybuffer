@@ -6,12 +6,9 @@ import Effect (Effect)
 import Data.ArrayBuffer.ArrayBuffer as AB
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.Typed as TA
-import Data.Either (fromRight)
 import Data.Maybe (Maybe(..), isNothing)
 import Data.UInt (fromInt, pow)
-import Partial.Unsafe (unsafePartial)
-import Test.QuickCheck (quickCheck', (<?>), quickCheck)
-import Test.Input (WellFormedInput(..))
+import Test.QuickCheck (quickCheck', (<?>))
 
 
 assertEffEquals :: forall a. Eq a => Show a => a -> Effect a -> Effect Unit
@@ -27,19 +24,6 @@ assertEquals expected actual = do
 
 main :: Effect Unit
 main = do
-  assertEquals "釺椱�밸造ə㊡癥闗" (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString "釺椱�밸造ə㊡癥闗")
-
-  quickCheck
-    \(WellFormedInput s) ->
-        let
-          result = (unsafePartial $ fromRight $ AB.decodeToString $ AB.fromString s)
-        in
-          s == result
-          <?> "Isormorphic arraybuffer conversion with string failed for input\n"
-          <> s
-          <> " which, after the round trip, result in\n"
-          <> result
-
   ab4 <- AB.create 4
   ab8 <- AB.create 8
   assertEquals 4 $ AB.byteLength ab4
@@ -52,9 +36,6 @@ main = do
   assertEquals (Just 2) $ DV.byteLength <$> DV.slice 2 2 ab4
   assertEquals 4 $ AB.byteLength $ AB.fromArray [1.0, 2.0, 3.0, 4.0]
   assertEquals 4 $ AB.byteLength $ AB.fromIntArray [1, 2, 3, 4]
-  assertEquals 4 $ AB.byteLength $ AB.fromString "hola"
-  assertEquals 5 $ AB.byteLength $ AB.fromString "hóla"
-  assertEquals 7 $ AB.byteLength $ AB.fromString "hóla¡"
   assertEquals 8 $ AB.byteLength $ DV.buffer $ DV.whole ab8
   assertEquals 8 $ AB.byteLength $ DV.buffer $ TA.dataView $ TA.asInt8Array $ DV.whole ab8
 
