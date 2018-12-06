@@ -35,7 +35,7 @@ exports.lengthImpl = function lemgthImpl (v) {
 };
 
 
-// Uint8Clamped
+// Typed Arrays
 
 exports.newUint8ClampedArray = function newUint8ClampedArray (a,mb,mc) {
     if (mc === null) {
@@ -48,7 +48,75 @@ exports.newUint8ClampedArray = function newUint8ClampedArray (a,mb,mc) {
         return new Uint8ClampedArray(a,mb,mc);
     }
 };
+exports.newUint32Array = function newUint32Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Uint32Array(a);
+        } else {
+            return new Uint32Array(a,mb);
+        }
+    } else {
+        return new Uint32Array(a,mb,mc);
+    }
+};
+exports.newUint16Array = function newUint16Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Uint16Array(a);
+        } else {
+            return new Uint16Array(a,mb);
+        }
+    } else {
+        return new Uint16Array(a,mb,mc);
+    }
+};
+exports.newUint8Array = function newUint8Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Uint8Array(a);
+        } else {
+            return new Uint8Array(a,mb);
+        }
+    } else {
+        return new Uint8Array(a,mb,mc);
+    }
+};
+exports.newInt32Array = function newInt32Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Int32Array(a);
+        } else {
+            return new Int32Array(a,mb);
+        }
+    } else {
+        return new Int32Array(a,mb,mc);
+    }
+};
+exports.newInt16Array = function newInt16Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Int16Array(a);
+        } else {
+            return new Int16Array(a,mb);
+        }
+    } else {
+        return new Int16Array(a,mb,mc);
+    }
+};
+exports.newInt8Array = function newInt8Array (a,mb,mc) {
+    if (mc === null) {
+        if (mb === null) {
+            return new Int8Array(a);
+        } else {
+            return new Int8Array(a,mb);
+        }
+    } else {
+        return new Int8Array(a,mb,mc);
+    }
+};
 
+
+// ------
 
 exports.everyImpl = function everyImpl (a,p) {
     return a.every(p);

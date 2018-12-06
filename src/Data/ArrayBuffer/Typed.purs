@@ -79,6 +79,12 @@ length = lengthImpl
 -- object creator implementations for each typed array
 
 foreign import newUint8ClampedArray :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8ClampedArray
+foreign import newUint32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint32Array
+foreign import newUint16Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint16Array
+foreign import newUint8Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8Array
+foreign import newInt32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int32Array
+foreign import newInt16Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int16Array
+foreign import newInt8Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int8Array
 
 
 -- ----
@@ -187,12 +193,174 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
   findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
   indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
   lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
--- instance typedArrayUint32 :: TypedArray Uint32 Number
--- instance typedArrayUint16 :: TypedArray Uint16 Int
--- instance typedArrayUint8 :: TypedArray Uint8 Int
--- instance typedArrayInt32 :: TypedArray Int32 Number
--- instance typedArrayInt16 :: TypedArray Int16 Int
--- instance typedArrayInt8 :: TypedArray Int8 Int
+instance typedArrayUint32 :: TypedArray Uint32 Number where
+  whole a = unsafePerformEffect (runEffectFn3 newUint32Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newUint32Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newUint32Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newUint32Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newUint32Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayUint16 :: TypedArray Uint16 Int where
+  whole a = unsafePerformEffect (runEffectFn3 newUint16Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newUint16Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newUint16Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newUint16Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newUint16Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayUint8 :: TypedArray Uint8 Int where
+  whole a = unsafePerformEffect (runEffectFn3 newUint8Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newUint8Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newUint8Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newUint8Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newUint8Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayInt32 :: TypedArray Int32 Number where
+  whole a = unsafePerformEffect (runEffectFn3 newInt32Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newInt32Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newInt32Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newInt32Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newInt32Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayInt16 :: TypedArray Int16 Int where
+  whole a = unsafePerformEffect (runEffectFn3 newInt16Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newInt16Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newInt16Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newInt16Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newInt16Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+instance typedArrayInt8 :: TypedArray Int8 Int where
+  whole a = unsafePerformEffect (runEffectFn3 newInt8Array a (toNullable Nothing) (toNullable Nothing))
+  remainder a x = runEffectFn3 newInt8Array a (toNullable (Just x)) (toNullable Nothing)
+  part a x y = runEffectFn3 newInt8Array a (toNullable (Just x)) (toNullable (Just y))
+  empty n = unsafePerformEffect (runEffectFn3 newInt8Array n (toNullable Nothing) (toNullable Nothing))
+  fromArray a = unsafePerformEffect (runEffectFn3 newInt8Array a (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fill a x mz = case mz of
+    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Just (Tuple s mq) -> case mq of
+      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
+  elem x mo a = runFn3 includesImpl a x (toNullable mo)
+  unsafeAt = runEffectFn2 unsafeAtImpl
+  foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
+  foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+  foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))
+  foldr1M a f = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+  find a f = toMaybe <$> runEffectFn2 findImpl a (mkEffectFn2 f)
+  findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
+  indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+  lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 
 
 foldl :: forall a b t. TypedArray a t => ArrayView a -> (b -> t -> Offset -> b) -> b -> b
