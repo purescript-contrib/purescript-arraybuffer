@@ -270,7 +270,7 @@ instance typedArrayUint8 :: TypedArray Uint8 Int where
   findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
   indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
   lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
-instance typedArrayInt32 :: TypedArray Int32 Number where
+instance typedArrayInt32 :: TypedArray Int32 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt32Array a (toNullable Nothing) (toNullable Nothing))
   remainder a x = runEffectFn3 newInt32Array a (toNullable (Just x)) (toNullable Nothing)
   part a x y = runEffectFn3 newInt32Array a (toNullable (Just x)) (toNullable (Just y))

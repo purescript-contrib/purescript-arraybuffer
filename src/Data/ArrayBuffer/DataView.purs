@@ -46,7 +46,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Exception (catchException)
 import Effect.Uncurried (EffectFn5, EffectFn3, EffectFn2, runEffectFn5, runEffectFn3, runEffectFn2)
-import Data.UInt (UInt)
+
 
 -- | Type for all fetching functions.
 type Getter r = DataView -> ByteOffset -> Effect (Maybe r)
@@ -114,21 +114,21 @@ getInt32le :: Getter Int
 getInt32le = getter "getInt32" 4 true
 
 -- | Fetch uint8 value at a certain index in a `DataView`.
-getUint8 :: Getter UInt
+getUint8 :: Getter Int
 getUint8 = getter "getUint8" 1 false
 
 -- | Fetch uint16 value at a certain index in a `DataView`.
-getUint16be :: Getter UInt
+getUint16be :: Getter Int
 getUint16be = getter "getUint16" 2 false
 
-getUint16le :: Getter UInt
+getUint16le :: Getter Int
 getUint16le = getter "getUint16" 2 true
 
 -- | Fetch uint32 value at a certain index in a `DataView`.
-getUint32be :: Getter UInt
+getUint32be :: Getter Number
 getUint32be = getter "getUint32" 4 false
 
-getUint32le :: Getter UInt
+getUint32le :: Getter Number
 getUint32le = getter "getUint32" 4 true
 
 -- | Fetch float32 value at a certain index in a `DataView`.
@@ -164,21 +164,21 @@ setInt32le :: Setter Int
 setInt32le = setter "setInt32" true
 
 -- | Store uint8 value at a certain index in a `DataView`.
-setUint8 :: Setter UInt
+setUint8 :: Setter Int
 setUint8 = setter "setUint8" false
 
 -- | Store uint16 value at a certain index in a `DataView`.
-setUint16be :: Setter UInt
+setUint16be :: Setter Int
 setUint16be = setter "setUint16" false
 
-setUint16le :: Setter UInt
+setUint16le :: Setter Int
 setUint16le = setter "setUint16" true
 
 -- | Store uint32 value at a certain index in a `DataView`.
-setUint32be :: Setter UInt
+setUint32be :: Setter Number
 setUint32be = setter "setUint32" false
 
-setUint32le :: Setter UInt
+setUint32le :: Setter Number
 setUint32le = setter "setUint32" true
 
 -- | Store float32 value at a certain index in a `DataView`.
