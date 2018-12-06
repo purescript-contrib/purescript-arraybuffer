@@ -37,6 +37,28 @@ arbitraryUint8Array :: forall m. MonadGen m => m Uint8Array
 arbitraryUint8Array = sized \s ->
    TA.fromArray <<< Array.fromFoldable <$> replicateM s arbitraryUByte
 
+arbitraryInt32Array :: forall m. MonadGen m => m Int32Array
+arbitraryInt32Array = sized \s ->
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s arbitraryWord
+
+arbitraryInt16Array :: forall m. MonadGen m => m Int16Array
+arbitraryInt16Array = sized \s ->
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s arbitraryNibble
+
+arbitraryInt8Array :: forall m. MonadGen m => m Int8Array
+arbitraryInt8Array = sized \s ->
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s arbitraryByte
+
+arbitraryFloat32Array :: forall m. MonadGen m => m Float32Array
+arbitraryFloat32Array = sized \s ->
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s arbitraryFloat32
+
+arbitraryFloat64Array :: forall m. MonadGen m => m Float64Array
+arbitraryFloat64Array = sized \s ->
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s arbitraryFloat64
+
+
+
 
 arbitraryUByte :: forall m. MonadGen m => m Int
 arbitraryUByte = chooseInt 0 ((I.pow 2 8) - 1)
