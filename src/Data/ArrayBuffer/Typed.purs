@@ -108,7 +108,34 @@ type Length = Int
 
 
 -- TODO use purescript-quotient
--- | Measured user-level values stored in each typed array
+-- | Typeclass that associates a measured user-level type with a typed array.
+-- |
+-- | # Creation
+-- |
+-- | - `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
+-- |   on top of an existing `ArrayBuffer`.
+-- | - `empty` and `fromArray` are methods for creating pure typed arrays
+-- |
+-- | # Modification
+-- |
+-- | - `fill`, `set`, and `setTyped` are methods for assigning values from external sources
+-- | - `map` and `traverse` allow you to create a new array from the existing values in another
+-- | - `copyWithin` allows you to set values to the array that exist in other parts of the array
+-- | - `filter` creates a new array without the values that don't pass a predicate
+-- | - `reverse` modifies an existing array in-place, with all values reversed
+-- | - `sort` modifies an existing array in-place, with all values sorted
+-- |
+-- | # Access
+-- |
+-- | - `elem`, `all`, and `any` are functions for testing the contents of an array
+-- | - `unsafeAt`, `hasIndex`, and `at` are used to get values from an array, with an offset
+-- | - `foldr`, `foldrM`, `foldr1`, `foldr1M`, `foldl`, `foldlM`, `foldl1`, `foldl1M` all can reduce an array
+-- | - `find` and `findIndex` are searching functions via a predicate
+-- | - `indexOf` and `lastIndexOf` are searching functions via equality
+-- | - `slice` returns a new typed array on the same array buffer content as the input
+-- | - `subArray` returns a new typed array with a separate array buffer
+-- | - `toString` prints to a CSV, `toString'` allows you to supply the delimiter
+-- | - `toArray` returns an array of numeric values
 class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | View mapping the whole `ArrayBuffer`.
   whole :: ArrayBuffer -> ArrayView a
@@ -120,10 +147,6 @@ class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   empty :: Length -> ArrayView a
   -- | Creates a typed array from an input array of values, to be binary serialized
   fromArray :: Array t -> ArrayView a
-  -- | Test a predicate to pass on all values
-  all :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
-  -- | Test a predicate to pass on any value
-  any :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
   -- | Fill the array with a value
   fill :: ArrayView a -> t -> Maybe (Tuple Offset (Maybe Offset)) -> Effect Unit
   -- | Stores multiple values into the typed array
@@ -134,6 +157,10 @@ class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   traverse :: (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
   -- | Traverses over each value
   traverse_ :: (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
+  -- | Test a predicate to pass on all values
+  all :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
+  -- | Test a predicate to pass on any value
+  any :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
   -- | Returns a new typed array with all values that pass the predicate
   filter :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect (ArrayView a)
   -- | Tests if a value is an element of the typed array

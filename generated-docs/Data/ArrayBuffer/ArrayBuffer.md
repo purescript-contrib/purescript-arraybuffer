@@ -22,7 +22,7 @@ Represents the length of an `ArrayBuffer` in bytes.
 #### `slice`
 
 ``` purescript
-slice :: ByteOffset -> ByteOffset -> ArrayBuffer -> ArrayBuffer
+slice :: ArrayBuffer -> Maybe (Tuple ByteOffset (Maybe ByteOffset)) -> ArrayBuffer
 ```
 
 Returns a new `ArrayBuffer` whose contents are a copy of this ArrayBuffer's bytes from begin, inclusive, up to end, exclusive.

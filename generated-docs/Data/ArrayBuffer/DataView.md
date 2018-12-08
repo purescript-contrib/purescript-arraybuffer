@@ -86,7 +86,7 @@ Fetch int32 value at a certain index in a `DataView`.
 #### `getUint8`
 
 ``` purescript
-getUint8 :: Getter UInt
+getUint8 :: Getter Int
 ```
 
 Fetch uint8 value at a certain index in a `DataView`.
@@ -94,7 +94,7 @@ Fetch uint8 value at a certain index in a `DataView`.
 #### `getUint16be`
 
 ``` purescript
-getUint16be :: Getter UInt
+getUint16be :: Getter Int
 ```
 
 Fetch uint16 value at a certain index in a `DataView`.
@@ -102,7 +102,7 @@ Fetch uint16 value at a certain index in a `DataView`.
 #### `getUint32be`
 
 ``` purescript
-getUint32be :: Getter UInt
+getUint32be :: Getter Number
 ```
 
 Fetch uint32 value at a certain index in a `DataView`.
@@ -138,13 +138,13 @@ getInt32le :: Getter Int
 #### `getUint16le`
 
 ``` purescript
-getUint16le :: Getter UInt
+getUint16le :: Getter Int
 ```
 
 #### `getUint32le`
 
 ``` purescript
-getUint32le :: Getter UInt
+getUint32le :: Getter Number
 ```
 
 #### `getFloat32le`
@@ -194,7 +194,7 @@ Store int32 value at a certain index in a `DataView`.
 #### `setUint8`
 
 ``` purescript
-setUint8 :: Setter UInt
+setUint8 :: Setter Int
 ```
 
 Store uint8 value at a certain index in a `DataView`.
@@ -202,7 +202,7 @@ Store uint8 value at a certain index in a `DataView`.
 #### `setUint16be`
 
 ``` purescript
-setUint16be :: Setter UInt
+setUint16be :: Setter Int
 ```
 
 Store uint16 value at a certain index in a `DataView`.
@@ -210,7 +210,7 @@ Store uint16 value at a certain index in a `DataView`.
 #### `setUint32be`
 
 ``` purescript
-setUint32be :: Setter UInt
+setUint32be :: Setter Number
 ```
 
 Store uint32 value at a certain index in a `DataView`.
@@ -246,13 +246,13 @@ setInt32le :: Setter Int
 #### `setUint16le`
 
 ``` purescript
-setUint16le :: Setter UInt
+setUint16le :: Setter Int
 ```
 
 #### `setUint32le`
 
 ``` purescript
-setUint32le :: Setter UInt
+setUint32le :: Setter Number
 ```
 
 #### `setFloat32le`

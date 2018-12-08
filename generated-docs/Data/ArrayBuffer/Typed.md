@@ -11,14 +11,6 @@ polyFill :: Effect Unit
 
 Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
 
-#### `buffer`
-
-``` purescript
-buffer :: forall a. ArrayView a -> ArrayBuffer
-```
-
-`ArrayBuffer` being mapped by the typed array.
-
 #### `Offset`
 
 ``` purescript
@@ -34,6 +26,14 @@ type Length = Int
 ```
 
 Value-oriented array length
+
+#### `buffer`
+
+``` purescript
+buffer :: forall a. ArrayView a -> ArrayBuffer
+```
+
+`ArrayBuffer` being mapped by the typed array.
 
 #### `byteOffset`
 
@@ -51,35 +51,29 @@ byteLength :: forall a. ArrayView a -> ByteLength
 
 Represents the length of this typed array, in bytes.
 
-#### `AProxy`
+#### `length`
 
 ``` purescript
-data AProxy (a :: ArrayViewType)
-  = AProxy
+length :: forall a b. BytesPerValue a b => ArrayView a -> Int
 ```
 
 #### `BytesPerValue`
 
 ``` purescript
-class BytesPerValue (a :: ArrayViewType)  where
-  bytesPerValue :: AProxy a -> Int
+class BytesPerValue (a :: ArrayViewType) (b :: Type) | a -> b
 ```
 
 ##### Instances
 ``` purescript
-BytesPerValue Uint8Clamped
-BytesPerValue Uint32
-BytesPerValue Uint16
-BytesPerValue Uint8
-BytesPerValue Int32
-BytesPerValue Int16
-BytesPerValue Int8
-```
-
-#### `length`
-
-``` purescript
-length :: forall a. BytesPerValue a => ArrayView a -> Int
+BytesPerValue Uint8Clamped D1
+BytesPerValue Uint32 D4
+BytesPerValue Uint16 D2
+BytesPerValue Uint8 D1
+BytesPerValue Int32 D4
+BytesPerValue Int16 D2
+BytesPerValue Int8 D1
+BytesPerValue Float32 D4
+BytesPerValue Float64 D8
 ```
 
 #### `TypedArray`
@@ -91,85 +85,112 @@ class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   part :: ArrayBuffer -> Offset -> Length -> Effect (ArrayView a)
   empty :: Length -> ArrayView a
   fromArray :: Array t -> ArrayView a
-  all :: (t -> Boolean) -> ArrayView a -> Boolean
-  any :: (t -> Boolean) -> ArrayView a -> Boolean
-  fill :: ArrayView a -> t -> Effect Unit
-  fillRemainder :: ArrayView a -> t -> Offset -> Effect Unit
-  fillPart :: ArrayView a -> t -> Offset -> Offset -> Effect Unit
-  set :: ArrayView a -> Array t -> Effect Unit
-  set' :: ArrayView a -> Offset -> Array t -> Effect Unit
-  map' :: (t -> t) -> ArrayView a -> ArrayView a
-  traverse' :: (t -> Effect t) -> ArrayView a -> Effect (ArrayView a)
-  traverse_' :: (t -> Effect Unit) -> ArrayView a -> Effect Unit
-  filter :: (t -> Boolean) -> ArrayView a -> ArrayView a
+  fill :: ArrayView a -> t -> Maybe (Tuple Offset (Maybe Offset)) -> Effect Unit
+  set :: ArrayView a -> Maybe Offset -> Array t -> Effect Unit
+  map :: (t -> Offset -> t) -> ArrayView a -> ArrayView a
+  traverse :: (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+  traverse_ :: (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
+  all :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
+  any :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
+  filter :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect (ArrayView a)
+  elem :: t -> Maybe Offset -> ArrayView a -> Boolean
   unsafeAt :: ArrayView a -> Offset -> Effect t
+  foldlM :: forall b. ArrayView a -> (b -> t -> Offset -> Effect b) -> b -> Effect b
+  foldl1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
+  foldrM :: forall b. ArrayView a -> (t -> b -> Offset -> Effect b) -> b -> Effect b
+  foldr1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
+  find :: ArrayView a -> (t -> Offset -> Effect Boolean) -> Effect (Maybe t)
+  findIndex :: ArrayView a -> (t -> Offset -> Effect Boolean) -> Effect (Maybe Offset)
+  indexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
+  lastIndexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
 ```
 
-Measured user-level values stored in each typed array
+Typeclass that associates a measured user-level type with a typed array.
+
+# Creation
+
+- `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
+  on top of an existing `ArrayBuffer`.
+- `empty` and `fromArray` are methods for creating pure typed arrays
+
+# Modification
+
+- `fill`, `set`, and `setTyped` are methods for assigning values from external sources
+- `map` and `traverse` allow you to create a new array from the existing values in another
+- `copyWithin` allows you to set values to the array that exist in other parts of the array
+- `filter` creates a new array without the values that don't pass a predicate
+- `reverse` modifies an existing array in-place, with all values reversed
+- `sort` modifies an existing array in-place, with all values sorted
+
+# Access
+
+- `elem`, `all`, and `any` are functions for testing the contents of an array
+- `unsafeAt`, `hasIndex`, and `at` are used to get values from an array, with an offset
+- `foldr`, `foldrM`, `foldr1`, `foldr1M`, `foldl`, `foldlM`, `foldl1`, `foldl1M` all can reduce an array
+- `find` and `findIndex` are searching functions via a predicate
+- `indexOf` and `lastIndexOf` are searching functions via equality
+- `slice` returns a new typed array on the same array buffer content as the input
+- `subArray` returns a new typed array with a separate array buffer
+- `toString` prints to a CSV, `toString'` allows you to supply the delimiter
+- `toArray` returns an array of numeric values
 
 ##### Instances
 ``` purescript
 TypedArray Uint8Clamped Int
+TypedArray Uint32 Number
+TypedArray Uint16 Int
+TypedArray Uint8 Int
+TypedArray Int32 Int
+TypedArray Int16 Int
+TypedArray Int8 Int
+TypedArray Float32 Number
+TypedArray Float64 Number
 ```
 
-#### `copyWithin`
+#### `foldl`
 
 ``` purescript
-copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Effect Unit
+foldl :: forall a b t. TypedArray a t => ArrayView a -> (b -> t -> Offset -> b) -> b -> b
 ```
 
-Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
-
-#### `copyWithinPart`
+#### `foldl1`
 
 ``` purescript
-copyWithinPart :: forall a. ArrayView a -> Offset -> Offset -> Offset -> Effect Unit
+foldl1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
 ```
 
-#### `reverse`
+#### `foldr`
 
 ``` purescript
-reverse :: forall a. ArrayView a -> Effect Unit
+foldr :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> Offset -> b) -> b -> b
 ```
 
-Reverses a typed array in-place.
+#### `foldr1`
+
+``` purescript
+foldr1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
+```
 
 #### `setTyped`
 
 ``` purescript
-setTyped :: forall a. ArrayView a -> ArrayView a -> Effect Unit
+setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Unit
 ```
 
 Stores multiple values in the typed array, reading input values from the second typed array.
 
-#### `setTyped'`
+#### `copyWithin`
 
 ``` purescript
-setTyped' :: forall a. ArrayView a -> Offset -> ArrayView a -> Effect Unit
+copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Maybe Offset -> Effect Unit
 ```
 
-Stores multiple values in the typed array, reading input values from the second typed array, with offset.
-
-#### `copy`
-
-``` purescript
-copy :: forall a. ArrayView a -> ArrayView a
-```
-
-Copy the entire contents of the typed array into a new buffer.
-
-#### `sliceRemainder`
-
-``` purescript
-sliceRemainder :: forall a. ArrayView a -> Offset -> ArrayView a
-```
-
-Copy the remainder of contents of the typed array into a new buffer, after some start index.
+Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
 
 #### `slice`
 
 ``` purescript
-slice :: forall a. ArrayView a -> Offset -> Offset -> ArrayView a
+slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
 ```
 
 Copy part of the contents of a typed array into a new buffer, between some start and end indices.
@@ -185,18 +206,18 @@ Sorts the values in-place
 #### `subArray`
 
 ``` purescript
-subArray :: forall a. ArrayView a -> Offset -> Offset -> ArrayView a
+subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
 ```
 
 Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
 
-#### `subArrayRemainder`
+#### `reverse`
 
 ``` purescript
-subArrayRemainder :: forall a. ArrayView a -> Offset -> ArrayView a
+reverse :: forall a. ArrayView a -> Effect Unit
 ```
 
-Returns a new typed array view of the same buffer, beginning at the index
+Reverses a typed array in-place.
 
 #### `toString`
 
