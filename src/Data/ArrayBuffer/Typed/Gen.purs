@@ -14,6 +14,8 @@ import Math as M
 import Data.Maybe (Maybe (..))
 import Data.List.Lazy (replicateM)
 import Data.Int as I
+import Data.UInt (UInt)
+import Data.UInt as UInt
 import Data.String.CodeUnits as S
 import Data.Float.Parse (parseFloat)
 import Data.Array as Array
@@ -76,8 +78,8 @@ arbitraryNibble =
   let j = I.pow 2 8
   in  chooseInt (negate j) (j - 1)
 
-arbitraryUWord :: forall m. MonadGen m => m Number
-arbitraryUWord = M.round <$> chooseFloat 0.0 ((M.pow 2.0 32.0) - 1.0)
+arbitraryUWord :: forall m. MonadGen m => m UInt
+arbitraryUWord = UInt.fromNumber <$> chooseFloat 0.0 ((M.pow 2.0 32.0) - 1.0)
 
 arbitraryWord :: forall m. MonadGen m => m Int
 arbitraryWord =

@@ -7,14 +7,16 @@ module Data.ArrayBuffer.Typed
   , buffer, byteOffset, byteLength, length
   , class BytesPerValue
   , class TypedArray
-  , whole, remainder, part, empty, fromArray, all, any, fill, set
-  , map, traverse, traverse_, filter, elem
+  , whole, remainder, part, empty, fromArray
+  , fill, set, setTyped, copyWithin
+  , map, traverse, traverse_, filter
+  , sort, reverse
+  , elem, all, any
+  , unsafeAt, hasIndex, at
   , foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
   , find, findIndex, indexOf, lastIndexOf
-  , setTyped, copyWithin, slice, sort, subArray, reverse
-  , toString, toString'
-  , unsafeAt, hasIndex, at
-  , toArray
+  , slice, subArray
+  , toString, toString', toArray
   ) where
 
 import Prelude
@@ -27,6 +29,8 @@ import Effect.Unsafe (unsafePerformEffect)
 import Data.Tuple (Tuple (..))
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toNullable, toMaybe)
+import Data.UInt (UInt)
+import Data.UInt (fromNumber, toNumber) as UInt
 import Data.ArrayBuffer.Types
   ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
   , Float64Array, Float32Array
@@ -213,26 +217,27 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
   findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
   indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
   lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
-instance typedArrayUint32 :: TypedArray Uint32 Number where
+instance typedArrayUint32 :: TypedArray Uint32 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint32Array a (toNullable Nothing) (toNullable Nothing))
   remainder a x = runEffectFn3 newUint32Array a (toNullable (Just x)) (toNullable Nothing)
   part a x y = runEffectFn3 newUint32Array a (toNullable (Just x)) (toNullable (Just y))
   empty n = unsafePerformEffect (runEffectFn3 newUint32Array n (toNullable Nothing) (toNullable Nothing))
-  fromArray a = unsafePerformEffect (runEffectFn3 newUint32Array a (toNullable Nothing) (toNullable Nothing))
-  all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
-  any p a = runEffectFn2 someImpl a (mkEffectFn2 p)
+  fromArray a = unsafePerformEffect (runEffectFn3 newUint32Array (UInt.toNumber <$> a) (toNullable Nothing) (toNullable Nothing))
+  all p a = runEffectFn2 everyImpl a (mkEffectFn2 (p <<< UInt.fromNumber))
+  any p a = runEffectFn2 someImpl a (mkEffectFn2 (p <<< UInt.fromNumber))
   fill a x mz = case mz of
-    Nothing -> runEffectFn4 fillImpl a x (toNullable Nothing) (toNullable Nothing)
+    Nothing -> runEffectFn4 fillImpl a (UInt.toNumber x) (toNullable Nothing) (toNullable Nothing)
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable Nothing)
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
-  set a mo x = runEffectFn3 setImpl a (toNullable mo) x
-  map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
-  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
-  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
-  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 p)
-  elem x mo a = runFn3 includesImpl a x (toNullable mo)
-  unsafeAt = runEffectFn2 unsafeAtImpl
+      Nothing -> runEffectFn4 fillImpl a (UInt.toNumber x) (toNullable (Just s)) (toNullable Nothing)
+      Just e -> runEffectFn4 fillImpl a (UInt.toNumber x) (toNullable (Just s)) (toNullable (Just e))
+  set a mo x = runEffectFn3 setImpl a (toNullable mo) (UInt.toNumber <$> x)
+  map f a = unsafePerformEffect $ runEffectFn2 mapImpl a $
+    mkEffectFn2 \x o -> pure $ UInt.toNumber $ f (UInt.fromNumber x) o
+  traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> UInt.toNumber <$> f (UInt.fromNumber x) o))
+  traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 (f <<< UInt.fromNumber))
+  filter p a = runEffectFn2 filterImpl a (mkEffectFn2 (p <<< UInt.fromNumber))
+  elem x mo a = runFn3 includesImpl a (UInt.toNumber x) (toNullable mo)
+  unsafeAt o ms = UInt.fromNumber <$> runEffectFn2 unsafeAtImpl o ms
   foldlM a f = runEffectFn3 reduceImpl a (mkEffectFn3 f)
   foldl1M a f = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
   foldrM a f = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o))

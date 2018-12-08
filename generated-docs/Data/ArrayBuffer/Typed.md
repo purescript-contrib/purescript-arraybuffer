@@ -107,13 +107,13 @@ class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
 
 Typeclass that associates a measured user-level type with a typed array.
 
-# Creation
+#### Creation
 
 - `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
   on top of an existing `ArrayBuffer`.
 - `empty` and `fromArray` are methods for creating pure typed arrays
 
-# Modification
+#### Modification
 
 - `fill`, `set`, and `setTyped` are methods for assigning values from external sources
 - `map` and `traverse` allow you to create a new array from the existing values in another
@@ -122,7 +122,7 @@ Typeclass that associates a measured user-level type with a typed array.
 - `reverse` modifies an existing array in-place, with all values reversed
 - `sort` modifies an existing array in-place, with all values sorted
 
-# Access
+#### Access
 
 - `elem`, `all`, and `any` are functions for testing the contents of an array
 - `unsafeAt`, `hasIndex`, and `at` are used to get values from an array, with an offset
@@ -146,6 +146,70 @@ TypedArray Int8 Int
 TypedArray Float32 Number
 TypedArray Float64 Number
 ```
+
+#### `setTyped`
+
+``` purescript
+setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Unit
+```
+
+Stores multiple values in the typed array, reading input values from the second typed array.
+
+#### `copyWithin`
+
+``` purescript
+copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Maybe Offset -> Effect Unit
+```
+
+Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
+
+#### `sort`
+
+``` purescript
+sort :: forall a. ArrayView a -> Effect Unit
+```
+
+Sorts the values in-place
+
+#### `reverse`
+
+``` purescript
+reverse :: forall a. ArrayView a -> Effect Unit
+```
+
+Reverses a typed array in-place.
+
+#### `slice`
+
+``` purescript
+slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
+```
+
+Copy part of the contents of a typed array into a new buffer, between some start and end indices.
+
+#### `subArray`
+
+``` purescript
+subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
+```
+
+Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
+
+#### `hasIndex`
+
+``` purescript
+hasIndex :: forall a. ArrayView a -> Offset -> Boolean
+```
+
+Determine if a certain index is valid.
+
+#### `at`
+
+``` purescript
+at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
+```
+
+Fetch element at index.
 
 #### `foldl`
 
@@ -171,54 +235,6 @@ foldr :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> Offset -> b) 
 foldr1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
 ```
 
-#### `setTyped`
-
-``` purescript
-setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Unit
-```
-
-Stores multiple values in the typed array, reading input values from the second typed array.
-
-#### `copyWithin`
-
-``` purescript
-copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Maybe Offset -> Effect Unit
-```
-
-Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
-
-#### `slice`
-
-``` purescript
-slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
-```
-
-Copy part of the contents of a typed array into a new buffer, between some start and end indices.
-
-#### `sort`
-
-``` purescript
-sort :: forall a. ArrayView a -> Effect Unit
-```
-
-Sorts the values in-place
-
-#### `subArray`
-
-``` purescript
-subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
-```
-
-Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
-
-#### `reverse`
-
-``` purescript
-reverse :: forall a. ArrayView a -> Effect Unit
-```
-
-Reverses a typed array in-place.
-
 #### `toString`
 
 ``` purescript
@@ -234,22 +250,6 @@ toString' :: forall a. ArrayView a -> String -> String
 ```
 
 Prints array to a delimiter-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join) for details.
-
-#### `hasIndex`
-
-``` purescript
-hasIndex :: forall a. ArrayView a -> Offset -> Boolean
-```
-
-Determine if a certain index is valid.
-
-#### `at`
-
-``` purescript
-at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
-```
-
-Fetch element at index.
 
 #### `toArray`
 
