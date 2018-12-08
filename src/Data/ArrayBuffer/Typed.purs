@@ -110,13 +110,13 @@ type Length = Int
 -- TODO use purescript-quotient
 -- | Typeclass that associates a measured user-level type with a typed array.
 -- |
--- | # Creation
+-- | #### Creation
 -- |
 -- | - `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
 -- |   on top of an existing `ArrayBuffer`.
 -- | - `empty` and `fromArray` are methods for creating pure typed arrays
 -- |
--- | # Modification
+-- | #### Modification
 -- |
 -- | - `fill`, `set`, and `setTyped` are methods for assigning values from external sources
 -- | - `map` and `traverse` allow you to create a new array from the existing values in another
@@ -125,7 +125,7 @@ type Length = Int
 -- | - `reverse` modifies an existing array in-place, with all values reversed
 -- | - `sort` modifies an existing array in-place, with all values sorted
 -- |
--- | # Access
+-- | #### Access
 -- |
 -- | - `elem`, `all`, and `any` are functions for testing the contents of an array
 -- | - `unsafeAt`, `hasIndex`, and `at` are used to get values from an array, with an offset
