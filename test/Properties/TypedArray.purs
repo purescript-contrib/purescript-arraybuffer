@@ -10,10 +10,12 @@ import Data.ArrayBuffer.Typed.Gen
   , arbitraryFloat32Array, arbitraryFloat64Array)
 
 import Prelude
+import Data.Maybe (Maybe (..))
 import Data.Typelevel.Num (toInt', class Nat)
 import Type.Proxy (Proxy (..))
 import Test.QuickCheck (quickCheckGen, Result, (===))
 import Effect (Effect)
+import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
 
 
@@ -23,6 +25,8 @@ typedArrayTests = do
   byteLengthDivBytesPerValueTests
   log "    - fromArray (toArray x) === x"
   fromArrayToArrayIsoTests
+  log "    - fill y x => all (== y) x"
+  allAreFilledTests
 
 
 type TestableArrayF a t n =
@@ -30,6 +34,7 @@ type TestableArrayF a t n =
   => Eq t
   => TypedArray a t
   => BytesPerValue a n
+  => Semiring t
   => Nat n
   => ArrayView a -> Result
 
@@ -69,3 +74,16 @@ fromArrayToArrayIsoTests = overAll fromArrayToArrayIso
   where
     fromArrayToArrayIso :: forall a t n. TestableArrayF a t n
     fromArrayToArrayIso x = TA.toArray (TA.fromArray (TA.toArray x) :: ArrayView a) === TA.toArray x
+
+
+allAreFilledTests :: Effect Unit
+allAreFilledTests = overAll allAreFilled
+  where
+    allAreFilled :: forall a t n. TestableArrayF a t n
+    allAreFilled xs = unsafePerformEffect do
+      let x = case TA.at xs 0 of
+            Nothing -> zero
+            Just y -> y
+      TA.fill xs x Nothing
+      b <- TA.all (\y o -> pure (y == x)) xs
+      pure (b === true)
