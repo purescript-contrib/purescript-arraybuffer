@@ -137,7 +137,7 @@ Typeclass that associates a measured user-level type with a typed array.
 ##### Instances
 ``` purescript
 TypedArray Uint8Clamped Int
-TypedArray Uint32 Number
+TypedArray Uint32 UInt
 TypedArray Uint16 Int
 TypedArray Uint8 Int
 TypedArray Int32 Int
@@ -179,22 +179,6 @@ reverse :: forall a. ArrayView a -> Effect Unit
 
 Reverses a typed array in-place.
 
-#### `slice`
-
-``` purescript
-slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
-```
-
-Copy part of the contents of a typed array into a new buffer, between some start and end indices.
-
-#### `subArray`
-
-``` purescript
-subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
-```
-
-Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
-
 #### `hasIndex`
 
 ``` purescript
@@ -234,6 +218,22 @@ foldr :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> Offset -> b) 
 ``` purescript
 foldr1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
 ```
+
+#### `slice`
+
+``` purescript
+slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
+```
+
+Copy part of the contents of a typed array into a new buffer, between some start and end indices.
+
+#### `subArray`
+
+``` purescript
+subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
+```
+
+Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
 
 #### `toString`
 

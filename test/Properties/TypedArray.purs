@@ -13,7 +13,7 @@ import Prelude
 import Data.Maybe (Maybe (..))
 import Data.Typelevel.Num (toInt', class Nat)
 import Type.Proxy (Proxy (..))
-import Test.QuickCheck (quickCheckGen, Result, (===))
+import Test.QuickCheck (quickCheckGen, Result, (===), class Testable, class Arbitrary)
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
@@ -29,17 +29,18 @@ typedArrayTests = do
   allAreFilledTests
 
 
-type TestableArrayF a t n =
+type TestableArrayF a t n q =
      Show t
   => Eq t
   => TypedArray a t
   => BytesPerValue a n
+  -- => Arbitrary t
   => Semiring t
   => Nat n
-  => ArrayView a -> Result
+  => ArrayView a -> q
 
 
-overAll :: (forall a t n. TestableArrayF a t n) -> Effect Unit
+overAll :: forall q. Testable q => (forall a t n. TestableArrayF a t n q) -> Effect Unit
 overAll f = do
   log "      - Uint8ClampedArray"
   quickCheckGen (f <$> arbitraryUint8ClampedArray)
@@ -64,7 +65,7 @@ overAll f = do
 byteLengthDivBytesPerValueTests :: Effect Unit
 byteLengthDivBytesPerValueTests = overAll byteLengthDivBytesPerValueEqLength
   where
-    byteLengthDivBytesPerValueEqLength :: forall a t n. TestableArrayF a t n
+    byteLengthDivBytesPerValueEqLength :: forall a t n. TestableArrayF a t n Result
     byteLengthDivBytesPerValueEqLength a =
       let n = toInt' (Proxy :: Proxy n)
       in  TA.length a === (TA.byteLength a `div` n)
@@ -72,18 +73,21 @@ byteLengthDivBytesPerValueTests = overAll byteLengthDivBytesPerValueEqLength
 fromArrayToArrayIsoTests :: Effect Unit
 fromArrayToArrayIsoTests = overAll fromArrayToArrayIso
   where
-    fromArrayToArrayIso :: forall a t n. TestableArrayF a t n
+    fromArrayToArrayIso :: forall a t n. TestableArrayF a t n Result
     fromArrayToArrayIso x = TA.toArray (TA.fromArray (TA.toArray x) :: ArrayView a) === TA.toArray x
 
 
 allAreFilledTests :: Effect Unit
 allAreFilledTests = overAll allAreFilled
   where
-    allAreFilled :: forall a t n. TestableArrayF a t n
-    allAreFilled xs = unsafePerformEffect do
+    allAreFilled :: forall a t n. TestableArrayF a t n Result -- (t -> Result)
+    allAreFilled xs {-x =-} = unsafePerformEffect do
       let x = case TA.at xs 0 of
             Nothing -> zero
             Just y -> y
       TA.fill xs x Nothing
       b <- TA.all (\y o -> pure (y == x)) xs
       pure (b === true)
+
+
+-- setSingletonIsEq 

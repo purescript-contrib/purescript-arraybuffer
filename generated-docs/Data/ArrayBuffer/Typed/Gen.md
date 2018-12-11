@@ -83,7 +83,7 @@ arbitraryNibble :: forall m. MonadGen m => m Int
 #### `arbitraryUWord`
 
 ``` purescript
-arbitraryUWord :: forall m. MonadGen m => m Number
+arbitraryUWord :: forall m. MonadGen m => m UInt
 ```
 
 #### `arbitraryWord`
