@@ -1,4 +1,4 @@
--- | Functions for generating random typed arrays.
+-- | Functions for generating typed arrays and values.
 
 module Data.ArrayBuffer.Typed.Gen where
 
@@ -20,9 +20,15 @@ import Data.String.CodeUnits as S
 import Data.Float.Parse (parseFloat)
 import Data.Array as Array
 import Data.Vec (Vec)
+import Data.Vec (fromArray) as Vec
 import Data.Generic.Rep (class Generic)
+import Data.Typelevel.Num (class Nat, toInt')
+import Data.Unfoldable (replicateA)
+import Type.Proxy (Proxy (..))
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Partial.Unsafe (unsafePartial)
+
+
 
 
 genUint8ClampedArray :: forall m. MonadGen m => m Uint8ClampedArray
@@ -35,7 +41,7 @@ genUint32Array = sized \s ->
 
 genUint16Array :: forall m. MonadGen m => m Uint16Array
 genUint16Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genUNibble
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s genUChomp
 
 genUint8Array :: forall m. MonadGen m => m Uint8Array
 genUint8Array = sized \s ->
@@ -47,7 +53,7 @@ genInt32Array = sized \s ->
 
 genInt16Array :: forall m. MonadGen m => m Int16Array
 genInt16Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genNibble
+   TA.fromArray <<< Array.fromFoldable <$> replicateM s genChomp
 
 genInt8Array :: forall m. MonadGen m => m Int8Array
 genInt8Array = sized \s ->
@@ -72,11 +78,11 @@ genByte =
   let j = I.pow 2 4
   in  chooseInt (negate j) (j - 1)
 
-genUNibble :: forall m. MonadGen m => m Int
-genUNibble = chooseInt 0 ((I.pow 2 16) - 1)
+genUChomp :: forall m. MonadGen m => m Int
+genUChomp = chooseInt 0 ((I.pow 2 16) - 1)
 
-genNibble :: forall m. MonadGen m => m Int
-genNibble =
+genChomp :: forall m. MonadGen m => m Int
+genChomp =
   let j = I.pow 2 8
   in  chooseInt (negate j) (j - 1)
 
@@ -107,6 +113,22 @@ genFloat64 :: forall m. MonadGen m => m Number
 genFloat64 = chooseFloat (-1.7e308) 1.7e308
 
 
--- For generating some set of offsets, inside the array
+
+-- | For generating some set of offsets residing inside the generated array
 data WithOffset n a = WithOffset (Vec n TA.Offset) (ArrayView a)
 derive instance genericWithOffset :: Generic (ArrayView a) a' => Generic (WithOffset n a) _
+
+genWithOffset :: forall m n b a
+               . MonadGen m
+              => Nat n
+              => TA.BytesPerValue a b
+              => m (ArrayView a)
+              -> m (WithOffset n a)
+genWithOffset genArrayView = do
+  let n = toInt' (Proxy :: Proxy n)
+  xs <- genArrayView
+  let l = TA.length xs
+  mos <- replicateA n (chooseInt 0 (l - 1))
+  let os = unsafePartial $ case Vec.fromArray mos of
+        Just q -> q
+  pure (WithOffset os xs)

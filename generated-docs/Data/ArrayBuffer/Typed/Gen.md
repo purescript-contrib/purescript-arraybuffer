@@ -1,107 +1,127 @@
 ## Module Data.ArrayBuffer.Typed.Gen
 
-Functions for generating random typed arrays.
+Functions for generating typed arrays and values.
 
-#### `arbitraryUint8ClampedArray`
+#### `genUint8ClampedArray`
 
 ``` purescript
-arbitraryUint8ClampedArray :: forall m. MonadGen m => m Uint8ClampedArray
+genUint8ClampedArray :: forall m. MonadGen m => m Uint8ClampedArray
 ```
 
-#### `arbitraryUint32Array`
+#### `genUint32Array`
 
 ``` purescript
-arbitraryUint32Array :: forall m. MonadGen m => m Uint32Array
+genUint32Array :: forall m. MonadGen m => m Uint32Array
 ```
 
-#### `arbitraryUint16Array`
+#### `genUint16Array`
 
 ``` purescript
-arbitraryUint16Array :: forall m. MonadGen m => m Uint16Array
+genUint16Array :: forall m. MonadGen m => m Uint16Array
 ```
 
-#### `arbitraryUint8Array`
+#### `genUint8Array`
 
 ``` purescript
-arbitraryUint8Array :: forall m. MonadGen m => m Uint8Array
+genUint8Array :: forall m. MonadGen m => m Uint8Array
 ```
 
-#### `arbitraryInt32Array`
+#### `genInt32Array`
 
 ``` purescript
-arbitraryInt32Array :: forall m. MonadGen m => m Int32Array
+genInt32Array :: forall m. MonadGen m => m Int32Array
 ```
 
-#### `arbitraryInt16Array`
+#### `genInt16Array`
 
 ``` purescript
-arbitraryInt16Array :: forall m. MonadGen m => m Int16Array
+genInt16Array :: forall m. MonadGen m => m Int16Array
 ```
 
-#### `arbitraryInt8Array`
+#### `genInt8Array`
 
 ``` purescript
-arbitraryInt8Array :: forall m. MonadGen m => m Int8Array
+genInt8Array :: forall m. MonadGen m => m Int8Array
 ```
 
-#### `arbitraryFloat32Array`
+#### `genFloat32Array`
 
 ``` purescript
-arbitraryFloat32Array :: forall m. MonadGen m => m Float32Array
+genFloat32Array :: forall m. MonadGen m => m Float32Array
 ```
 
-#### `arbitraryFloat64Array`
+#### `genFloat64Array`
 
 ``` purescript
-arbitraryFloat64Array :: forall m. MonadGen m => m Float64Array
+genFloat64Array :: forall m. MonadGen m => m Float64Array
 ```
 
-#### `arbitraryUByte`
+#### `genUByte`
 
 ``` purescript
-arbitraryUByte :: forall m. MonadGen m => m Int
+genUByte :: forall m. MonadGen m => m Int
 ```
 
-#### `arbitraryByte`
+#### `genByte`
 
 ``` purescript
-arbitraryByte :: forall m. MonadGen m => m Int
+genByte :: forall m. MonadGen m => m Int
 ```
 
-#### `arbitraryUNibble`
+#### `genUChomp`
 
 ``` purescript
-arbitraryUNibble :: forall m. MonadGen m => m Int
+genUChomp :: forall m. MonadGen m => m Int
 ```
 
-#### `arbitraryNibble`
+#### `genChomp`
 
 ``` purescript
-arbitraryNibble :: forall m. MonadGen m => m Int
+genChomp :: forall m. MonadGen m => m Int
 ```
 
-#### `arbitraryUWord`
+#### `genUWord`
 
 ``` purescript
-arbitraryUWord :: forall m. MonadGen m => m UInt
+genUWord :: forall m. MonadGen m => m UInt
 ```
 
-#### `arbitraryWord`
+#### `genWord`
 
 ``` purescript
-arbitraryWord :: forall m. MonadGen m => m Int
+genWord :: forall m. MonadGen m => m Int
 ```
 
-#### `arbitraryFloat32`
+#### `genFloat32`
 
 ``` purescript
-arbitraryFloat32 :: forall m. MonadGen m => m Number
+genFloat32 :: forall m. MonadGen m => m Number
 ```
 
-#### `arbitraryFloat64`
+#### `genFloat64`
 
 ``` purescript
-arbitraryFloat64 :: forall m. MonadGen m => m Number
+genFloat64 :: forall m. MonadGen m => m Number
+```
+
+#### `WithOffset`
+
+``` purescript
+data WithOffset n a
+  = WithOffset (Vec n Offset) (ArrayView a)
+```
+
+For generating some set of offsets residing inside the generated array
+
+##### Instances
+``` purescript
+(Generic (ArrayView a) a') => Generic (WithOffset n a) _
+```
+
+#### `genWithOffset`
+
+``` purescript
+genWithOffset :: forall m n b a. MonadGen m => Nat n => BytesPerValue a b => m (ArrayView a) -> m (WithOffset n a)
 ```
 
 
