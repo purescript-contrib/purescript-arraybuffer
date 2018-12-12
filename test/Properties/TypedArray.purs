@@ -7,11 +7,13 @@ import Data.ArrayBuffer.Typed (class BytesPerValue, class TypedArray)
 import Data.ArrayBuffer.Typed.Gen
   ( genUint8ClampedArray, genUint8Array, genUint16Array, genUint32Array
   , genInt8Array, genInt16Array, genInt32Array
-  , genFloat32Array, genFloat64Array)
+  , genFloat32Array, genFloat64Array, WithOffset (..), genWithOffset)
 
 import Prelude
 import Data.Maybe (Maybe (..))
-import Data.Typelevel.Num (toInt', class Nat)
+import Data.Tuple (Tuple (..))
+import Data.Typelevel.Num (toInt', class Nat, D0, D1)
+import Data.Vec (head) as Vec
 import Type.Proxy (Proxy (..))
 import Test.QuickCheck (quickCheckGen, Result, (===), class Testable, class Arbitrary)
 import Effect (Effect)
@@ -27,62 +29,65 @@ typedArrayTests = do
   fromArrayToArrayIsoTests
   log "    - fill y x => all (== y) x"
   allAreFilledTests
+  log "    - set x [y] o => (at x o == Just y)"
+  setSingletonIsEqTests
 
 
-type TestableArrayF a t n q =
+type TestableArrayF a b n t q =
      Show t
   => Eq t
   => TypedArray a t
-  => BytesPerValue a n
+  => Nat b
+  => BytesPerValue a b
   => Arbitrary t
   => Semiring t
-  => Nat n
-  => ArrayView a
+  => WithOffset n a
   -> q
 
 
-overAll :: forall q. Testable q => (forall a t n. TestableArrayF a t n q) -> Effect Unit
+overAll :: forall q n. Testable q => Nat n => (forall a b t. TestableArrayF a b n t q) -> Effect Unit
 overAll f = do
   log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genUint8ClampedArray)
+  quickCheckGen (f <$> genWithOffset genUint8ClampedArray)
   log "      - Uint32Array"
-  quickCheckGen (f <$> genUint32Array)
+  quickCheckGen (f <$> genWithOffset genUint32Array)
   log "      - Uint16Array"
-  quickCheckGen (f <$> genUint16Array)
+  quickCheckGen (f <$> genWithOffset genUint16Array)
   log "      - Uint8Array"
-  quickCheckGen (f <$> genUint8Array)
+  quickCheckGen (f <$> genWithOffset genUint8Array)
   log "      - Int32Array"
-  quickCheckGen (f <$> genInt32Array)
+  quickCheckGen (f <$> genWithOffset genInt32Array)
   log "      - Int16Array"
-  quickCheckGen (f <$> genInt16Array)
+  quickCheckGen (f <$> genWithOffset genInt16Array)
   log "      - Int8Array"
-  quickCheckGen (f <$> genInt8Array)
+  quickCheckGen (f <$> genWithOffset genInt8Array)
   log "      - Float32Array"
-  quickCheckGen (f <$> genFloat32Array)
+  quickCheckGen (f <$> genWithOffset genFloat32Array)
   log "      - Float64Array"
-  quickCheckGen (f <$> genFloat64Array)
+  quickCheckGen (f <$> genWithOffset genFloat64Array)
 
 
 byteLengthDivBytesPerValueTests :: Effect Unit
 byteLengthDivBytesPerValueTests = overAll byteLengthDivBytesPerValueEqLength
   where
-    byteLengthDivBytesPerValueEqLength :: forall a t n. TestableArrayF a t n Result
-    byteLengthDivBytesPerValueEqLength a =
-      let n = toInt' (Proxy :: Proxy n)
-      in  TA.length a === (TA.byteLength a `div` n)
+    byteLengthDivBytesPerValueEqLength :: forall a b t. TestableArrayF a b D0 t Result
+    byteLengthDivBytesPerValueEqLength (WithOffset _ a) =
+      let b = toInt' (Proxy :: Proxy b)
+      in  TA.length a === (TA.byteLength a `div` b)
 
 fromArrayToArrayIsoTests :: Effect Unit
 fromArrayToArrayIsoTests = overAll fromArrayToArrayIso
   where
-    fromArrayToArrayIso :: forall a t n. TestableArrayF a t n Result
-    fromArrayToArrayIso x = TA.toArray (TA.fromArray (TA.toArray x) :: ArrayView a) === TA.toArray x
+    fromArrayToArrayIso :: forall a b t. TestableArrayF a b D0 t Result
+    fromArrayToArrayIso (WithOffset _ x) =
+      TA.toArray (TA.fromArray (TA.toArray x) :: ArrayView a) === TA.toArray x
 
 
 allAreFilledTests :: Effect Unit
 allAreFilledTests = overAll allAreFilled
   where
-    allAreFilled :: forall a t n. TestableArrayF a t n Result
-    allAreFilled xs = unsafePerformEffect do
+    allAreFilled :: forall a b t. TestableArrayF a b D0 t Result
+    allAreFilled (WithOffset _ xs) = unsafePerformEffect do
       let x = case TA.at xs 0 of
             Nothing -> zero
             Just y -> y
@@ -91,4 +96,13 @@ allAreFilledTests = overAll allAreFilled
       pure (b === true)
 
 
--- setSingletonIsEq 
+setSingletonIsEqTests :: Effect Unit
+setSingletonIsEqTests = overAll setSingletonIsEq
+  where
+    setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
+    setSingletonIsEq (WithOffset os xs) = unsafePerformEffect do
+      let x = case TA.at xs 0 of
+            Nothing -> zero
+            Just y -> y
+      TA.set xs (Just (Vec.head os)) [x]
+      pure (TA.at xs (Vec.head os) === Just x)
