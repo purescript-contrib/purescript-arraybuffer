@@ -75,17 +75,23 @@ typedArrayTests = do
   toStringIsJoinWithCommaTests
   log "    - setTyped x (subArray x) == x"
   setTypedOfSubArrayIsIdentityTests
-  log "    - let z' = subArray z; q = toArray z'; mutate z; pure q /= toArray z'"
+  log "    - let z' = subArray x; q = toArray z'; mutate x; pure q /= toArray z'"
   modifyingOriginalMutatesSubArrayTests
-  log "    - let z' = subArray 0 z; q = toArray z'; mutate z; pure q /= toArray z'"
+  log "    - let z' = subArray x; q = toArray x; mutate z'; pure q /= toArray x"
+  modifyingSubArrayMutatesOriginalTests
+  log "    - let z' = subArray 0 x; q = toArray z'; mutate x; pure q /= toArray z'"
   modifyingOriginalMutatesSubArrayZeroTests
-  log "    - let z' = subArray 0 (length z) z; q = toArray z'; mutate z; pure q /= toArray z'"
+  log "    - let z' = subArray 0 x; q = toArray x; mutate z'; pure q /= toArray x"
+  modifyingSubArrayMutatesOriginalZeroTests
+  log "    - let z' = subArray 0 (length x) x; q = toArray z'; mutate x; pure q /= toArray z'"
   modifyingOriginalMutatesSubArrayAllTests
-  log "    - let z' = subArray o z; q = toArray z'; mutate z; pure q == toArray z'"
+  log "    - let z' = subArray 0 (length x) x; q = toArray x; mutate z'; pure q /= toArray x"
+  modifyingSubArrayMutatesOriginalAllTests
+  log "    - let z' = subArray o x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSubArrayPartTests
-  log "    - let z' = slice z; q = toArray z'; mutate z; pure q == toArray z'"
+  log "    - let z' = slice x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSliceTests
-  log "    - let z' = slice o z; q = toArray z'; mutate z; pure q == toArray z'"
+  log "    - let z' = slice o x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSlicePartTests
   -- log "    - take (o + 1) (copyWithin o x) == slice o x"
   -- copyWithinIsSliceTests
@@ -325,7 +331,7 @@ traverseSnocIsToArrayTests = overAll traverseSnocIsToArray
     traverseSnocIsToArray (WithOffset _ xs) =
       let ys = unsafePerformEffect do
             ref <- Ref.new []
-            TA.traverse_ (\x _ -> void (Ref.modify (\xs -> Array.snoc xs x) ref)) xs
+            TA.traverse_ (\x _ -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
             Ref.read ref
       in  TA.toArray xs === ys
 
@@ -417,6 +423,21 @@ modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
         in  zs /== ys
 
 
+modifyingSubArrayMutatesOriginalTests :: Effect Unit
+modifyingSubArrayMutatesOriginalTests = overAll modifyingOriginalMutatesSubArray
+  where
+    modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArray (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.subArray xs Nothing
+            zs = TA.toArray xs
+            ys = unsafePerformEffect do
+              TA.fill zsSub zero Nothing
+              pure (TA.toArray xs)
+        in  zs /== ys
+
+
 modifyingOriginalMutatesSubArrayZeroTests :: Effect Unit
 modifyingOriginalMutatesSubArrayZeroTests = overAll modifyingOriginalMutatesSubArrayZero
   where
@@ -432,6 +453,21 @@ modifyingOriginalMutatesSubArrayZeroTests = overAll modifyingOriginalMutatesSubA
         in  zs /== ys
 
 
+modifyingSubArrayMutatesOriginalZeroTests :: Effect Unit
+modifyingSubArrayMutatesOriginalZeroTests = overAll modifyingSubArrayMutatesOriginalZero
+  where
+    modifyingSubArrayMutatesOriginalZero :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingSubArrayMutatesOriginalZero (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.subArray xs (Just (Tuple 0 Nothing))
+            zs = TA.toArray xs
+            ys = unsafePerformEffect do
+              TA.fill zsSub zero Nothing
+              pure (TA.toArray xs)
+        in  zs /== ys
+
+
 modifyingOriginalMutatesSubArrayAllTests :: Effect Unit
 modifyingOriginalMutatesSubArrayAllTests = overAll modifyingOriginalMutatesSubArrayAll
   where
@@ -444,6 +480,21 @@ modifyingOriginalMutatesSubArrayAllTests = overAll modifyingOriginalMutatesSubAr
             ys = unsafePerformEffect do
               TA.fill xs zero Nothing
               pure (TA.toArray zsSub)
+        in  zs /== ys
+
+
+modifyingSubArrayMutatesOriginalAllTests :: Effect Unit
+modifyingSubArrayMutatesOriginalAllTests = overAll modifyingSubArrayMutatesOriginalAll
+  where
+    modifyingSubArrayMutatesOriginalAll :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingSubArrayMutatesOriginalAll (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.subArray xs (Just (Tuple 0 (Just (TA.length xs))))
+            zs = TA.toArray xs
+            ys = unsafePerformEffect do
+              TA.fill zsSub zero Nothing
+              pure (TA.toArray xs)
         in  zs /== ys
 
 
