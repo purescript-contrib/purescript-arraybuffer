@@ -44,6 +44,8 @@ typedArrayTests = do
   withOffsetHasIndexTests
   log "    - forall os `in` xs. all (\\o -> elem (at o xs) xs)"
   withOffsetElemTests
+  log "    - any p x => p (find p x)"
+  anyImpliesFindTests
 
 
 type TestableArrayF a b n t q =
@@ -186,3 +188,19 @@ withOffsetElemTests = overAll withOffsetElem
     withOffsetElem (WithOffset os xs) =
       Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt xs o)) Nothing xs) os === true
 
+
+-- | Should work with any arbitrary predicate, but we can't generate them
+anyImpliesFindTests :: Effect Unit
+anyImpliesFindTests = overAll anyImpliesFind
+  where
+    anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
+    anyImpliesFind (WithOffset _ xs) =
+      let pred x o = pure (x /= zero)
+          q = unsafePerformEffect (TA.any pred xs)
+          is = unsafePerformEffect do
+            mzs <- TA.find xs pred
+            case mzs of
+              Nothing -> pure Nothing
+              Just z -> Just <$> pred z 0
+      in  q `implies` (Just true == is) === true
+    implies x y = if x == true && y == false then false else true
