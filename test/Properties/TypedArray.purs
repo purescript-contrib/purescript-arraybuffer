@@ -17,7 +17,8 @@ import Data.Vec (head) as Vec
 import Data.Array as Array
 import Data.HeytingAlgebra (implies)
 import Type.Proxy (Proxy (..))
-import Test.QuickCheck (quickCheckGen, Result (..), (===), class Testable, class Arbitrary)
+import Test.QuickCheck (quickCheckGen, Result (..), (===), class Testable, class Arbitrary, (<?>))
+import Test.QuickCheck.Combinators ((&=&), (|=|), (==>))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
@@ -53,6 +54,12 @@ typedArrayTests = do
   indexOfImpliesAtTests
   log "    - at x (lastIndexOf y x) == y"
   lastIndexOfImpliesAtTests
+
+
+-- TODO: folding, traversals, mapping
+--       copyWithin, reverse, sort, setTyped, slice, subArray
+--       toString ~ join ","
+
 
 
 type TestableArrayF a b n t q =
@@ -139,7 +146,7 @@ allImpliesAnyTests = overAll allImpliesAny
       let pred x o = pure (x /= zero)
           all' = unsafePerformEffect (TA.all pred xs)
           any' = unsafePerformEffect (TA.any pred xs)
-      in  (all' `implies` any') === true
+      in  all' `implies` any' <?> "All doesn't imply any"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -151,7 +158,7 @@ filterImpliesAllTests = overAll filterImpliesAll
       let pred x o = pure (x /= zero)
           ys = unsafePerformEffect (TA.filter pred xs)
           all' = unsafePerformEffect (TA.all pred ys)
-      in  all' === true
+      in  all' <?> "Filter doesn't imply all"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -183,7 +190,7 @@ withOffsetHasIndexTests = overAll withOffsetHasIndex
   where
     withOffsetHasIndex :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetHasIndex (WithOffset os xs) =
-      Array.all (\o -> TA.hasIndex xs o) os === true
+      Array.all (\o -> TA.hasIndex xs o) os <?> "All doesn't have index of itself"
 
 
 withOffsetElemTests :: Effect Unit
@@ -191,7 +198,8 @@ withOffsetElemTests = overAll withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) =
-      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt xs o)) Nothing xs) os === true
+      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt xs o)) Nothing xs) os
+        <?> "All doesn't have an elem of itself"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -207,7 +215,7 @@ anyImpliesFindTests = overAll anyImpliesFind
             case mzs of
               Nothing -> pure Nothing
               Just z -> Just <$> pred z 0
-      in  q `implies` (Just true == is) === true
+      in  q `implies` (Just true == is) <?> "Any imples find"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -222,7 +230,7 @@ findIndexImpliesAtTests = overAll findIndexImpliesAt
             Nothing -> Success
             Just o -> case TA.at xs o of
               Nothing -> Failed "No value at found index"
-              Just x -> unsafePerformEffect (pred x o) === true
+              Just x -> unsafePerformEffect (pred x o) <?> "Find index implies at"
 
 
 
