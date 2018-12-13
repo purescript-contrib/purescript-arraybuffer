@@ -33,6 +33,12 @@ typedArrayTests = do
   setSingletonIsEqTests
   log "    - all p x => any p x"
   allImpliesAnyTests
+  log "    - all p (filter p x)"
+  filterImpliesAllTests
+  log "    - filter (not . p) (filter p x) == []"
+  filterIsTotalTests
+  log "    - filter p (filter p x) == filter p x"
+  filterIsIdempotentTests
 
 
 type TestableArrayF a b n t q =
@@ -121,3 +127,41 @@ allImpliesAnyTests = overAll allImpliesAny
           any' = unsafePerformEffect (TA.any pred xs)
       in  (all' `implies` any') === true
     implies x y = if x == true && y == false then false else true
+
+
+-- | Should work with any arbitrary predicate, but we can't generate them
+filterImpliesAllTests :: Effect Unit
+filterImpliesAllTests = overAll filterImpliesAll
+  where
+    filterImpliesAll :: forall a b t. TestableArrayF a b D1 t Result
+    filterImpliesAll (WithOffset _ xs) =
+      let pred x o = pure (x /= zero)
+          ys = unsafePerformEffect (TA.filter pred xs)
+          all' = unsafePerformEffect (TA.all pred ys)
+      in  all' === true
+    implies x y = if x == true && y == false then false else true
+
+
+-- | Should work with any arbitrary predicate, but we can't generate them
+filterIsTotalTests :: Effect Unit
+filterIsTotalTests = overAll filterIsTotal
+  where
+    filterIsTotal :: forall a b t. TestableArrayF a b D1 t Result
+    filterIsTotal (WithOffset _ xs) =
+      let pred x o = pure (x /= zero)
+          ys = unsafePerformEffect (TA.filter pred xs)
+          zs = unsafePerformEffect (TA.filter (\x o -> not <$> pred x o) ys)
+      in  TA.toArray zs === []
+
+
+-- | Should work with any arbitrary predicate, but we can't generate them
+filterIsIdempotentTests :: Effect Unit
+filterIsIdempotentTests = overAll filterIsIdempotent
+  where
+    filterIsIdempotent :: forall a b t. TestableArrayF a b D1 t Result
+    filterIsIdempotent (WithOffset _ xs) =
+      let pred x o = pure (x /= zero)
+          ys = unsafePerformEffect (TA.filter pred xs)
+          zs = unsafePerformEffect (TA.filter pred ys)
+      in  TA.toArray zs === TA.toArray ys
+
