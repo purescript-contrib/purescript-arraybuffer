@@ -71,6 +71,8 @@ typedArrayTests = do
   sortIsIdempotentTests
   log "    - toArray (sort x) == Array.sort (toArray x)"
   sortIsArraySortTests
+  log "    - toString' \",\" x == toString x"
+  toStringIsJoinWithCommaTests
 
 
 
@@ -353,6 +355,14 @@ sortIsArraySortTests = overAll sortIsArraySort
           _ = unsafePerformEffect do
             TA.sort xs
       in  TA.toArray xs === ys
+
+
+toStringIsJoinWithCommaTests :: Effect Unit
+toStringIsJoinWithCommaTests = overAll toStringIsJoinWithComma
+  where
+    toStringIsJoinWithComma :: forall a b t. TestableArrayF a b D0 t Result
+    toStringIsJoinWithComma (WithOffset _ xs) =
+      TA.toString' xs "," === TA.toString xs
 
 
 
