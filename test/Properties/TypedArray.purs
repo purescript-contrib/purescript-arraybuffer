@@ -89,6 +89,8 @@ typedArrayTests = do
   modifyingSubArrayMutatesOriginalAllTests
   log "    - let z' = subArray o x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSubArrayPartTests
+  log "    - let z' = subArray 0 o x; q = toArray z'; mutate x; pure q == toArray z'"
+  modifyingOriginalDoesntMutateSubArrayPart2Tests
   log "    - let z' = slice x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSliceTests
   log "    - let z' = slice o x; q = toArray z'; mutate x; pure q == toArray z'"
@@ -509,6 +511,24 @@ modifyingOriginalDoesntMutateSubArrayPartTests = overAll modifyingOriginalMutate
       | otherwise =
         let o = Vec.head os
             zsSub = TA.subArray xs (Just (Tuple o Nothing))
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs === ys
+
+
+modifyingOriginalDoesntMutateSubArrayPart2Tests :: Effect Unit
+modifyingOriginalDoesntMutateSubArrayPart2Tests = overAll modifyingOriginalMutatesSubArrayPart2
+  where
+    modifyingOriginalMutatesSubArrayPart2 :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalMutatesSubArrayPart2 (WithOffset os xs)
+      | Vec.head os == 0 = Success
+      | Array.all (eq zero) (TA.toArray (TA.subArray xs Nothing)) = Success
+      | TA.at xs (Vec.head os) == Just zero = Success
+      | otherwise =
+        let o = Vec.head os
+            zsSub = TA.subArray xs (Just (Tuple 0 (Just o)))
             zs = TA.toArray zsSub
             ys = unsafePerformEffect do
               TA.fill xs zero Nothing

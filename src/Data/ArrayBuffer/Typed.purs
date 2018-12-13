@@ -505,6 +505,24 @@ foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nu
 -- | mutable replica of the original array - the sub-array reference reflects mutations to the original array.
 -- | However, when the sub-array is is actually a smaller contiguous portion of the array, then it behaves
 -- | purely.
+-- |
+-- | **tl;dr**: if you want a duplicate reference of the same typed array, consider either of the following:
+-- |
+-- | ```
+-- | y :: ArrayView _
+-- | y = x
+-- |
+-- | y' :: ArrayView _
+-- | y' = subArray x Nothing
+-- |
+-- | y'' :: ArrayView _
+-- | y'' = subArray x (Just (Tuple 0 Nothing))
+-- |
+-- | y''' :: ArrayView _
+-- | y''' = subArray x (Just (Tuple 0 (Just (length x))))
+-- | ```
+-- |
+-- | Otherwise, you'll get an _image_ of the array at the moment, like `slice`.
 subArray :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
 subArray a mz = case mz of
   Nothing -> runFn3 subArrayImpl a (toNullable Nothing) (toNullable Nothing)
