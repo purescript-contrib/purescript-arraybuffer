@@ -12,8 +12,9 @@ import Data.ArrayBuffer.Typed.Gen
 import Prelude
 import Data.Maybe (Maybe (..))
 import Data.Tuple (Tuple (..))
-import Data.Typelevel.Num (toInt', class Nat, D0, D1)
+import Data.Typelevel.Num (toInt', class Nat, D0, D1, D5)
 import Data.Vec (head) as Vec
+import Data.Array as Array
 import Type.Proxy (Proxy (..))
 import Test.QuickCheck (quickCheckGen, Result, (===), class Testable, class Arbitrary)
 import Effect (Effect)
@@ -39,6 +40,10 @@ typedArrayTests = do
   filterIsTotalTests
   log "    - filter p (filter p x) == filter p x"
   filterIsIdempotentTests
+  log "    - forall os `in` xs. all (\\o -> hasIndex o xs)"
+  withOffsetHasIndexTests
+  log "    - forall os `in` xs. all (\\o -> elem (at o xs) xs)"
+  withOffsetElemTests
 
 
 type TestableArrayF a b n t q =
@@ -120,7 +125,7 @@ setSingletonIsEqTests = overAll setSingletonIsEq
 allImpliesAnyTests :: Effect Unit
 allImpliesAnyTests = overAll allImpliesAny
   where
-    allImpliesAny :: forall a b t. TestableArrayF a b D1 t Result
+    allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
     allImpliesAny (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
           all' = unsafePerformEffect (TA.all pred xs)
@@ -133,7 +138,7 @@ allImpliesAnyTests = overAll allImpliesAny
 filterImpliesAllTests :: Effect Unit
 filterImpliesAllTests = overAll filterImpliesAll
   where
-    filterImpliesAll :: forall a b t. TestableArrayF a b D1 t Result
+    filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
     filterImpliesAll (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
           ys = unsafePerformEffect (TA.filter pred xs)
@@ -146,7 +151,7 @@ filterImpliesAllTests = overAll filterImpliesAll
 filterIsTotalTests :: Effect Unit
 filterIsTotalTests = overAll filterIsTotal
   where
-    filterIsTotal :: forall a b t. TestableArrayF a b D1 t Result
+    filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
     filterIsTotal (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
           ys = unsafePerformEffect (TA.filter pred xs)
@@ -158,10 +163,26 @@ filterIsTotalTests = overAll filterIsTotal
 filterIsIdempotentTests :: Effect Unit
 filterIsIdempotentTests = overAll filterIsIdempotent
   where
-    filterIsIdempotent :: forall a b t. TestableArrayF a b D1 t Result
+    filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     filterIsIdempotent (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
           ys = unsafePerformEffect (TA.filter pred xs)
           zs = unsafePerformEffect (TA.filter pred ys)
       in  TA.toArray zs === TA.toArray ys
+
+
+withOffsetHasIndexTests :: Effect Unit
+withOffsetHasIndexTests = overAll withOffsetHasIndex
+  where
+    withOffsetHasIndex :: forall a b t. TestableArrayF a b D5 t Result
+    withOffsetHasIndex (WithOffset os xs) =
+      Array.all (\o -> TA.hasIndex xs o) os === true
+
+
+withOffsetElemTests :: Effect Unit
+withOffsetElemTests = overAll withOffsetElem
+  where
+    withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
+    withOffsetElem (WithOffset os xs) =
+      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt xs o)) Nothing xs) os === true
 
