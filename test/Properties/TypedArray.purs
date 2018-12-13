@@ -95,6 +95,8 @@ typedArrayTests = do
   modifyingOriginalDoesntMutateSliceTests
   log "    - let z' = slice o x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSlicePartTests
+  log "    - let z' = slice 0 o x; q = toArray z'; mutate x; pure q == toArray z'"
+  modifyingOriginalDoesntMutateSlicePart2Tests
   -- log "    - take (o + 1) (copyWithin o x) == slice o x"
   -- copyWithinIsSliceTests
 
@@ -561,6 +563,23 @@ modifyingOriginalDoesntMutateSlicePartTests = overAll modifyingOriginalDoesntMut
       | otherwise =
         let o = Vec.head os
             zsSub = TA.slice xs (Just (Tuple o Nothing))
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs === ys
+
+
+modifyingOriginalDoesntMutateSlicePart2Tests :: Effect Unit
+modifyingOriginalDoesntMutateSlicePart2Tests = overAll modifyingOriginalDoesntMutateSlicePart2
+  where
+    modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs)
+      | Array.all (eq zero) (TA.toArray (TA.slice xs (Just (Tuple (Vec.head os) Nothing)))) = Success
+      | TA.at xs (Vec.head os) == Just zero = Success
+      | otherwise =
+        let o = Vec.head os
+            zsSub = TA.slice xs (Just (Tuple 0 (Just o)))
             zs = TA.toArray zsSub
             ys = unsafePerformEffect do
               TA.fill xs zero Nothing

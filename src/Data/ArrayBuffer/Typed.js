@@ -254,7 +254,7 @@ exports.sliceImpl = function sliceImpl (a,ms,me) {
             return a.slice(ms);
         }
     } else {
-        return a.slice(s,e);
+        return a.slice(ms,me);
     }
 };
 
