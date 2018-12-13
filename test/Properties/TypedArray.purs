@@ -69,17 +69,20 @@ typedArrayTests = do
   reverseIsArrayReverseTests
   log "    - sort (sort x) == sort x"
   sortIsIdempotentTests
+  log "    - toArray (sort x) == Array.sort (toArray x)"
+  sortIsArraySortTests
 
 
 
 type TestableArrayF a b n t q =
      Show t
   => Eq t
-  => TypedArray a t
-  => Nat b
-  => BytesPerValue a b
-  => Arbitrary t
+  => Ord t
   => Semiring t
+  => Arbitrary t
+  => TypedArray a t
+  => BytesPerValue a b
+  => Nat b
   => WithOffset n a
   -> q
 
@@ -341,8 +344,19 @@ sortIsIdempotentTests = overAll sortIsIdempotent
       in  zs === ys
 
 
+sortIsArraySortTests :: Effect Unit
+sortIsArraySortTests = overAll sortIsArraySort
+  where
+    sortIsArraySort :: forall a b t. TestableArrayF a b D0 t Result
+    sortIsArraySort (WithOffset _ xs) =
+      let ys = Array.sort (TA.toArray xs)
+          _ = unsafePerformEffect do
+            TA.sort xs
+      in  TA.toArray xs === ys
 
 
 
--- TODO: copyWithin, sort, setTyped, slice, subArray
+
+
+-- TODO: copyWithin, setTyped, slice, subArray
 --       toString ~ join ","
