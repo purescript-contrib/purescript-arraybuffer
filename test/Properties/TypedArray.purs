@@ -15,8 +15,9 @@ import Data.Tuple (Tuple (..))
 import Data.Typelevel.Num (toInt', class Nat, D0, D1, D5)
 import Data.Vec (head) as Vec
 import Data.Array as Array
+import Data.HeytingAlgebra (implies)
 import Type.Proxy (Proxy (..))
-import Test.QuickCheck (quickCheckGen, Result, (===), class Testable, class Arbitrary)
+import Test.QuickCheck (quickCheckGen, Result (..), (===), class Testable, class Arbitrary)
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
@@ -48,6 +49,8 @@ typedArrayTests = do
   anyImpliesFindTests
   log "    - p (at x (findIndex p x))"
   findIndexImpliesAtTests
+  log "    - at x (indexOf y x) == y"
+  indexOfImpliesAtTests
 
 
 type TestableArrayF a b n t q =
@@ -135,7 +138,6 @@ allImpliesAnyTests = overAll allImpliesAny
           all' = unsafePerformEffect (TA.all pred xs)
           any' = unsafePerformEffect (TA.any pred xs)
       in  (all' `implies` any') === true
-    implies x y = if x == true && y == false then false else true
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -148,7 +150,6 @@ filterImpliesAllTests = overAll filterImpliesAll
           ys = unsafePerformEffect (TA.filter pred xs)
           all' = unsafePerformEffect (TA.all pred ys)
       in  all' === true
-    implies x y = if x == true && y == false then false else true
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -205,7 +206,6 @@ anyImpliesFindTests = overAll anyImpliesFind
               Nothing -> pure Nothing
               Just z -> Just <$> pred z 0
       in  q `implies` (Just true == is) === true
-    implies x y = if x == true && y == false then false else true
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -216,9 +216,21 @@ findIndexImpliesAtTests = overAll findIndexImpliesAt
     findIndexImpliesAt (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
           mo = unsafePerformEffect (TA.findIndex xs pred)
-          v = case mo of
-                Nothing -> true
-                Just o -> case TA.at xs o of
-                  Nothing -> false
-                  Just x -> unsafePerformEffect (pred x o)
-      in  v === true
+      in  case mo of
+            Nothing -> Success
+            Just o -> case TA.at xs o of
+              Nothing -> Failed "No value at found index"
+              Just x -> unsafePerformEffect (pred x o) === true
+
+
+
+indexOfImpliesAtTests :: Effect Unit
+indexOfImpliesAtTests = overAll indexOfImpliesAt
+  where
+    indexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
+    indexOfImpliesAt (WithOffset _ xs) =
+      case TA.at xs 0 of
+        Nothing -> Success
+        Just y -> case TA.indexOf xs y Nothing of
+          Nothing -> Failed "no index of"
+          Just o -> TA.at xs o === Just y
