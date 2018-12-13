@@ -56,11 +56,6 @@ typedArrayTests = do
   lastIndexOfImpliesAtTests
 
 
--- TODO: folding, traversals, mapping
---       copyWithin, reverse, sort, setTyped, slice, subArray
---       toString ~ join ","
-
-
 
 type TestableArrayF a b n t q =
      Show t
@@ -256,3 +251,10 @@ lastIndexOfImpliesAtTests = overAll lastIndexOfImpliesAt
         Just y -> case TA.lastIndexOf xs y Nothing of
           Nothing -> Failed "no lastIndex of"
           Just o -> TA.at xs o === Just y
+
+
+-- - traversal_:
+--     push to the end of a new typed array, see if they're iso. Likewise, for folds?
+-- TODO: folding, traversals, mapping
+--       copyWithin, reverse, sort, setTyped, slice, subArray
+--       toString ~ join ","
