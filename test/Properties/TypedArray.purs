@@ -22,6 +22,7 @@ import Test.QuickCheck.Combinators ((&=&), (|=|), (==>))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
+import Effect.Ref as Ref
 
 
 typedArrayTests :: Effect Unit
@@ -54,6 +55,20 @@ typedArrayTests = do
   indexOfImpliesAtTests
   log "    - at x (lastIndexOf y x) == y"
   lastIndexOfImpliesAtTests
+  log "    - foldr cons [] x == toArray x"
+  foldrConsIsToArrayTests
+  log "    - foldl snoc [] x == toArray x"
+  foldlSnocIsToArrayTests
+  log "    - map identity x == x"
+  mapIdentityIsIdentityTests
+  log "    - traverse snoc x == toArray x"
+  traverseSnocIsToArrayTests
+  log "    - reverse (reverse x) == x"
+  doubleReverseIsIdentityTests
+  log "    - toArray (reverse x) == Array.reverse (toArray x)"
+  reverseIsArrayReverseTests
+  log "    - sort (sort x) == sort x"
+  sortIsIdempotentTests
 
 
 
@@ -253,8 +268,81 @@ lastIndexOfImpliesAtTests = overAll lastIndexOfImpliesAt
           Just o -> TA.at xs o === Just y
 
 
--- - traversal_:
---     push to the end of a new typed array, see if they're iso. Likewise, for folds?
--- TODO: folding, traversals, mapping
---       copyWithin, reverse, sort, setTyped, slice, subArray
+foldrConsIsToArrayTests :: Effect Unit
+foldrConsIsToArrayTests = overAll foldrConsIsToArray
+  where
+    foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
+    foldrConsIsToArray (WithOffset _ xs) =
+      TA.foldr xs (\x acc _ -> Array.cons x acc) [] === TA.toArray xs
+
+
+foldlSnocIsToArrayTests :: Effect Unit
+foldlSnocIsToArrayTests = overAll foldlSnocIsToArray
+  where
+    foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
+    foldlSnocIsToArray (WithOffset _ xs) =
+      TA.foldl xs (\acc x _ -> Array.snoc acc x) [] === TA.toArray xs
+
+
+mapIdentityIsIdentityTests :: Effect Unit
+mapIdentityIsIdentityTests = overAll mapIdentityIsIdentity
+  where
+    mapIdentityIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    mapIdentityIsIdentity (WithOffset _ xs) =
+      TA.toArray (TA.map (\x _ -> x) xs) === TA.toArray xs
+
+
+traverseSnocIsToArrayTests :: Effect Unit
+traverseSnocIsToArrayTests = overAll traverseSnocIsToArray
+  where
+    traverseSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
+    traverseSnocIsToArray (WithOffset _ xs) =
+      let ys = unsafePerformEffect do
+            ref <- Ref.new []
+            TA.traverse_ (\x _ -> void (Ref.modify (\xs -> Array.snoc xs x) ref)) xs
+            Ref.read ref
+      in  TA.toArray xs === ys
+
+
+doubleReverseIsIdentityTests :: Effect Unit
+doubleReverseIsIdentityTests = overAll doubleReverseIsIdentity
+  where
+    doubleReverseIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    doubleReverseIsIdentity (WithOffset _ xs) =
+      let ys = TA.toArray xs
+          _ = unsafePerformEffect do
+            TA.reverse xs
+            TA.reverse xs
+      in  TA.toArray xs === ys
+
+
+reverseIsArrayReverseTests :: Effect Unit
+reverseIsArrayReverseTests = overAll reverseIsArrayReverse
+  where
+    reverseIsArrayReverse :: forall a b t. TestableArrayF a b D0 t Result
+    reverseIsArrayReverse (WithOffset _ xs) =
+      let ys = Array.reverse (TA.toArray xs)
+          _ = unsafePerformEffect do
+            TA.reverse xs
+      in  TA.toArray xs === ys
+
+
+sortIsIdempotentTests :: Effect Unit
+sortIsIdempotentTests = overAll sortIsIdempotent
+  where
+    sortIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
+    sortIsIdempotent (WithOffset _ xs) =
+      let ys = unsafePerformEffect do
+            TA.sort xs
+            pure (TA.toArray xs)
+          zs = unsafePerformEffect do
+            TA.sort xs
+            pure (TA.toArray xs)
+      in  zs === ys
+
+
+
+
+
+-- TODO: copyWithin, sort, setTyped, slice, subArray
 --       toString ~ join ","
