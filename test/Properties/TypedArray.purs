@@ -46,6 +46,8 @@ typedArrayTests = do
   withOffsetElemTests
   log "    - any p x => p (find p x)"
   anyImpliesFindTests
+  log "    - p (at x (findIndex p x))"
+  findIndexImpliesAtTests
 
 
 type TestableArrayF a b n t q =
@@ -204,3 +206,19 @@ anyImpliesFindTests = overAll anyImpliesFind
               Just z -> Just <$> pred z 0
       in  q `implies` (Just true == is) === true
     implies x y = if x == true && y == false then false else true
+
+
+-- | Should work with any arbitrary predicate, but we can't generate them
+findIndexImpliesAtTests :: Effect Unit
+findIndexImpliesAtTests = overAll findIndexImpliesAt
+  where
+    findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
+    findIndexImpliesAt (WithOffset _ xs) =
+      let pred x o = pure (x /= zero)
+          mo = unsafePerformEffect (TA.findIndex xs pred)
+          v = case mo of
+                Nothing -> true
+                Just o -> case TA.at xs o of
+                  Nothing -> false
+                  Just x -> unsafePerformEffect (pred x o)
+      in  v === true
