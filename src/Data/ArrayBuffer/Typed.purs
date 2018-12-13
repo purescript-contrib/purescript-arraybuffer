@@ -496,11 +496,21 @@ sort :: forall a. ArrayView a -> Effect Unit
 sort = runEffectFn1 sortImpl
 
 
-foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset (Nullable Offset) (ArrayView a)
+foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
-subArray :: forall a. ArrayView a -> Offset -> Maybe Offset -> ArrayView a
-subArray a o mo = runFn3 subArrayImpl a o (toNullable mo)
+-- |
+-- | **Note**: there is really peculiar behavior with `subArray` - if the first offset argument is omitted, or
+-- | is `0`, and likewise if the second argument is the length of the array, then the "sub-array" is actually a
+-- | mutable replica of the original array - the sub-array reference reflects mutations to the original array.
+-- | However, when the sub-array is is actually a smaller contiguous portion of the array, then it behaves
+-- | purely.
+subArray :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
+subArray a mz = case mz of
+  Nothing -> runFn3 subArrayImpl a (toNullable Nothing) (toNullable Nothing)
+  Just (Tuple s me) -> case me of
+    Nothing -> runFn3 subArrayImpl a (toNullable (Just s)) (toNullable Nothing)
+    Just e -> runFn3 subArrayImpl a (toNullable (Just s)) (toNullable (Just e))
 
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.

@@ -264,11 +264,15 @@ exports.sortImpl = function sortImpl (a) {
 };
 
 
-exports.subArrayImpl = function subArrayImpl (a,s,me) {
+exports.subArrayImpl = function subArrayImpl (a,ms,me) {
     if (me === null) {
-        return a.subarray(s);
+        if (ms === null) {
+            return a.subarray();
+        } else {
+            return a.subarray(ms);
+        }
     } else {
-        return a.subarray(s,me);
+        return a.subarray(ms,me);
     }
 };
 

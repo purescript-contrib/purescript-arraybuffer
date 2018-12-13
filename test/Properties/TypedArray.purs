@@ -77,8 +77,12 @@ typedArrayTests = do
   setTypedOfSubArrayIsIdentityTests
   log "    - let z' = subArray z; q = toArray z'; mutate z; pure q /= toArray z'"
   modifyingOriginalMutatesSubArrayTests
-  -- log "    - let z' = subArray o z; q = toArray z'; mutate z; pure q /= toArray z'"
-  -- modifyingOriginalMutatesSubArrayPartTests
+  log "    - let z' = subArray 0 z; q = toArray z'; mutate z; pure q /= toArray z'"
+  modifyingOriginalMutatesSubArrayZeroTests
+  log "    - let z' = subArray 0 (length z) z; q = toArray z'; mutate z; pure q /= toArray z'"
+  modifyingOriginalMutatesSubArrayAllTests
+  log "    - let z' = subArray o z; q = toArray z'; mutate z; pure q == toArray z'"
+  modifyingOriginalDoesntMutateSubArrayPartTests
   log "    - let z' = slice z; q = toArray z'; mutate z; pure q == toArray z'"
   modifyingOriginalDoesntMutateSliceTests
   log "    - let z' = slice o z; q = toArray z'; mutate z; pure q == toArray z'"
@@ -388,11 +392,14 @@ setTypedOfSubArrayIsIdentityTests = overAll setTypedOfSubArrayIsIdentity
     setTypedOfSubArrayIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     setTypedOfSubArrayIsIdentity (WithOffset _ xs) =
       let ys = TA.toArray xs
-          zsSub = TA.subArray xs 0 Nothing
+          zsSub = TA.subArray xs Nothing
           zs = unsafePerformEffect do
             TA.setTyped xs Nothing zsSub
             pure (TA.toArray xs)
       in  zs === ys
+
+
+-- setTyped of subArray is copyWithin
 
 
 modifyingOriginalMutatesSubArrayTests :: Effect Unit
@@ -402,7 +409,7 @@ modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
     modifyingOriginalMutatesSubArray (WithOffset _ xs)
       | Array.all (eq zero) (TA.toArray xs) = Success
       | otherwise =
-        let zsSub = TA.subArray xs 0 Nothing
+        let zsSub = TA.subArray xs Nothing
             zs = TA.toArray zsSub
             ys = unsafePerformEffect do
               TA.fill xs zero Nothing
@@ -410,21 +417,52 @@ modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
         in  zs /== ys
 
 
-modifyingOriginalMutatesSubArrayPartTests :: Effect Unit
-modifyingOriginalMutatesSubArrayPartTests = overAll modifyingOriginalMutatesSubArrayPart
+modifyingOriginalMutatesSubArrayZeroTests :: Effect Unit
+modifyingOriginalMutatesSubArrayZeroTests = overAll modifyingOriginalMutatesSubArrayZero
+  where
+    modifyingOriginalMutatesSubArrayZero :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArrayZero (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.subArray xs (Just (Tuple 0 Nothing))
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs /== ys
+
+
+modifyingOriginalMutatesSubArrayAllTests :: Effect Unit
+modifyingOriginalMutatesSubArrayAllTests = overAll modifyingOriginalMutatesSubArrayAll
+  where
+    modifyingOriginalMutatesSubArrayAll :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArrayAll (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.subArray xs (Just (Tuple 0 (Just (TA.length xs))))
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs /== ys
+
+
+modifyingOriginalDoesntMutateSubArrayPartTests :: Effect Unit
+modifyingOriginalDoesntMutateSubArrayPartTests = overAll modifyingOriginalMutatesSubArrayPart
   where
     modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalMutatesSubArrayPart (WithOffset os xs)
-      | Array.all (eq zero) (TA.toArray (TA.subArray xs (Vec.head os) Nothing)) = Success
+      | Vec.head os == 0 = Success
+      | Array.all (eq zero) (TA.toArray (TA.subArray xs Nothing)) = Success
       | TA.at xs (Vec.head os) == Just zero = Success
       | otherwise =
         let o = Vec.head os
-            zsSub = TA.subArray xs o Nothing
+            zsSub = TA.subArray xs (Just (Tuple o Nothing))
             zs = TA.toArray zsSub
             ys = unsafePerformEffect do
               TA.fill xs zero Nothing
               pure (TA.toArray zsSub)
-        in  zs /== ys
+        in  zs === ys
 
 
 modifyingOriginalDoesntMutateSliceTests :: Effect Unit
