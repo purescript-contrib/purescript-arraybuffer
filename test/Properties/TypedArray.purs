@@ -31,6 +31,8 @@ typedArrayTests = do
   allAreFilledTests
   log "    - set x [y] o => (at x o == Just y)"
   setSingletonIsEqTests
+  log "    - all p x => any p x"
+  allImpliesAnyTests
 
 
 type TestableArrayF a b n t q =
@@ -106,3 +108,16 @@ setSingletonIsEqTests = overAll setSingletonIsEq
             Just y -> y
       TA.set xs (Just (Vec.head os)) [x]
       pure (TA.at xs (Vec.head os) === Just x)
+
+
+-- | Should work with any arbitrary predicate, but we can't generate them
+allImpliesAnyTests :: Effect Unit
+allImpliesAnyTests = overAll allImpliesAny
+  where
+    allImpliesAny :: forall a b t. TestableArrayF a b D1 t Result
+    allImpliesAny (WithOffset _ xs) =
+      let pred x o = pure (x /= zero)
+          all' = unsafePerformEffect (TA.all pred xs)
+          any' = unsafePerformEffect (TA.any pred xs)
+      in  (all' `implies` any') === true
+    implies x y = if x == true && y == false then false else true
