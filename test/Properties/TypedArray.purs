@@ -17,7 +17,7 @@ import Data.Vec (head) as Vec
 import Data.Array as Array
 import Data.HeytingAlgebra (implies)
 import Type.Proxy (Proxy (..))
-import Test.QuickCheck (quickCheckGen, Result (..), (===), class Testable, class Arbitrary, (<?>))
+import Test.QuickCheck (quickCheckGen, Result (..), (===), (/==), class Testable, class Arbitrary, (<?>))
 import Test.QuickCheck.Combinators ((&=&), (|=|), (==>))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
@@ -73,6 +73,14 @@ typedArrayTests = do
   sortIsArraySortTests
   log "    - toString' \",\" x == toString x"
   toStringIsJoinWithCommaTests
+  log "    - setTyped x (subArray x) == x"
+  setTypedOfSubArrayIsIdentityTests
+  log "    - let z' = subArray o z; q = toArray z'; mutate z; pure q /= toArray z'"
+  modifyingOriginalMutatesSubArrayTests
+  log "    - let z' = slice o z; q = toArray z'; mutate z; pure q == toArray z'"
+  modifyingOriginalDoesntMutateSliceTests
+  -- log "    - take (o + 1) (copyWithin o x) == subArray o x"
+  -- copyWithinIsSubArrayTests
 
 
 
@@ -137,7 +145,7 @@ allAreFilledTests = overAll allAreFilled
             Just y -> y
       TA.fill xs x Nothing
       b <- TA.all (\y o -> pure (y == x)) xs
-      pure (b === true)
+      pure (b <?> "All aren't the filled value")
 
 
 setSingletonIsEqTests :: Effect Unit
@@ -159,9 +167,9 @@ allImpliesAnyTests = overAll allImpliesAny
     allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
     allImpliesAny (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
-          all' = unsafePerformEffect (TA.all pred xs)
-          any' = unsafePerformEffect (TA.any pred xs)
-      in  all' `implies` any' <?> "All doesn't imply any"
+          all' = unsafePerformEffect (TA.all pred xs) <?> "All don't satisfy the predicate"
+          any' = unsafePerformEffect (TA.any pred xs) <?> "None satisfy the predicate"
+      in  all' ==> any'
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -224,13 +232,18 @@ anyImpliesFindTests = overAll anyImpliesFind
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
     anyImpliesFind (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
-          q = unsafePerformEffect (TA.any pred xs)
-          is = unsafePerformEffect do
+          p = unsafePerformEffect (TA.any pred xs) <?> "All don't satisfy the predicate"
+          q = unsafePerformEffect do
             mzs <- TA.find xs pred
             case mzs of
-              Nothing -> pure Nothing
-              Just z -> Just <$> pred z 0
-      in  q `implies` (Just true == is) <?> "Any imples find"
+              Nothing -> pure (Failed "Doesn't have a value satisfying the predicate")
+              Just z -> do
+                b <- pred z 0
+                pure $
+                  if b
+                    then Success
+                    else Failed "Found value doesn't satisfy the predicate"
+      in  p ==> q
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -365,8 +378,62 @@ toStringIsJoinWithCommaTests = overAll toStringIsJoinWithComma
       TA.toString' xs "," === TA.toString xs
 
 
+setTypedOfSubArrayIsIdentityTests :: Effect Unit
+setTypedOfSubArrayIsIdentityTests = overAll setTypedOfSubArrayIsIdentity
+  where
+    setTypedOfSubArrayIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    setTypedOfSubArrayIsIdentity (WithOffset _ xs) =
+      let ys = TA.toArray xs
+          zsSub = TA.subArray xs 0 Nothing
+          zs = unsafePerformEffect do
+            TA.setTyped xs Nothing zsSub
+            pure (TA.toArray xs)
+      in  zs === ys
+
+
+modifyingOriginalMutatesSubArrayTests :: Effect Unit
+modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
+  where
+    modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArray (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.subArray xs 0 Nothing
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs /== ys
+
+
+modifyingOriginalDoesntMutateSliceTests :: Effect Unit
+modifyingOriginalDoesntMutateSliceTests = overAll modifyingOriginalDoesntMutateSlice
+  where
+    modifyingOriginalDoesntMutateSlice :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalDoesntMutateSlice (WithOffset _ xs)
+      | Array.all (eq zero) (TA.toArray xs) = Success
+      | otherwise =
+        let zsSub = TA.slice xs Nothing
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs === ys
+
+
+-- copyWithinIsSubArrayTests :: Effect Unit
+-- copyWithinIsSubArrayTests = overAll copyWithinIsSubArray
+--   where
+--     copyWithinIsSubArray :: forall a b t. TestableArrayF a b D1 t Result
+--     copyWithinIsSubArray (WithOffset os xs) =
+--       let o = Vec.head os
+--           ys = TA.subArray xs o Nothing
+--           zs = unsafePerformEffect do
+--             TA.copyWithin xs 0 o Nothing
+--             pure $ Array.take ((o + 1)) $ TA.toArray xs
+--       in  zs === TA.toArray ys
+
 
 
 
 -- TODO: copyWithin, setTyped, slice, subArray
---       toString ~ join ","
