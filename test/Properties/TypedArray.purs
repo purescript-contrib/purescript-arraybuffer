@@ -97,6 +97,8 @@ typedArrayTests = do
   modifyingOriginalDoesntMutateSlicePartTests
   log "    - let z' = slice 0 o x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSlicePart2Tests
+  log "    - copyWithin x 0 0 (length x) == x"
+  copyWithinSelfIsIdentityTests
   -- log "    - take (o + 1) (copyWithin o x) == slice o x"
   -- copyWithinIsSliceTests
 
@@ -585,6 +587,18 @@ modifyingOriginalDoesntMutateSlicePart2Tests = overAll modifyingOriginalDoesntMu
               TA.fill xs zero Nothing
               pure (TA.toArray zsSub)
         in  zs === ys
+
+
+copyWithinSelfIsIdentityTests :: Effect Unit
+copyWithinSelfIsIdentityTests = overAll copyWithinSelfIsIdentity
+  where
+    copyWithinSelfIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    copyWithinSelfIsIdentity (WithOffset _ xs) =
+      let ys = TA.toArray xs
+          zs = unsafePerformEffect do
+            TA.copyWithin xs 0 0 (Just (TA.length xs))
+            pure (TA.toArray xs)
+      in  zs === ys
 
 
 copyWithinIsSliceTests :: Effect Unit
