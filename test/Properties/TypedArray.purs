@@ -75,12 +75,16 @@ typedArrayTests = do
   toStringIsJoinWithCommaTests
   log "    - setTyped x (subArray x) == x"
   setTypedOfSubArrayIsIdentityTests
-  log "    - let z' = subArray o z; q = toArray z'; mutate z; pure q /= toArray z'"
+  log "    - let z' = subArray z; q = toArray z'; mutate z; pure q /= toArray z'"
   modifyingOriginalMutatesSubArrayTests
-  log "    - let z' = slice o z; q = toArray z'; mutate z; pure q == toArray z'"
+  -- log "    - let z' = subArray o z; q = toArray z'; mutate z; pure q /= toArray z'"
+  -- modifyingOriginalMutatesSubArrayPartTests
+  log "    - let z' = slice z; q = toArray z'; mutate z; pure q == toArray z'"
   modifyingOriginalDoesntMutateSliceTests
-  -- log "    - take (o + 1) (copyWithin o x) == subArray o x"
-  -- copyWithinIsSubArrayTests
+  log "    - let z' = slice o z; q = toArray z'; mutate z; pure q == toArray z'"
+  modifyingOriginalDoesntMutateSlicePartTests
+  -- log "    - take (o + 1) (copyWithin o x) == slice o x"
+  -- copyWithinIsSliceTests
 
 
 
@@ -406,6 +410,23 @@ modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
         in  zs /== ys
 
 
+modifyingOriginalMutatesSubArrayPartTests :: Effect Unit
+modifyingOriginalMutatesSubArrayPartTests = overAll modifyingOriginalMutatesSubArrayPart
+  where
+    modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalMutatesSubArrayPart (WithOffset os xs)
+      | Array.all (eq zero) (TA.toArray (TA.subArray xs (Vec.head os) Nothing)) = Success
+      | TA.at xs (Vec.head os) == Just zero = Success
+      | otherwise =
+        let o = Vec.head os
+            zsSub = TA.subArray xs o Nothing
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs /== ys
+
+
 modifyingOriginalDoesntMutateSliceTests :: Effect Unit
 modifyingOriginalDoesntMutateSliceTests = overAll modifyingOriginalDoesntMutateSlice
   where
@@ -421,17 +442,34 @@ modifyingOriginalDoesntMutateSliceTests = overAll modifyingOriginalDoesntMutateS
         in  zs === ys
 
 
--- copyWithinIsSubArrayTests :: Effect Unit
--- copyWithinIsSubArrayTests = overAll copyWithinIsSubArray
---   where
---     copyWithinIsSubArray :: forall a b t. TestableArrayF a b D1 t Result
---     copyWithinIsSubArray (WithOffset os xs) =
---       let o = Vec.head os
---           ys = TA.subArray xs o Nothing
---           zs = unsafePerformEffect do
---             TA.copyWithin xs 0 o Nothing
---             pure $ Array.take ((o + 1)) $ TA.toArray xs
---       in  zs === TA.toArray ys
+modifyingOriginalDoesntMutateSlicePartTests :: Effect Unit
+modifyingOriginalDoesntMutateSlicePartTests = overAll modifyingOriginalDoesntMutateSlicePart
+  where
+    modifyingOriginalDoesntMutateSlicePart :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalDoesntMutateSlicePart (WithOffset os xs)
+      | Array.all (eq zero) (TA.toArray (TA.slice xs (Just (Tuple (Vec.head os) Nothing)))) = Success
+      | TA.at xs (Vec.head os) == Just zero = Success
+      | otherwise =
+        let o = Vec.head os
+            zsSub = TA.slice xs (Just (Tuple o Nothing))
+            zs = TA.toArray zsSub
+            ys = unsafePerformEffect do
+              TA.fill xs zero Nothing
+              pure (TA.toArray zsSub)
+        in  zs === ys
+
+
+copyWithinIsSliceTests :: Effect Unit
+copyWithinIsSliceTests = overAll copyWithinIsSlice
+  where
+    copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
+    copyWithinIsSlice (WithOffset os xs) =
+      let o = Vec.head os
+          ys = TA.toArray (TA.slice xs (Just (Tuple o Nothing)))
+          zs = unsafePerformEffect do
+            TA.copyWithin xs 0 o Nothing
+            pure $ Array.take (Array.length ys - o) $ TA.toArray xs
+      in  zs === ys
 
 
 
