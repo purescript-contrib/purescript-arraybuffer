@@ -51,6 +51,8 @@ typedArrayTests = do
   findIndexImpliesAtTests
   log "    - at x (indexOf y x) == y"
   indexOfImpliesAtTests
+  log "    - at x (lastIndexOf y x) == y"
+  lastIndexOfImpliesAtTests
 
 
 type TestableArrayF a b n t q =
@@ -233,4 +235,16 @@ indexOfImpliesAtTests = overAll indexOfImpliesAt
         Nothing -> Success
         Just y -> case TA.indexOf xs y Nothing of
           Nothing -> Failed "no index of"
+          Just o -> TA.at xs o === Just y
+
+
+lastIndexOfImpliesAtTests :: Effect Unit
+lastIndexOfImpliesAtTests = overAll lastIndexOfImpliesAt
+  where
+    lastIndexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
+    lastIndexOfImpliesAt (WithOffset _ xs) =
+      case TA.at xs 0 of
+        Nothing -> Success
+        Just y -> case TA.lastIndexOf xs y Nothing of
+          Nothing -> Failed "no lastIndex of"
           Just o -> TA.at xs o === Just y
