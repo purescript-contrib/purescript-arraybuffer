@@ -12,7 +12,6 @@ import Data.ArrayBuffer.Typed as TA
 import Prelude
 import Math as M
 import Data.Maybe (Maybe (..))
-import Data.List.Lazy (replicateM)
 import Data.Int as I
 import Data.UInt (UInt)
 import Data.UInt as UInt
@@ -31,42 +30,19 @@ import Partial.Unsafe (unsafePartial)
 
 
 
-genUint8ClampedArray :: forall m. MonadGen m => m Uint8ClampedArray
-genUint8ClampedArray = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genUByte
-
-genUint32Array :: forall m. MonadGen m => m Uint32Array
-genUint32Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genUWord
-
-genUint16Array :: forall m. MonadGen m => m Uint16Array
-genUint16Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genUChomp
-
-genUint8Array :: forall m. MonadGen m => m Uint8Array
-genUint8Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genUByte
-
-genInt32Array :: forall m. MonadGen m => m Int32Array
-genInt32Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genWord
-
-genInt16Array :: forall m. MonadGen m => m Int16Array
-genInt16Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genChomp
-
-genInt8Array :: forall m. MonadGen m => m Int8Array
-genInt8Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genByte
-
-genFloat32Array :: forall m. MonadGen m => m Float32Array
-genFloat32Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genFloat32
-
-genFloat64Array :: forall m. MonadGen m => m Float64Array
-genFloat64Array = sized \s ->
-   TA.fromArray <<< Array.fromFoldable <$> replicateM s genFloat64
-
+genTypedArray :: forall m a t
+               . MonadGen m
+              => TA.TypedArray a t
+              => TA.Length -- ^ Minimum length
+              -> Maybe TA.Length -- ^ Max length
+              -> m t
+              -> m (ArrayView a)
+genTypedArray q1 mq2 gen = sized \s ->
+  let s'' = s `max` q1
+      s' = case mq2 of
+        Nothing -> s''
+        Just q2 -> s'' `min` q2
+  in  TA.fromArray <$> replicateA s' gen
 
 
 

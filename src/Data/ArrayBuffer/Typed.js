@@ -45,51 +45,51 @@ exports.newUint8ClampedArray = function newUint8ClampedArray (a,mb,mc) {
 };
 exports.newUint32Array = function newUint32Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Uint32Array(a)
-                           : new Uint32Array(a,mb)
+                                       : new Uint32Array(a,mb)
                          )
-    : new Uint32Array(a,mb,mc);
+                       : new Uint32Array(a,mb,mc);
 };
 exports.newUint16Array = function newUint16Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Uint16Array(a)
-                           : new Uint16Array(a,mb)
+                                       : new Uint16Array(a,mb)
                          )
-    : new Uint16Array(a,mb,mc);
+                       : new Uint16Array(a,mb,mc);
 };
 exports.newUint8Array = function newUint8Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Uint8Array(a)
-                           : new Uint8Array(a,mb)
+                                       : new Uint8Array(a,mb)
                          )
-    : new Uint8Array(a,mb,mc);
+                       : new Uint8Array(a,mb,mc);
 };
 exports.newInt32Array = function newInt32Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Int32Array(a)
-                           : new Int32Array(a,mb)
+                                       : new Int32Array(a,mb)
                          )
-    : new Int32Array(a,mb,mc);
+                       : new Int32Array(a,mb,mc);
 };
 exports.newInt16Array = function newInt16Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Int16Array(a)
-                           : new Int16Array(a,mb)
+                                       : new Int16Array(a,mb)
                          )
-    : new Int16Array(a,mb,mc);
+                       : new Int16Array(a,mb,mc);
 };
 exports.newInt8Array = function newInt8Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Int8Array(a)
-                           : new Int8Array(a,mb)
+                                       : new Int8Array(a,mb)
                          )
-    : new Int8Array(a,mb,mc);
+                       : new Int8Array(a,mb,mc);
 };
 exports.newFloat32Array = function newFloat32Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Float32Array(a)
-                           : new Float32Array(a,mb)
+                                       : new Float32Array(a,mb)
                          )
-    : new Float32Array(a,mb,mc);
+                       : new Float32Array(a,mb,mc);
 };
 exports.newFloat64Array = function newFloat64Array (a,mb,mc) {
     return mc === null ? ( mb === null ? new Float64Array(a)
-                           : new Float64Array(a,mb)
+                                       : new Float64Array(a,mb)
                          )
-    : new Float64Array(a,mb,mc);
+                       : new Float64Array(a,mb,mc);
 };
 
 
@@ -104,15 +104,7 @@ exports.someImpl = function someImpl (a,p) {
 
 
 exports.fillImpl = function fillImpl (a,x,ms,me) {
-    if (me === null) {
-        if (ms === null) {
-            return a.fill(x);
-        } else {
-            return a.fill(x,ms);
-        }
-    } else {
-        return a.fill(x,ms,me);
-    }
+    return me === null ? (ms === null ? a.fill(x) : a.fill(x,ms)) : a.fill(x,ms,me);
 };
 
 
@@ -129,11 +121,7 @@ exports.filterImpl = function filterImpl (a,p) {
 };
 
 exports.includesImpl = function includesImpl (a,x,mo) {
-    if (mo === null) {
-        return a.includes(x);
-    } else {
-        return a.includes(x,mo);
-    }
+    return mo === null ? a.includes(x) : a.includes(x,mo);
 };
 
 exports.reduceImpl = function reduceImpl (a,f,i) {
@@ -158,21 +146,11 @@ exports.findIndexImpl = function findIndexImpl (a,f) {
     return (x === -1) ? null : x;
 };
 exports.indexOfImpl = function indexOfImpl (a,x,mo) {
-    var r;
-    if (mo === null) {
-        r = a.indexOf(x);
-    } else {
-        r = a.indexOf(x,mo);
-    }
+    var r = mo === null ? a.indexOf(x) : a.indexOf(x,mo);
     return r === -1 ? null : r;
 };
 exports.lastIndexOfImpl = function lastIndexOfImpl (a,x,mo) {
-    var r;
-    if (mo === null) {
-        r = a.lastIndexOf(x);
-    } else {
-        r = a.lastIndexOf(x,mo);
-    }
+    var r = mo === null ? a.lastIndexOf(x) : a.lastIndexOf(x,mo);
     return r === -1 ? null : r;
 };
 
@@ -202,15 +180,7 @@ exports.setImpl = function setImpl (a, off, b) {
 
 
 exports.sliceImpl = function sliceImpl (a,ms,me) {
-    if (me === null) {
-        if (ms === null) {
-            return a.slice();
-        } else {
-            return a.slice(ms);
-        }
-    } else {
-        return a.slice(ms,me);
-    }
+    return me === null ? (ms === null ? a.slice() : a.slice(ms)) : a.slice(ms,me);
 };
 
 
@@ -220,15 +190,7 @@ exports.sortImpl = function sortImpl (a) {
 
 
 exports.subArrayImpl = function subArrayImpl (a,ms,me) {
-    if (me === null) {
-        if (ms === null) {
-            return a.subarray();
-        } else {
-            return a.subarray(ms);
-        }
-    } else {
-        return a.subarray(ms,me);
-    }
+    return me === null ? (ms === null ? a.subarray() : a.subarray(ms)) : a.subarray(ms,me);
 };
 
 
@@ -245,13 +207,13 @@ exports.unsafeAtImpl = function(a, i) {
 }
 
 exports.hasIndexImpl = function(a, i) {
-  return i in a;
+    return i in a;
 }
 
 exports.toArrayImpl = function(a) {
-  var l = a.length;
-  var ret = new Array(l);
-  for (var i = 0; i < l; i++)
-    ret[i] = a[i];
-  return ret;
+    var l = a.length;
+    var ret = new Array(l);
+    for (var i = 0; i < l; i++)
+        ret[i] = a[i];
+    return ret;
 }

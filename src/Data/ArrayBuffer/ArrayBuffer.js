@@ -11,13 +11,5 @@ exports.byteLength = function byteLength (a) {
 };
 
 exports.sliceImpl = function sliceImpl (a, ms, me) {
-    if (me === null) {
-        if (ms === null) {
-            return a.slice();
-        } else {
-            return a.slice(ms);
-        }
-    } else {
-        return a.slice(ms,me);
-    }
+    return me === null ? (ms === null ? a.slice() : a.slice(ms)) : a.slice(ms,me);
 };

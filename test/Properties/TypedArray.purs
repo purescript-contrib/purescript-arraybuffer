@@ -1,13 +1,15 @@
 module Test.Properties.TypedArray where
 
 
-import Data.ArrayBuffer.Types (ArrayView)
+import Data.ArrayBuffer.Types
+  (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
+  , Float32Array, Float64Array)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed (class BytesPerValue, class TypedArray)
 import Data.ArrayBuffer.Typed.Gen
-  ( genUint8ClampedArray, genUint8Array, genUint16Array, genUint32Array
-  , genInt8Array, genInt16Array, genInt32Array
-  , genFloat32Array, genFloat64Array, WithOffset (..), genWithOffset)
+  ( genUByte, genUChomp, genUWord
+  , genByte, genChomp, genWord, genFloat32, genFloat64
+  , WithOffset (..), genWithOffset, genTypedArray)
 
 import Prelude
 import Data.Maybe (Maybe (..))
@@ -18,6 +20,7 @@ import Data.Array as Array
 import Data.HeytingAlgebra (implies)
 import Type.Proxy (Proxy (..))
 import Test.QuickCheck (quickCheckGen, Result (..), (===), (/==), class Testable, class Arbitrary, (<?>))
+import Test.QuickCheck.Gen (Gen)
 import Test.QuickCheck.Combinators ((&=&), (|=|), (==>))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
@@ -131,23 +134,23 @@ overAll :: forall q n. Testable q => Nat n => (forall a b t. TestableArrayF a b 
 overAll f = do
   void (Ref.modify (\x -> x + 1) count)
   log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genWithOffset genUint8ClampedArray)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUByte :: Gen Uint8ClampedArray))
   log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset genUint32Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUWord :: Gen Uint32Array))
   log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset genUint16Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUChomp :: Gen Uint16Array))
   log "      - Uint8Array"
-  quickCheckGen (f <$> genWithOffset genUint8Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUByte :: Gen Uint8Array))
   log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset genInt32Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genWord :: Gen Int32Array))
   log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset genInt16Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genChomp :: Gen Int16Array))
   log "      - Int8Array"
-  quickCheckGen (f <$> genWithOffset genInt8Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genByte :: Gen Int8Array))
   log "      - Float32Array"
-  quickCheckGen (f <$> genWithOffset genFloat32Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genFloat32 :: Gen Float32Array))
   log "      - Float64Array"
-  quickCheckGen (f <$> genWithOffset genFloat64Array)
+  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genFloat64 :: Gen Float64Array))
 
 
 byteLengthDivBytesPerValueTests :: Effect Unit
