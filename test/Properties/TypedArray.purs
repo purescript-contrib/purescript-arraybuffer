@@ -106,6 +106,8 @@ typedArrayTests = do
   copyWithinSelfIsIdentityTests
   log "    - take (o + 1) (copyWithin o x) == slice o x"
   copyWithinIsSliceTests
+  log "    - copyWithin o x == setTyped x (slice o x)"
+  copyWithinViaSetTypedTests
 
   c <- Ref.read count
   log $ "Verified " <> show c <> " properties, generating " <> show (c * 900) <> " test cases."
@@ -621,6 +623,20 @@ copyWithinIsSliceTests = overAll copyWithinIsSlice
             TA.copyWithin xs 0 o Nothing
             pure $ Array.drop (Array.length ys) $ TA.toArray xs
       in  TA.toArray xs === ys <> zs
+
+
+copyWithinViaSetTypedTests :: Effect Unit
+copyWithinViaSetTypedTests = overAll copyWithinViaSetTyped
+  where
+    copyWithinViaSetTyped :: forall a b t. TestableArrayF a b D1 t Result
+    copyWithinViaSetTyped (WithOffset os xs) =
+      let o = Vec.head os
+          xs' = TA.fromArray (TA.toArray xs) :: ArrayView a
+          _ = unsafePerformEffect do
+            let ys = TA.slice xs' (Just (Tuple o Nothing))
+            TA.setTyped xs' Nothing ys
+            TA.copyWithin xs 0 o Nothing
+      in  TA.toArray xs === TA.toArray xs'
 
 
 
