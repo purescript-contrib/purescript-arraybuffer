@@ -38,103 +38,58 @@ exports.lengthImpl = function lemgthImpl (v) {
 // Typed Arrays
 
 exports.newUint8ClampedArray = function newUint8ClampedArray (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Uint8ClampedArray(a);
-        } else {
-            return new Uint8ClampedArray(a,mb);
-        }
-    } else {
-        return new Uint8ClampedArray(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Uint8ClampedArray(a)
+                                       : new Uint8ClampedArray(a,mb)
+                         )
+                       : new Uint8ClampedArray(a,mb,mc);
 };
 exports.newUint32Array = function newUint32Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Uint32Array(a);
-        } else {
-            return new Uint32Array(a,mb);
-        }
-    } else {
-        return new Uint32Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Uint32Array(a)
+                           : new Uint32Array(a,mb)
+                         )
+    : new Uint32Array(a,mb,mc);
 };
 exports.newUint16Array = function newUint16Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Uint16Array(a);
-        } else {
-            return new Uint16Array(a,mb);
-        }
-    } else {
-        return new Uint16Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Uint16Array(a)
+                           : new Uint16Array(a,mb)
+                         )
+    : new Uint16Array(a,mb,mc);
 };
 exports.newUint8Array = function newUint8Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Uint8Array(a);
-        } else {
-            return new Uint8Array(a,mb);
-        }
-    } else {
-        return new Uint8Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Uint8Array(a)
+                           : new Uint8Array(a,mb)
+                         )
+    : new Uint8Array(a,mb,mc);
 };
 exports.newInt32Array = function newInt32Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Int32Array(a);
-        } else {
-            return new Int32Array(a,mb);
-        }
-    } else {
-        return new Int32Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Int32Array(a)
+                           : new Int32Array(a,mb)
+                         )
+    : new Int32Array(a,mb,mc);
 };
 exports.newInt16Array = function newInt16Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Int16Array(a);
-        } else {
-            return new Int16Array(a,mb);
-        }
-    } else {
-        return new Int16Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Int16Array(a)
+                           : new Int16Array(a,mb)
+                         )
+    : new Int16Array(a,mb,mc);
 };
 exports.newInt8Array = function newInt8Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Int8Array(a);
-        } else {
-            return new Int8Array(a,mb);
-        }
-    } else {
-        return new Int8Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Int8Array(a)
+                           : new Int8Array(a,mb)
+                         )
+    : new Int8Array(a,mb,mc);
 };
 exports.newFloat32Array = function newFloat32Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Float32Array(a);
-        } else {
-            return new Float32Array(a,mb);
-        }
-    } else {
-        return new Float32Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Float32Array(a)
+                           : new Float32Array(a,mb)
+                         )
+    : new Float32Array(a,mb,mc);
 };
 exports.newFloat64Array = function newFloat64Array (a,mb,mc) {
-    if (mc === null) {
-        if (mb === null) {
-            return new Float64Array(a);
-        } else {
-            return new Float64Array(a,mb);
-        }
-    } else {
-        return new Float64Array(a,mb,mc);
-    }
+    return mc === null ? ( mb === null ? new Float64Array(a)
+                           : new Float64Array(a,mb)
+                         )
+    : new Float64Array(a,mb,mc);
 };
 
 
