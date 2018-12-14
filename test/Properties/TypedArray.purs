@@ -22,7 +22,12 @@ import Test.QuickCheck.Combinators ((&=&), (|=|), (==>))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
+import Effect.Ref (Ref)
 import Effect.Ref as Ref
+
+
+count :: Ref Int
+count = unsafePerformEffect (Ref.new 0)
 
 
 typedArrayTests :: Effect Unit
@@ -99,8 +104,11 @@ typedArrayTests = do
   modifyingOriginalDoesntMutateSlicePart2Tests
   log "    - copyWithin x 0 0 (length x) == x"
   copyWithinSelfIsIdentityTests
-  -- log "    - take (o + 1) (copyWithin o x) == slice o x"
-  -- copyWithinIsSliceTests
+  log "    - take (o + 1) (copyWithin o x) == slice o x"
+  copyWithinIsSliceTests
+
+  c <- Ref.read count
+  log $ "Verified " <> show c <> " properties, generating " <> show (c * 900) <> " test cases."
 
 
 
@@ -119,6 +127,7 @@ type TestableArrayF a b n t q =
 
 overAll :: forall q n. Testable q => Nat n => (forall a b t. TestableArrayF a b n t q) -> Effect Unit
 overAll f = do
+  void (Ref.modify (\x -> x + 1) count)
   log "      - Uint8ClampedArray"
   quickCheckGen (f <$> genWithOffset genUint8ClampedArray)
   log "      - Uint32Array"
@@ -610,8 +619,8 @@ copyWithinIsSliceTests = overAll copyWithinIsSlice
           ys = TA.toArray (TA.slice xs (Just (Tuple o Nothing)))
           zs = unsafePerformEffect do
             TA.copyWithin xs 0 o Nothing
-            pure $ Array.take (Array.length ys - o) $ TA.toArray xs
-      in  zs === ys
+            pure $ Array.drop (Array.length ys) $ TA.toArray xs
+      in  TA.toArray xs === ys <> zs
 
 
 
