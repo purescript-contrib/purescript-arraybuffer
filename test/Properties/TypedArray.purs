@@ -422,9 +422,6 @@ setTypedOfSubArrayIsIdentityTests = overAll setTypedOfSubArrayIsIdentity
       in  zs === ys
 
 
--- setTyped of subArray is copyWithin
-
-
 modifyingOriginalMutatesSubArrayTests :: Effect Unit
 modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
   where
@@ -640,5 +637,3 @@ copyWithinViaSetTypedTests = overAll copyWithinViaSetTyped
 
 
 
-
--- TODO: copyWithin, setTyped, slice, subArray
