@@ -40,7 +40,7 @@ module Data.ArrayBuffer.DataView
   , setFloat64le
   ) where
 
-import Prelude
+import Prelude (Unit, const, pure, (<$>))
 import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)

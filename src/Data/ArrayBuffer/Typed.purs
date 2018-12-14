@@ -19,7 +19,7 @@ module Data.ArrayBuffer.Typed
   , toString, toString', toArray
   ) where
 
-import Prelude
+import Prelude (Unit, pure, (<$>), (<<<), ($))
 import Effect (Effect)
 import Effect.Uncurried
   ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
