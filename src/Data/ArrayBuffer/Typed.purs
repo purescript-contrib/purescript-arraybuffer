@@ -520,6 +520,9 @@ subArray a mz = case mz of
     Just e -> runFn3 subArrayImpl a (toNullable (Just s)) (toNullable (Just e))
 
 
+-- FIXME ^ deliberately just create a new typed array from the previous one's buffer?
+
+
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
 foreign import toString :: forall a. ArrayView a -> String
 
