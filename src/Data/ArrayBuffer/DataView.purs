@@ -9,6 +9,7 @@ module Data.ArrayBuffer.DataView
   , byteOffset
   , byteLength
   , Getter()
+  , runGetter
   , getInt8
   , getInt16be
   , getInt32be
@@ -24,6 +25,7 @@ module Data.ArrayBuffer.DataView
   , getFloat32le
   , getFloat64le
   , Setter()
+  , runSetter
   , setInt8
   , setInt16be
   , setInt32be
@@ -57,9 +59,17 @@ import Effect.Uncurried (EffectFn5, EffectFn3, EffectFn2, runEffectFn5, runEffec
 newtype Getter (a :: ArrayViewType) t =
   Getter (DataView -> ByteOffset -> Effect (Maybe t))
 
+runGetter :: forall a t. BinaryValue a t => Getter a t -> DataView -> ByteOffset -> Effect (Maybe t)
+runGetter (Getter f) = f
+
+
 -- | Type for all storing functions.
 newtype Setter (a :: ArrayViewType) t =
   Setter (DataView -> t -> ByteOffset -> Effect Unit)
+
+runSetter :: forall a t. BinaryValue a t => Setter a t -> DataView -> t -> ByteOffset -> Effect Unit
+runSetter (Setter f) = f
+
 
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
