@@ -11,7 +11,7 @@ import Math as M
 import Data.Maybe (Maybe (..))
 import Data.Int as I
 import Data.UInt (UInt)
-import Data.UInt as UInt
+import Data.UInt (fromInt, fromNumber) as UInt
 import Data.String.CodeUnits as S
 import Data.Float.Parse (parseFloat)
 import Data.Vec (Vec)
@@ -42,16 +42,16 @@ genTypedArray q1 mq2 gen = sized \s ->
 
 
 
-genUByte :: forall m. MonadGen m => m Int
-genUByte = chooseInt 0 ((I.pow 2 8) - 1)
+genUByte :: forall m. MonadGen m => m UInt
+genUByte = UInt.fromInt <$> chooseInt 0 ((I.pow 2 8) - 1)
 
 genByte :: forall m. MonadGen m => m Int
 genByte =
   let j = I.pow 2 4
   in  chooseInt (negate j) (j - 1)
 
-genUChomp :: forall m. MonadGen m => m Int
-genUChomp = chooseInt 0 ((I.pow 2 16) - 1)
+genUChomp :: forall m. MonadGen m => m UInt
+genUChomp = UInt.fromInt <$> chooseInt 0 ((I.pow 2 16) - 1)
 
 genChomp :: forall m. MonadGen m => m Int
 genChomp =

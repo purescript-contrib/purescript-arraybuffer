@@ -23,10 +23,10 @@ instance bytesPerValueFloat64 :: BytesPerValue Float64 D8
 
 class BinaryValue (a :: ArrayViewType) (t :: Type) | a -> t
 
-instance binaryValueUint8Clamped :: BinaryValue Uint8Clamped Int
+instance binaryValueUint8Clamped :: BinaryValue Uint8Clamped UInt
 instance binaryValueUint32 :: BinaryValue Uint32 UInt
-instance binaryValueUint16 :: BinaryValue Uint16 Int
-instance binaryValueUint8 :: BinaryValue Uint8 Int
+instance binaryValueUint16 :: BinaryValue Uint16 UInt
+instance binaryValueUint8 :: BinaryValue Uint8 UInt
 instance binaryValueInt32 :: BinaryValue Int32 Int
 instance binaryValueInt16 :: BinaryValue Int16 Int
 instance binaryValueInt8 :: BinaryValue Int8 Int

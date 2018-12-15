@@ -178,7 +178,7 @@ class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t wh
   lastIndexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
 
 
-instance typedArrayUint8Clamped :: TypedArray Uint8Clamped Int where
+instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a (toNullable Nothing) (toNullable Nothing))
   remainder a x = runEffectFn3 newUint8ClampedArray a (toNullable (Just x)) (toNullable Nothing)
   part a x y = runEffectFn3 newUint8ClampedArray a (toNullable (Just x)) (toNullable (Just y))
@@ -235,7 +235,7 @@ instance typedArrayUint32 :: TypedArray Uint32 UInt where
   findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
   indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
   lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
-instance typedArrayUint16 :: TypedArray Uint16 Int where
+instance typedArrayUint16 :: TypedArray Uint16 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint16Array a (toNullable Nothing) (toNullable Nothing))
   remainder a x = runEffectFn3 newUint16Array a (toNullable (Just x)) (toNullable Nothing)
   part a x y = runEffectFn3 newUint16Array a (toNullable (Just x)) (toNullable (Just y))
@@ -263,7 +263,7 @@ instance typedArrayUint16 :: TypedArray Uint16 Int where
   findIndex a f = toMaybe <$> runEffectFn2 findIndexImpl a (mkEffectFn2 f)
   indexOf a x mo = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
   lastIndexOf a x mo = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
-instance typedArrayUint8 :: TypedArray Uint8 Int where
+instance typedArrayUint8 :: TypedArray Uint8 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint8Array a (toNullable Nothing) (toNullable Nothing))
   remainder a x = runEffectFn3 newUint8Array a (toNullable (Just x)) (toNullable Nothing)
   part a x y = runEffectFn3 newUint8Array a (toNullable (Just x)) (toNullable (Just y))
