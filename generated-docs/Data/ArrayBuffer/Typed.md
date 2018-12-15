@@ -27,6 +27,15 @@ type Length = Int
 
 Value-oriented array length
 
+#### `Range`
+
+``` purescript
+type Range = Maybe (Tuple Offset (Maybe Offset))
+```
+
+Represents a range of indicies, where if omitted, it represents the whole span.
+If only the second argument is omitted, then it represents the remainder of the span after the first index.
+
 #### `buffer`
 
 ``` purescript
@@ -66,7 +75,7 @@ class (BinaryValue a t) <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t 
   part :: ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
   empty :: Length -> ArrayView a
   fromArray :: Array t -> ArrayView a
-  fill :: ArrayView a -> t -> Maybe (Tuple Offset (Maybe Offset)) -> Effect Unit
+  fill :: ArrayView a -> t -> Range -> Effect Unit
   set :: ArrayView a -> Maybe Offset -> Array t -> Effect Unit
   map :: (t -> Offset -> t) -> ArrayView a -> ArrayView a
   traverse :: (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
@@ -75,15 +84,15 @@ class (BinaryValue a t) <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t 
   any :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect Boolean
   filter :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect (ArrayView a)
   elem :: t -> Maybe Offset -> ArrayView a -> Boolean
-  unsafeAt :: ArrayView a -> Offset -> Effect t
-  foldlM :: forall b. ArrayView a -> (b -> t -> Offset -> Effect b) -> b -> Effect b
-  foldl1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
-  foldrM :: forall b. ArrayView a -> (t -> b -> Offset -> Effect b) -> b -> Effect b
-  foldr1M :: ArrayView a -> (t -> t -> Offset -> Effect t) -> Effect t
-  find :: ArrayView a -> (t -> Offset -> Effect Boolean) -> Effect (Maybe t)
-  findIndex :: ArrayView a -> (t -> Offset -> Effect Boolean) -> Effect (Maybe Offset)
-  indexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
-  lastIndexOf :: ArrayView a -> t -> Maybe Offset -> Maybe Offset
+  unsafeAt :: Offset -> ArrayView a -> Effect t
+  foldlM :: forall b. (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
+  foldl1M :: (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
+  foldrM :: forall b. (t -> b -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
+  foldr1M :: (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
+  find :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect (Maybe t)
+  findIndex :: (t -> Offset -> Effect Boolean) -> ArrayView a -> Effect (Maybe Offset)
+  indexOf :: t -> Maybe Offset -> ArrayView a -> Maybe Offset
+  lastIndexOf :: t -> Maybe Offset -> ArrayView a -> Maybe Offset
 ```
 
 Typeclass that associates a measured user-level type with a typed array.
@@ -179,34 +188,40 @@ at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
 
 Fetch element at index.
 
+#### `(!)`
+
+``` purescript
+infixl 3 at as !
+```
+
 #### `foldl`
 
 ``` purescript
-foldl :: forall a b t. TypedArray a t => ArrayView a -> (b -> t -> Offset -> b) -> b -> b
+foldl :: forall a b t. TypedArray a t => (b -> t -> Offset -> b) -> b -> ArrayView a -> b
 ```
 
 #### `foldl1`
 
 ``` purescript
-foldl1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
+foldl1 :: forall a t. TypedArray a t => (t -> t -> Offset -> t) -> ArrayView a -> t
 ```
 
 #### `foldr`
 
 ``` purescript
-foldr :: forall a b t. TypedArray a t => ArrayView a -> (t -> b -> Offset -> b) -> b -> b
+foldr :: forall a b t. TypedArray a t => (t -> b -> Offset -> b) -> b -> ArrayView a -> b
 ```
 
 #### `foldr1`
 
 ``` purescript
-foldr1 :: forall a t. TypedArray a t => ArrayView a -> (t -> t -> Offset -> t) -> t
+foldr1 :: forall a t. TypedArray a t => (t -> t -> Offset -> t) -> ArrayView a -> t
 ```
 
 #### `slice`
 
 ``` purescript
-slice :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
+slice :: forall a. ArrayView a -> Range -> ArrayView a
 ```
 
 Copy part of the contents of a typed array into a new buffer, between some start and end indices.
@@ -214,7 +229,7 @@ Copy part of the contents of a typed array into a new buffer, between some start
 #### `subArray`
 
 ``` purescript
-subArray :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
+subArray :: forall a. ArrayView a -> Range -> ArrayView a
 ```
 
 Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
