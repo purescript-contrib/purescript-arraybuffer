@@ -249,7 +249,7 @@ withOffsetElemTests count = overAll count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) =
-      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt xs o)) Nothing xs) os
+      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt o xs)) Nothing xs) os
         <?> "All doesn't have an elem of itself"
 
 
@@ -262,7 +262,7 @@ anyImpliesFindTests count = overAll count anyImpliesFind
       let pred x o = pure (x /= zero)
           p = unsafePerformEffect (TA.any pred xs) <?> "All don't satisfy the predicate"
           q = unsafePerformEffect do
-            mzs <- TA.find xs pred
+            mzs <- TA.find pred xs
             case mzs of
               Nothing -> pure (Failed "Doesn't have a value satisfying the predicate")
               Just z -> do
@@ -281,7 +281,7 @@ findIndexImpliesAtTests count = overAll count findIndexImpliesAt
     findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
     findIndexImpliesAt (WithOffset _ xs) =
       let pred x o = pure (x /= zero)
-          mo = unsafePerformEffect (TA.findIndex xs pred)
+          mo = unsafePerformEffect (TA.findIndex pred xs)
       in  case mo of
             Nothing -> Success
             Just o -> case TA.at xs o of
@@ -297,7 +297,7 @@ indexOfImpliesAtTests count = overAll count indexOfImpliesAt
     indexOfImpliesAt (WithOffset _ xs) =
       case TA.at xs 0 of
         Nothing -> Success
-        Just y -> case TA.indexOf xs y Nothing of
+        Just y -> case TA.indexOf y Nothing xs of
           Nothing -> Failed "no index of"
           Just o -> TA.at xs o === Just y
 
@@ -309,7 +309,7 @@ lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
     lastIndexOfImpliesAt (WithOffset _ xs) =
       case TA.at xs 0 of
         Nothing -> Success
-        Just y -> case TA.lastIndexOf xs y Nothing of
+        Just y -> case TA.lastIndexOf y Nothing xs of
           Nothing -> Failed "no lastIndex of"
           Just o -> TA.at xs o === Just y
 
@@ -319,7 +319,7 @@ foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
   where
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldrConsIsToArray (WithOffset _ xs) =
-      TA.foldr xs (\x acc _ -> Array.cons x acc) [] === TA.toArray xs
+      TA.foldr (\x acc _ -> Array.cons x acc) [] xs === TA.toArray xs
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -327,7 +327,7 @@ foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
   where
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldlSnocIsToArray (WithOffset _ xs) =
-      TA.foldl xs (\acc x _ -> Array.snoc acc x) [] === TA.toArray xs
+      TA.foldl (\acc x _ -> Array.snoc acc x) [] xs === TA.toArray xs
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
