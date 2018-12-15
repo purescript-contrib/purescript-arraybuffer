@@ -1,19 +1,24 @@
 module Test.Main where
 
-import Test.Properties.TypedArray (typedArrayTests)
+import Test.Properties (propertiesTests)
 
 import Prelude
 import Effect (Effect)
 import Effect.Console (log)
+import Effect.Ref as Ref
 
 
 
 
 main :: Effect Unit
 main = do
+  count <- Ref.new 0
+
   log "Starting tests..."
-  log "  - TypedArray Tests:"
-  typedArrayTests
+  propertiesTests count
+
+  c <- Ref.read count
+  log $ "Verified " <> show c <> " properties, generating " <> show (c * 900) <> " test cases."
 
 
 -- import Data.ArrayBuffer.ArrayBuffer as AB

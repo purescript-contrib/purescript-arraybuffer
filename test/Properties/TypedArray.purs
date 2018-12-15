@@ -5,7 +5,8 @@ import Data.ArrayBuffer.Types
   (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
   , Float32Array, Float64Array)
 import Data.ArrayBuffer.Typed as TA
-import Data.ArrayBuffer.Typed (class BytesPerValue, class TypedArray)
+import Data.ArrayBuffer.Typed (class TypedArray)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.ArrayBuffer.Typed.Gen
   ( genUByte, genUChomp, genUWord
   , genByte, genChomp, genWord, genFloat32, genFloat64
@@ -29,91 +30,84 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 
 
-count :: Ref Int
-count = unsafePerformEffect (Ref.new 0)
-
-
-typedArrayTests :: Effect Unit
-typedArrayTests = do
+typedArrayTests :: Ref Int -> Effect Unit
+typedArrayTests count = do
   log "    - byteLength x / bytesPerValue === length x"
-  byteLengthDivBytesPerValueTests
+  byteLengthDivBytesPerValueTests count
   log "    - fromArray (toArray x) === x"
-  fromArrayToArrayIsoTests
+  fromArrayToArrayIsoTests count
   log "    - fill y x => all (== y) x"
-  allAreFilledTests
+  allAreFilledTests count
   log "    - set x [y] o => (at x o == Just y)"
-  setSingletonIsEqTests
+  setSingletonIsEqTests count
   log "    - all p x => any p x"
-  allImpliesAnyTests
+  allImpliesAnyTests count
   log "    - all p (filter p x)"
-  filterImpliesAllTests
+  filterImpliesAllTests count
   log "    - filter (not . p) (filter p x) == []"
-  filterIsTotalTests
+  filterIsTotalTests count
   log "    - filter p (filter p x) == filter p x"
-  filterIsIdempotentTests
+  filterIsIdempotentTests count
   log "    - forall os `in` xs. all (\\o -> hasIndex o xs)"
-  withOffsetHasIndexTests
+  withOffsetHasIndexTests count
   log "    - forall os `in` xs. all (\\o -> elem (at o xs) xs)"
-  withOffsetElemTests
+  withOffsetElemTests count
   log "    - any p x => p (find p x)"
-  anyImpliesFindTests
+  anyImpliesFindTests count
   log "    - p (at x (findIndex p x))"
-  findIndexImpliesAtTests
+  findIndexImpliesAtTests count
   log "    - at x (indexOf y x) == y"
-  indexOfImpliesAtTests
+  indexOfImpliesAtTests count
   log "    - at x (lastIndexOf y x) == y"
-  lastIndexOfImpliesAtTests
+  lastIndexOfImpliesAtTests count
   log "    - foldr cons [] x == toArray x"
-  foldrConsIsToArrayTests
+  foldrConsIsToArrayTests count
   log "    - foldl snoc [] x == toArray x"
-  foldlSnocIsToArrayTests
+  foldlSnocIsToArrayTests count
   log "    - map identity x == x"
-  mapIdentityIsIdentityTests
+  mapIdentityIsIdentityTests count
   log "    - traverse snoc x == toArray x"
-  traverseSnocIsToArrayTests
+  traverseSnocIsToArrayTests count
   log "    - reverse (reverse x) == x"
-  doubleReverseIsIdentityTests
+  doubleReverseIsIdentityTests count
   log "    - toArray (reverse x) == Array.reverse (toArray x)"
-  reverseIsArrayReverseTests
+  reverseIsArrayReverseTests count
   log "    - sort (sort x) == sort x"
-  sortIsIdempotentTests
+  sortIsIdempotentTests count
   log "    - toArray (sort x) == Array.sort (toArray x)"
-  sortIsArraySortTests
+  sortIsArraySortTests count
   log "    - toString' \",\" x == toString x"
-  toStringIsJoinWithCommaTests
+  toStringIsJoinWithCommaTests count
   log "    - setTyped x (subArray x) == x"
-  setTypedOfSubArrayIsIdentityTests
+  setTypedOfSubArrayIsIdentityTests count
   log "    - let z' = subArray x; q = toArray z'; mutate x; pure q /= toArray z'"
-  modifyingOriginalMutatesSubArrayTests
+  modifyingOriginalMutatesSubArrayTests count
   log "    - let z' = subArray x; q = toArray x; mutate z'; pure q /= toArray x"
-  modifyingSubArrayMutatesOriginalTests
+  modifyingSubArrayMutatesOriginalTests count
   log "    - let z' = subArray 0 x; q = toArray z'; mutate x; pure q /= toArray z'"
-  modifyingOriginalMutatesSubArrayZeroTests
+  modifyingOriginalMutatesSubArrayZeroTests count
   log "    - let z' = subArray 0 x; q = toArray x; mutate z'; pure q /= toArray x"
-  modifyingSubArrayMutatesOriginalZeroTests
+  modifyingSubArrayMutatesOriginalZeroTests count
   log "    - let z' = subArray 0 (length x) x; q = toArray z'; mutate x; pure q /= toArray z'"
-  modifyingOriginalMutatesSubArrayAllTests
+  modifyingOriginalMutatesSubArrayAllTests count
   log "    - let z' = subArray 0 (length x) x; q = toArray x; mutate z'; pure q /= toArray x"
-  modifyingSubArrayMutatesOriginalAllTests
+  modifyingSubArrayMutatesOriginalAllTests count
   log "    - let z' = subArray o x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSubArrayPartTests
+  modifyingOriginalDoesntMutateSubArrayPartTests count
   log "    - let z' = subArray 0 o x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSubArrayPart2Tests
+  modifyingOriginalDoesntMutateSubArrayPart2Tests count
   log "    - let z' = slice x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSliceTests
+  modifyingOriginalDoesntMutateSliceTests count
   log "    - let z' = slice o x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSlicePartTests
+  modifyingOriginalDoesntMutateSlicePartTests count
   log "    - let z' = slice 0 o x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSlicePart2Tests
+  modifyingOriginalDoesntMutateSlicePart2Tests count
   log "    - copyWithin x 0 0 (length x) == x"
-  copyWithinSelfIsIdentityTests
+  copyWithinSelfIsIdentityTests count
   log "    - take (o + 1) (copyWithin o x) == slice o x"
-  copyWithinIsSliceTests
+  copyWithinIsSliceTests count
   log "    - copyWithin o x == setTyped x (slice o x)"
-  copyWithinViaSetTypedTests
-
-  c <- Ref.read count
-  log $ "Verified " <> show c <> " properties, generating " <> show (c * 900) <> " test cases."
+  copyWithinViaSetTypedTests count
 
 
 
@@ -130,47 +124,47 @@ type TestableArrayF a b n t q =
   -> q
 
 
-overAll :: forall q n. Testable q => Nat n => (forall a b t. TestableArrayF a b n t q) -> Effect Unit
-overAll f = do
+overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll count f = do
   void (Ref.modify (\x -> x + 1) count)
   log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUByte :: Gen Uint8ClampedArray))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUByte :: Gen Uint8ClampedArray))
   log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUWord :: Gen Uint32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUWord :: Gen Uint32Array))
   log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUChomp :: Gen Uint16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUChomp :: Gen Uint16Array))
   log "      - Uint8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genUByte :: Gen Uint8Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUByte :: Gen Uint8Array))
   log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genWord :: Gen Int32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genWord :: Gen Int32Array))
   log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genChomp :: Gen Int16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genChomp :: Gen Int16Array))
   log "      - Int8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genByte :: Gen Int8Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genByte :: Gen Int8Array))
   log "      - Float32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genFloat32 :: Gen Float32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat32 :: Gen Float32Array))
   log "      - Float64Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 0 Nothing genFloat64 :: Gen Float64Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat64 :: Gen Float64Array))
 
 
-byteLengthDivBytesPerValueTests :: Effect Unit
-byteLengthDivBytesPerValueTests = overAll byteLengthDivBytesPerValueEqLength
+byteLengthDivBytesPerValueTests :: Ref Int -> Effect Unit
+byteLengthDivBytesPerValueTests count = overAll count byteLengthDivBytesPerValueEqLength
   where
     byteLengthDivBytesPerValueEqLength :: forall a b t. TestableArrayF a b D0 t Result
     byteLengthDivBytesPerValueEqLength (WithOffset _ a) =
       let b = toInt' (Proxy :: Proxy b)
       in  TA.length a === (TA.byteLength a `div` b)
 
-fromArrayToArrayIsoTests :: Effect Unit
-fromArrayToArrayIsoTests = overAll fromArrayToArrayIso
+fromArrayToArrayIsoTests :: Ref Int -> Effect Unit
+fromArrayToArrayIsoTests count = overAll count fromArrayToArrayIso
   where
     fromArrayToArrayIso :: forall a b t. TestableArrayF a b D0 t Result
     fromArrayToArrayIso (WithOffset _ x) =
       TA.toArray (TA.fromArray (TA.toArray x) :: ArrayView a) === TA.toArray x
 
 
-allAreFilledTests :: Effect Unit
-allAreFilledTests = overAll allAreFilled
+allAreFilledTests :: Ref Int -> Effect Unit
+allAreFilledTests count = overAll count allAreFilled
   where
     allAreFilled :: forall a b t. TestableArrayF a b D0 t Result
     allAreFilled (WithOffset _ xs) = unsafePerformEffect do
@@ -182,8 +176,8 @@ allAreFilledTests = overAll allAreFilled
       pure (b <?> "All aren't the filled value")
 
 
-setSingletonIsEqTests :: Effect Unit
-setSingletonIsEqTests = overAll setSingletonIsEq
+setSingletonIsEqTests :: Ref Int -> Effect Unit
+setSingletonIsEqTests count = overAll count setSingletonIsEq
   where
     setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
     setSingletonIsEq (WithOffset os xs) = unsafePerformEffect do
@@ -195,8 +189,8 @@ setSingletonIsEqTests = overAll setSingletonIsEq
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
-allImpliesAnyTests :: Effect Unit
-allImpliesAnyTests = overAll allImpliesAny
+allImpliesAnyTests :: Ref Int -> Effect Unit
+allImpliesAnyTests count = overAll count allImpliesAny
   where
     allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
     allImpliesAny (WithOffset _ xs) =
@@ -207,8 +201,8 @@ allImpliesAnyTests = overAll allImpliesAny
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
-filterImpliesAllTests :: Effect Unit
-filterImpliesAllTests = overAll filterImpliesAll
+filterImpliesAllTests :: Ref Int -> Effect Unit
+filterImpliesAllTests count = overAll count filterImpliesAll
   where
     filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
     filterImpliesAll (WithOffset _ xs) =
@@ -219,8 +213,8 @@ filterImpliesAllTests = overAll filterImpliesAll
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
-filterIsTotalTests :: Effect Unit
-filterIsTotalTests = overAll filterIsTotal
+filterIsTotalTests :: Ref Int -> Effect Unit
+filterIsTotalTests count = overAll count filterIsTotal
   where
     filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
     filterIsTotal (WithOffset _ xs) =
@@ -231,8 +225,8 @@ filterIsTotalTests = overAll filterIsTotal
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
-filterIsIdempotentTests :: Effect Unit
-filterIsIdempotentTests = overAll filterIsIdempotent
+filterIsIdempotentTests :: Ref Int -> Effect Unit
+filterIsIdempotentTests count = overAll count filterIsIdempotent
   where
     filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     filterIsIdempotent (WithOffset _ xs) =
@@ -242,16 +236,16 @@ filterIsIdempotentTests = overAll filterIsIdempotent
       in  TA.toArray zs === TA.toArray ys
 
 
-withOffsetHasIndexTests :: Effect Unit
-withOffsetHasIndexTests = overAll withOffsetHasIndex
+withOffsetHasIndexTests :: Ref Int -> Effect Unit
+withOffsetHasIndexTests count = overAll count withOffsetHasIndex
   where
     withOffsetHasIndex :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetHasIndex (WithOffset os xs) =
       Array.all (\o -> TA.hasIndex xs o) os <?> "All doesn't have index of itself"
 
 
-withOffsetElemTests :: Effect Unit
-withOffsetElemTests = overAll withOffsetElem
+withOffsetElemTests :: Ref Int -> Effect Unit
+withOffsetElemTests count = overAll count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) =
@@ -260,8 +254,8 @@ withOffsetElemTests = overAll withOffsetElem
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
-anyImpliesFindTests :: Effect Unit
-anyImpliesFindTests = overAll anyImpliesFind
+anyImpliesFindTests :: Ref Int -> Effect Unit
+anyImpliesFindTests count = overAll count anyImpliesFind
   where
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
     anyImpliesFind (WithOffset _ xs) =
@@ -281,8 +275,8 @@ anyImpliesFindTests = overAll anyImpliesFind
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
-findIndexImpliesAtTests :: Effect Unit
-findIndexImpliesAtTests = overAll findIndexImpliesAt
+findIndexImpliesAtTests :: Ref Int -> Effect Unit
+findIndexImpliesAtTests count = overAll count findIndexImpliesAt
   where
     findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
     findIndexImpliesAt (WithOffset _ xs) =
@@ -296,8 +290,8 @@ findIndexImpliesAtTests = overAll findIndexImpliesAt
 
 
 
-indexOfImpliesAtTests :: Effect Unit
-indexOfImpliesAtTests = overAll indexOfImpliesAt
+indexOfImpliesAtTests :: Ref Int -> Effect Unit
+indexOfImpliesAtTests count = overAll count indexOfImpliesAt
   where
     indexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
     indexOfImpliesAt (WithOffset _ xs) =
@@ -308,8 +302,8 @@ indexOfImpliesAtTests = overAll indexOfImpliesAt
           Just o -> TA.at xs o === Just y
 
 
-lastIndexOfImpliesAtTests :: Effect Unit
-lastIndexOfImpliesAtTests = overAll lastIndexOfImpliesAt
+lastIndexOfImpliesAtTests :: Ref Int -> Effect Unit
+lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
   where
     lastIndexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
     lastIndexOfImpliesAt (WithOffset _ xs) =
@@ -320,32 +314,32 @@ lastIndexOfImpliesAtTests = overAll lastIndexOfImpliesAt
           Just o -> TA.at xs o === Just y
 
 
-foldrConsIsToArrayTests :: Effect Unit
-foldrConsIsToArrayTests = overAll foldrConsIsToArray
+foldrConsIsToArrayTests :: Ref Int -> Effect Unit
+foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
   where
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldrConsIsToArray (WithOffset _ xs) =
       TA.foldr xs (\x acc _ -> Array.cons x acc) [] === TA.toArray xs
 
 
-foldlSnocIsToArrayTests :: Effect Unit
-foldlSnocIsToArrayTests = overAll foldlSnocIsToArray
+foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
+foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
   where
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldlSnocIsToArray (WithOffset _ xs) =
       TA.foldl xs (\acc x _ -> Array.snoc acc x) [] === TA.toArray xs
 
 
-mapIdentityIsIdentityTests :: Effect Unit
-mapIdentityIsIdentityTests = overAll mapIdentityIsIdentity
+mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
+mapIdentityIsIdentityTests count = overAll count mapIdentityIsIdentity
   where
     mapIdentityIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     mapIdentityIsIdentity (WithOffset _ xs) =
       TA.toArray (TA.map (\x _ -> x) xs) === TA.toArray xs
 
 
-traverseSnocIsToArrayTests :: Effect Unit
-traverseSnocIsToArrayTests = overAll traverseSnocIsToArray
+traverseSnocIsToArrayTests :: Ref Int -> Effect Unit
+traverseSnocIsToArrayTests count = overAll count traverseSnocIsToArray
   where
     traverseSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     traverseSnocIsToArray (WithOffset _ xs) =
@@ -356,8 +350,8 @@ traverseSnocIsToArrayTests = overAll traverseSnocIsToArray
       in  TA.toArray xs === ys
 
 
-doubleReverseIsIdentityTests :: Effect Unit
-doubleReverseIsIdentityTests = overAll doubleReverseIsIdentity
+doubleReverseIsIdentityTests :: Ref Int -> Effect Unit
+doubleReverseIsIdentityTests count = overAll count doubleReverseIsIdentity
   where
     doubleReverseIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     doubleReverseIsIdentity (WithOffset _ xs) =
@@ -368,8 +362,8 @@ doubleReverseIsIdentityTests = overAll doubleReverseIsIdentity
       in  TA.toArray xs === ys
 
 
-reverseIsArrayReverseTests :: Effect Unit
-reverseIsArrayReverseTests = overAll reverseIsArrayReverse
+reverseIsArrayReverseTests :: Ref Int -> Effect Unit
+reverseIsArrayReverseTests count = overAll count reverseIsArrayReverse
   where
     reverseIsArrayReverse :: forall a b t. TestableArrayF a b D0 t Result
     reverseIsArrayReverse (WithOffset _ xs) =
@@ -379,8 +373,8 @@ reverseIsArrayReverseTests = overAll reverseIsArrayReverse
       in  TA.toArray xs === ys
 
 
-sortIsIdempotentTests :: Effect Unit
-sortIsIdempotentTests = overAll sortIsIdempotent
+sortIsIdempotentTests :: Ref Int -> Effect Unit
+sortIsIdempotentTests count = overAll count sortIsIdempotent
   where
     sortIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     sortIsIdempotent (WithOffset _ xs) =
@@ -393,8 +387,8 @@ sortIsIdempotentTests = overAll sortIsIdempotent
       in  zs === ys
 
 
-sortIsArraySortTests :: Effect Unit
-sortIsArraySortTests = overAll sortIsArraySort
+sortIsArraySortTests :: Ref Int -> Effect Unit
+sortIsArraySortTests count = overAll count sortIsArraySort
   where
     sortIsArraySort :: forall a b t. TestableArrayF a b D0 t Result
     sortIsArraySort (WithOffset _ xs) =
@@ -404,16 +398,16 @@ sortIsArraySortTests = overAll sortIsArraySort
       in  TA.toArray xs === ys
 
 
-toStringIsJoinWithCommaTests :: Effect Unit
-toStringIsJoinWithCommaTests = overAll toStringIsJoinWithComma
+toStringIsJoinWithCommaTests :: Ref Int -> Effect Unit
+toStringIsJoinWithCommaTests count = overAll count toStringIsJoinWithComma
   where
     toStringIsJoinWithComma :: forall a b t. TestableArrayF a b D0 t Result
     toStringIsJoinWithComma (WithOffset _ xs) =
       TA.toString' xs "," === TA.toString xs
 
 
-setTypedOfSubArrayIsIdentityTests :: Effect Unit
-setTypedOfSubArrayIsIdentityTests = overAll setTypedOfSubArrayIsIdentity
+setTypedOfSubArrayIsIdentityTests :: Ref Int -> Effect Unit
+setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIdentity
   where
     setTypedOfSubArrayIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     setTypedOfSubArrayIsIdentity (WithOffset _ xs) =
@@ -425,8 +419,8 @@ setTypedOfSubArrayIsIdentityTests = overAll setTypedOfSubArrayIsIdentity
       in  zs === ys
 
 
-modifyingOriginalMutatesSubArrayTests :: Effect Unit
-modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
+modifyingOriginalMutatesSubArrayTests :: Ref Int -> Effect Unit
+modifyingOriginalMutatesSubArrayTests count = overAll count modifyingOriginalMutatesSubArray
   where
     modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
     modifyingOriginalMutatesSubArray (WithOffset _ xs)
@@ -440,8 +434,8 @@ modifyingOriginalMutatesSubArrayTests = overAll modifyingOriginalMutatesSubArray
         in  zs /== ys
 
 
-modifyingSubArrayMutatesOriginalTests :: Effect Unit
-modifyingSubArrayMutatesOriginalTests = overAll modifyingOriginalMutatesSubArray
+modifyingSubArrayMutatesOriginalTests :: Ref Int -> Effect Unit
+modifyingSubArrayMutatesOriginalTests count = overAll count modifyingOriginalMutatesSubArray
   where
     modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
     modifyingOriginalMutatesSubArray (WithOffset _ xs)
@@ -455,8 +449,8 @@ modifyingSubArrayMutatesOriginalTests = overAll modifyingOriginalMutatesSubArray
         in  zs /== ys
 
 
-modifyingOriginalMutatesSubArrayZeroTests :: Effect Unit
-modifyingOriginalMutatesSubArrayZeroTests = overAll modifyingOriginalMutatesSubArrayZero
+modifyingOriginalMutatesSubArrayZeroTests :: Ref Int -> Effect Unit
+modifyingOriginalMutatesSubArrayZeroTests count = overAll count modifyingOriginalMutatesSubArrayZero
   where
     modifyingOriginalMutatesSubArrayZero :: forall a b t. TestableArrayF a b D0 t Result
     modifyingOriginalMutatesSubArrayZero (WithOffset _ xs)
@@ -470,8 +464,8 @@ modifyingOriginalMutatesSubArrayZeroTests = overAll modifyingOriginalMutatesSubA
         in  zs /== ys
 
 
-modifyingSubArrayMutatesOriginalZeroTests :: Effect Unit
-modifyingSubArrayMutatesOriginalZeroTests = overAll modifyingSubArrayMutatesOriginalZero
+modifyingSubArrayMutatesOriginalZeroTests :: Ref Int -> Effect Unit
+modifyingSubArrayMutatesOriginalZeroTests count = overAll count modifyingSubArrayMutatesOriginalZero
   where
     modifyingSubArrayMutatesOriginalZero :: forall a b t. TestableArrayF a b D0 t Result
     modifyingSubArrayMutatesOriginalZero (WithOffset _ xs)
@@ -485,8 +479,8 @@ modifyingSubArrayMutatesOriginalZeroTests = overAll modifyingSubArrayMutatesOrig
         in  zs /== ys
 
 
-modifyingOriginalMutatesSubArrayAllTests :: Effect Unit
-modifyingOriginalMutatesSubArrayAllTests = overAll modifyingOriginalMutatesSubArrayAll
+modifyingOriginalMutatesSubArrayAllTests :: Ref Int -> Effect Unit
+modifyingOriginalMutatesSubArrayAllTests count = overAll count modifyingOriginalMutatesSubArrayAll
   where
     modifyingOriginalMutatesSubArrayAll :: forall a b t. TestableArrayF a b D0 t Result
     modifyingOriginalMutatesSubArrayAll (WithOffset _ xs)
@@ -500,8 +494,8 @@ modifyingOriginalMutatesSubArrayAllTests = overAll modifyingOriginalMutatesSubAr
         in  zs /== ys
 
 
-modifyingSubArrayMutatesOriginalAllTests :: Effect Unit
-modifyingSubArrayMutatesOriginalAllTests = overAll modifyingSubArrayMutatesOriginalAll
+modifyingSubArrayMutatesOriginalAllTests :: Ref Int -> Effect Unit
+modifyingSubArrayMutatesOriginalAllTests count = overAll count modifyingSubArrayMutatesOriginalAll
   where
     modifyingSubArrayMutatesOriginalAll :: forall a b t. TestableArrayF a b D0 t Result
     modifyingSubArrayMutatesOriginalAll (WithOffset _ xs)
@@ -515,8 +509,8 @@ modifyingSubArrayMutatesOriginalAllTests = overAll modifyingSubArrayMutatesOrigi
         in  zs /== ys
 
 
-modifyingOriginalDoesntMutateSubArrayPartTests :: Effect Unit
-modifyingOriginalDoesntMutateSubArrayPartTests = overAll modifyingOriginalMutatesSubArrayPart
+modifyingOriginalDoesntMutateSubArrayPartTests :: Ref Int -> Effect Unit
+modifyingOriginalDoesntMutateSubArrayPartTests count = overAll count modifyingOriginalMutatesSubArrayPart
   where
     modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalMutatesSubArrayPart (WithOffset os xs)
@@ -533,8 +527,8 @@ modifyingOriginalDoesntMutateSubArrayPartTests = overAll modifyingOriginalMutate
         in  zs === ys
 
 
-modifyingOriginalDoesntMutateSubArrayPart2Tests :: Effect Unit
-modifyingOriginalDoesntMutateSubArrayPart2Tests = overAll modifyingOriginalMutatesSubArrayPart2
+modifyingOriginalDoesntMutateSubArrayPart2Tests :: Ref Int -> Effect Unit
+modifyingOriginalDoesntMutateSubArrayPart2Tests count = overAll count modifyingOriginalMutatesSubArrayPart2
   where
     modifyingOriginalMutatesSubArrayPart2 :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalMutatesSubArrayPart2 (WithOffset os xs)
@@ -551,8 +545,8 @@ modifyingOriginalDoesntMutateSubArrayPart2Tests = overAll modifyingOriginalMutat
         in  zs === ys
 
 
-modifyingOriginalDoesntMutateSliceTests :: Effect Unit
-modifyingOriginalDoesntMutateSliceTests = overAll modifyingOriginalDoesntMutateSlice
+modifyingOriginalDoesntMutateSliceTests :: Ref Int -> Effect Unit
+modifyingOriginalDoesntMutateSliceTests count = overAll count modifyingOriginalDoesntMutateSlice
   where
     modifyingOriginalDoesntMutateSlice :: forall a b t. TestableArrayF a b D0 t Result
     modifyingOriginalDoesntMutateSlice (WithOffset _ xs)
@@ -566,8 +560,8 @@ modifyingOriginalDoesntMutateSliceTests = overAll modifyingOriginalDoesntMutateS
         in  zs === ys
 
 
-modifyingOriginalDoesntMutateSlicePartTests :: Effect Unit
-modifyingOriginalDoesntMutateSlicePartTests = overAll modifyingOriginalDoesntMutateSlicePart
+modifyingOriginalDoesntMutateSlicePartTests :: Ref Int -> Effect Unit
+modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOriginalDoesntMutateSlicePart
   where
     modifyingOriginalDoesntMutateSlicePart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart (WithOffset os xs)
@@ -583,8 +577,8 @@ modifyingOriginalDoesntMutateSlicePartTests = overAll modifyingOriginalDoesntMut
         in  zs === ys
 
 
-modifyingOriginalDoesntMutateSlicePart2Tests :: Effect Unit
-modifyingOriginalDoesntMutateSlicePart2Tests = overAll modifyingOriginalDoesntMutateSlicePart2
+modifyingOriginalDoesntMutateSlicePart2Tests :: Ref Int -> Effect Unit
+modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOriginalDoesntMutateSlicePart2
   where
     modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs)
@@ -600,8 +594,8 @@ modifyingOriginalDoesntMutateSlicePart2Tests = overAll modifyingOriginalDoesntMu
         in  zs === ys
 
 
-copyWithinSelfIsIdentityTests :: Effect Unit
-copyWithinSelfIsIdentityTests = overAll copyWithinSelfIsIdentity
+copyWithinSelfIsIdentityTests :: Ref Int -> Effect Unit
+copyWithinSelfIsIdentityTests count = overAll count copyWithinSelfIsIdentity
   where
     copyWithinSelfIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     copyWithinSelfIsIdentity (WithOffset _ xs) =
@@ -612,8 +606,8 @@ copyWithinSelfIsIdentityTests = overAll copyWithinSelfIsIdentity
       in  zs === ys
 
 
-copyWithinIsSliceTests :: Effect Unit
-copyWithinIsSliceTests = overAll copyWithinIsSlice
+copyWithinIsSliceTests :: Ref Int -> Effect Unit
+copyWithinIsSliceTests count = overAll count copyWithinIsSlice
   where
     copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
     copyWithinIsSlice (WithOffset os xs) =
@@ -625,8 +619,8 @@ copyWithinIsSliceTests = overAll copyWithinIsSlice
       in  TA.toArray xs === ys <> zs
 
 
-copyWithinViaSetTypedTests :: Effect Unit
-copyWithinViaSetTypedTests = overAll copyWithinViaSetTyped
+copyWithinViaSetTypedTests :: Ref Int -> Effect Unit
+copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
   where
     copyWithinViaSetTyped :: forall a b t. TestableArrayF a b D1 t Result
     copyWithinViaSetTyped (WithOffset os xs) =

@@ -2,12 +2,9 @@
 
 module Data.ArrayBuffer.Typed.Gen where
 
-import Data.ArrayBuffer.Types
-  ( Uint8ClampedArray, Uint8Array, Uint16Array, Uint32Array
-  , Int8Array, Int16Array, Int32Array
-  , Float32Array, Float64Array, ArrayView
-  )
+import Data.ArrayBuffer.Types (ArrayView)
 import Data.ArrayBuffer.Typed as TA
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 
 import Prelude
 import Math as M
@@ -17,7 +14,6 @@ import Data.UInt (UInt)
 import Data.UInt as UInt
 import Data.String.CodeUnits as S
 import Data.Float.Parse (parseFloat)
-import Data.Array as Array
 import Data.Vec (Vec)
 import Data.Vec (fromArray) as Vec
 import Data.Generic.Rep (class Generic)
@@ -97,7 +93,7 @@ derive instance genericWithOffset :: Generic (ArrayView a) a' => Generic (WithOf
 genWithOffset :: forall m n b a
                . MonadGen m
               => Nat n
-              => TA.BytesPerValue a b
+              => BytesPerValue a b
               => m (ArrayView a)
               -> m (WithOffset n a)
 genWithOffset genArrayView = do

@@ -5,7 +5,6 @@ module Data.ArrayBuffer.Typed
   ( polyFill
   , Offset, Length
   , buffer, byteOffset, byteLength, length
-  , class BytesPerValue
   , class TypedArray
   , whole, remainder, part, empty, fromArray
   , fill, set, setTyped, copyWithin
@@ -19,6 +18,15 @@ module Data.ArrayBuffer.Typed
   , toString, toString', toArray
   ) where
 
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
+import Data.ArrayBuffer.Types
+  ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
+  , Float64Array, Float32Array
+  , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
+  , Float64, Float32
+  , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
+
+
 import Prelude (Unit, pure, (<$>), (<<<), ($))
 import Effect (Effect)
 import Effect.Uncurried
@@ -31,14 +39,7 @@ import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toNullable, toMaybe)
 import Data.UInt (UInt)
 import Data.UInt (fromNumber, toNumber) as UInt
-import Data.ArrayBuffer.Types
-  ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
-  , Float64Array, Float32Array
-  , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
-  , Float64, Float32
-  , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
-import Data.Typelevel.Num (D1,D2,D4,D8)
 
 
 -- | Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
@@ -54,18 +55,6 @@ foreign import byteOffset :: forall a. ArrayView a -> ByteOffset
 foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
 foreign import lengthImpl :: forall a. ArrayView a -> Length
-
-class BytesPerValue (a :: ArrayViewType) (b :: Type) | a -> b
-
-instance bytesPerValueUint8Clamped :: BytesPerValue Uint8Clamped D1
-instance bytesPerValueUint32 :: BytesPerValue Uint32 D4
-instance bytesPerValueUint16 :: BytesPerValue Uint16 D2
-instance bytesPerValueUint8 :: BytesPerValue Uint8 D1
-instance bytesPerValueInt32 :: BytesPerValue Int32 D4
-instance bytesPerValueInt16 :: BytesPerValue Int16 D2
-instance bytesPerValueInt8 :: BytesPerValue Int8 D1
-instance bytesPerValueFloat32 :: BytesPerValue Float32 D4
-instance bytesPerValueFloat64 :: BytesPerValue Float64 D8
 
 length :: forall a b. BytesPerValue a b => ArrayView a -> Int
 length = lengthImpl
@@ -140,7 +129,7 @@ type Length = Int
 -- | - `subArray` returns a new typed array with a separate array buffer
 -- | - `toString` prints to a CSV, `toString'` allows you to supply the delimiter
 -- | - `toArray` returns an array of numeric values
-class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
+class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   -- | View mapping the whole `ArrayBuffer`.
   whole :: ArrayBuffer -> ArrayView a
   -- | View mapping the rest of an `ArrayBuffer` after an index.
