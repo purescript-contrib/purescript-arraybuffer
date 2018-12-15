@@ -1,9 +1,9 @@
 module Data.ArrayBuffer.DataView.Gen where
 
 import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
-import Data.ArrayBuffer.DataView (whole, byteLength)
+import Data.ArrayBuffer.DataView (whole, byteLength, class DataView, kind Endianness)
 import Data.ArrayBuffer.Types (DataView, ByteLength, ByteOffset, kind ArrayViewType)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 
 import Prelude ((<$>), bind, pure, (-), ($))
 import Data.Maybe (Maybe (Just))
@@ -26,17 +26,18 @@ genDataView a b = whole <$> genArrayBuffer a b
 
 
 -- | For generating some set of offsets residing inside the generated array
-data WithOffsetAndValue n (a :: ArrayViewType) t = WithOffsetAndValue (Vec n ByteOffset) t DataView
+data WithOffsetAndValue n (a :: ArrayViewType) (e :: Endianness) t =
+  WithOffsetAndValue (Vec n ByteOffset) t DataView
 
-genWithOffsetAndValue :: forall m n a b t
+genWithOffsetAndValue :: forall m n a b e t
                       . MonadGen m
                       => Nat n
                       => BytesPerValue a b
-                      => BinaryValue a t
+                      => DataView a e t
                       => Nat b
                       => m DataView -- ^ Assumes generated length is at least the minimum length of one value
                       -> m t
-                      -> m (WithOffsetAndValue n a t)
+                      -> m (WithOffsetAndValue n a e t)
 genWithOffsetAndValue gen genT = do
   let n = toInt' (Proxy :: Proxy n)
       b = toInt' (Proxy :: Proxy b)

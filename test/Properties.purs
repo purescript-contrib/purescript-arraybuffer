@@ -21,4 +21,4 @@ propertiesTests = do
   log "  - DataView Tests:"
   dataViewTests count
   c <- Ref.read count
-  log $ "  - Verified " <> show c <> " properties, generating " <> show (c * 8 * 100) <> " test cases."
+  log $ "  - Verified " <> show c <> " properties, generating " <> show (c * 16 * 100) <> " test cases."
