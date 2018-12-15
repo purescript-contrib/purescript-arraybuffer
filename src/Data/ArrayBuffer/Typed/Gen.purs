@@ -96,9 +96,9 @@ genWithOffset :: forall m n b a
               => BytesPerValue a b
               => m (ArrayView a)
               -> m (WithOffset n a)
-genWithOffset genArrayView = do
+genWithOffset gen = do
   let n = toInt' (Proxy :: Proxy n)
-  xs <- genArrayView
+  xs <- gen
   let l = TA.length xs
   mos <- replicateA n (chooseInt 0 (l - 1))
   let os = unsafePartial $ case Vec.fromArray mos of
