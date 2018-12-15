@@ -12,13 +12,10 @@ import Effect.Ref as Ref
 
 main :: Effect Unit
 main = do
-  count <- Ref.new 0
 
   log "Starting tests..."
-  propertiesTests count
+  propertiesTests
 
-  c <- Ref.read count
-  log $ "Verified " <> show c <> " properties, generating " <> show (c * 900) <> " test cases."
 
 
 -- import Data.ArrayBuffer.ArrayBuffer as AB

@@ -3,7 +3,7 @@ module Data.ArrayBuffer.DataView.Gen where
 import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
 import Data.ArrayBuffer.DataView (whole, byteLength)
 import Data.ArrayBuffer.Types (DataView, ByteLength, ByteOffset, kind ArrayViewType)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
 
 import Prelude ((<$>), bind, pure, (-), ($))
 import Data.Maybe (Maybe (Just))
@@ -26,16 +26,18 @@ genDataView a b = whole <$> genArrayBuffer a b
 
 
 -- | For generating some set of offsets residing inside the generated array
-data WithOffset n (a :: ArrayViewType) = WithOffset (Vec n ByteOffset) DataView
+data WithOffsetAndValue n (a :: ArrayViewType) t = WithOffsetAndValue (Vec n ByteOffset) t DataView
 
-genWithOffset :: forall m n a b
-               . MonadGen m
-              => Nat n
-              => BytesPerValue a b
-              => Nat b
-              => m DataView -- ^ Assumes generated length is at least the minimum length of one value
-              -> m (WithOffset n a)
-genWithOffset gen = do
+genWithOffsetAndValue :: forall m n a b t
+                      . MonadGen m
+                      => Nat n
+                      => BytesPerValue a b
+                      => BinaryValue a t
+                      => Nat b
+                      => m DataView -- ^ Assumes generated length is at least the minimum length of one value
+                      -> m t
+                      -> m (WithOffsetAndValue n a t)
+genWithOffsetAndValue gen genT = do
   let n = toInt' (Proxy :: Proxy n)
       b = toInt' (Proxy :: Proxy b)
   xs <- gen
@@ -43,4 +45,5 @@ genWithOffset gen = do
   mos <- replicateA n (chooseInt 0 (l - b))
   let os = unsafePartial $ case Vec.fromArray mos of
         Just q -> q
-  pure (WithOffset os xs)
+  t <- genT
+  pure (WithOffsetAndValue os t xs)

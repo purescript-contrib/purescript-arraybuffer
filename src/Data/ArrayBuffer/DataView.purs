@@ -8,67 +8,26 @@ module Data.ArrayBuffer.DataView
   , buffer
   , byteOffset
   , byteLength
-  , Getter()
-  , runGetter
-  , getInt8
-  , getInt16be
-  , getInt32be
-  , getUint8
-  , getUint16be
-  , getUint32be
-  , getFloat32be
-  , getFloat64be
-  , getInt16le
-  , getInt32le
-  , getUint16le
-  , getUint32le
-  , getFloat32le
-  , getFloat64le
-  , Setter()
-  , runSetter
-  , setInt8
-  , setInt16be
-  , setInt32be
-  , setUint8
-  , setUint16be
-  , setUint32be
-  , setFloat32be
-  , setFloat64be
-  , setInt16le
-  , setInt32le
-  , setUint16le
-  , setUint32le
-  , setFloat32le
-  , setFloat64le
+  , DVProxy (..), kind Endianness, BE, LE
+  , class DataView
+  , get, set
   ) where
 
 import Data.ArrayBuffer.Types
   ( ByteOffset, DataView, ByteLength, ArrayBuffer, kind ArrayViewType
   , Int32, Int16, Int8, Uint32, Uint16, Uint8, Float32, Float64)
-import Data.ArrayBuffer.ValueMapping (class BinaryValue)
+import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 
 import Prelude (Unit, const, pure, (<$>))
 import Data.Maybe (Maybe(..))
 import Data.UInt (UInt)
+import Data.Typelevel.Num (toInt', class Nat)
+import Type.Proxy (Proxy (..))
 import Effect (Effect)
 import Effect.Exception (catchException)
 import Effect.Uncurried (EffectFn5, EffectFn3, EffectFn2, runEffectFn5, runEffectFn3, runEffectFn2)
 
 
--- | Type for all fetching functions.
-newtype Getter (a :: ArrayViewType) t =
-  Getter (DataView -> ByteOffset -> Effect (Maybe t))
-
-runGetter :: forall a t. BinaryValue a t => Getter a t -> DataView -> ByteOffset -> Effect (Maybe t)
-runGetter (Getter f) = f
-
-
--- | Type for all storing functions.
-newtype Setter (a :: ArrayViewType) t =
-  Setter (DataView -> t -> ByteOffset -> Effect Unit)
-
-runSetter :: forall a t. BinaryValue a t => Setter a t -> DataView -> t -> ByteOffset -> Effect Unit
-runSetter (Setter f) = f
 
 
 -- | View mapping the whole `ArrayBuffer`.
@@ -96,118 +55,93 @@ foreign import byteOffset :: DataView -> ByteOffset
 foreign import byteLength :: DataView -> ByteLength
 
 
-type Endianness = Boolean
 
-foreign import getterImpl :: forall t. EffectFn5 String ByteLength Endianness DataView ByteOffset t
+data DVProxy (a :: ArrayViewType) (e :: Endianness) = DVProxy
 
-getter :: forall a t. BinaryValue a t => String -> ByteLength -> Endianness -> Getter a t
-getter p l e = Getter \d o ->
+foreign import kind Endianness
+foreign import data BE :: Endianness
+foreign import data LE :: Endianness
+
+
+class BinaryValue a t <= DataView (a :: ArrayViewType) (e :: Endianness) t | a -> t where
+  get :: DVProxy a e -> DataView -> ByteOffset -> Effect (Maybe t)
+  set :: DVProxy a e -> DataView -> t -> ByteOffset -> Effect Unit
+
+
+foreign import getterImpl :: forall t. EffectFn5 String ByteLength Boolean DataView ByteOffset t
+
+getter :: forall t. String -> ByteLength -> Boolean -> DataView -> ByteOffset -> Effect (Maybe t)
+getter p l e = \d o ->
   let x = runEffectFn5 getterImpl p l e d o
   in  catchException (const (pure Nothing)) (Just <$> x)
 
-foreign import setterImpl :: forall t. EffectFn5 String Endianness DataView t ByteOffset Unit
+foreign import setterImpl :: forall t. EffectFn5 String Boolean DataView t ByteOffset Unit
 
-setter :: forall a t. BinaryValue a t => String -> Endianness -> Setter a t
-setter p e = Setter \d x o ->
+setter :: forall t. String -> Boolean -> DataView -> t -> ByteOffset -> Effect Unit
+setter p e = \d x o ->
   runEffectFn5 setterImpl p e d x o
 
 
--- | Fetch int8 value at a certain index in a `DataView`.
-getInt8 :: Getter Int8 Int
-getInt8 = getter "getInt8" 1 false
+instance dataViewInt8BE :: (BytesPerValue Int8 b, Nat b) => DataView Int8 BE Int where
+  get DVProxy = getter "getInt8" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setInt8" false
 
--- | Fetch int16 value at a certain index in a `DataView`.
-getInt16be :: Getter Int16 Int
-getInt16be = getter "getInt16" 2 false
+instance dataViewInt8LE :: (BytesPerValue Int8 b, Nat b) => DataView Int8 LE Int where
+  get DVProxy = getter "getInt8" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setInt8" true
 
-getInt16le :: Getter Int16 Int
-getInt16le = getter "getInt16" 2 true
+instance dataViewInt16BE :: (BytesPerValue Int16 b, Nat b) => DataView Int16 BE Int where
+  get DVProxy = getter "getInt16" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setInt16" false
 
--- | Fetch int32 value at a certain index in a `DataView`.
-getInt32be :: Getter Int32 Int
-getInt32be = getter "getInt32" 4 false
+instance dataViewInt16LE :: (BytesPerValue Int16 b, Nat b) => DataView Int16 LE Int where
+  get DVProxy = getter "getInt16" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setInt16" true
 
-getInt32le :: Getter Int32 Int
-getInt32le = getter "getInt32" 4 true
+instance dataViewInt32BE :: (BytesPerValue Int32 b, Nat b) => DataView Int32 BE Int where
+  get DVProxy = getter "getInt32" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setInt32" false
 
--- | Fetch uint8 value at a certain index in a `DataView`.
-getUint8 :: Getter Uint8 UInt
-getUint8 = getter "getUint8" 1 false
+instance dataViewInt32LE :: (BytesPerValue Int32 b, Nat b) => DataView Int32 LE Int where
+  get DVProxy = getter "getInt32" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setInt32" true
 
--- | Fetch uint16 value at a certain index in a `DataView`.
-getUint16be :: Getter Uint16 UInt
-getUint16be = getter "getUint16" 2 false
+instance dataViewUint8BE :: (BytesPerValue Uint8 b, Nat b) => DataView Uint8 BE UInt where
+  get DVProxy = getter "getUint8" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setUint8" false
 
-getUint16le :: Getter Uint16 UInt
-getUint16le = getter "getUint16" 2 true
+instance dataViewUint8LE :: (BytesPerValue Uint8 b, Nat b) => DataView Uint8 LE UInt where
+  get DVProxy = getter "getUint8" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setUint8" true
 
--- | Fetch uint32 value at a certain index in a `DataView`.
-getUint32be :: Getter Uint32 UInt
-getUint32be = getter "getUint32" 4 false
+instance dataViewUint16BE :: (BytesPerValue Uint16 b, Nat b) => DataView Uint16 BE UInt where
+  get DVProxy = getter "getUint16" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setUint16" false
 
-getUint32le :: Getter Uint32 UInt
-getUint32le = getter "getUint32" 4 true
+instance dataViewUint16LE :: (BytesPerValue Uint16 b, Nat b) => DataView Uint16 LE UInt where
+  get DVProxy = getter "getUint16" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setUint16" true
 
--- | Fetch float32 value at a certain index in a `DataView`.
-getFloat32be :: Getter Float32 Number
-getFloat32be = getter "getFloat32" 4 false
+instance dataViewUint32BE :: (BytesPerValue Uint32 b, Nat b) => DataView Uint32 BE UInt where
+  get DVProxy = getter "getUint32" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setUint32" false
 
-getFloat32le :: Getter Float32 Number
-getFloat32le = getter "getFloat32" 4 true
+instance dataViewUint32LE :: (BytesPerValue Uint32 b, Nat b) => DataView Uint32 LE UInt where
+  get DVProxy = getter "getUint32" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setUint32" true
 
--- | Fetch float64 value at a certain index in a `DataView`.
-getFloat64be :: Getter Float64 Number
-getFloat64be = getter "getFloat64" 8 false
+instance dataViewFloat32BE :: (BytesPerValue Float32 b, Nat b) => DataView Float32 BE Number where
+  get DVProxy = getter "getFloat32" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setFloat32" false
 
-getFloat64le :: Getter Float64 Number
-getFloat64le = getter "getFloat64" 8 true
+instance dataViewFloat32LE :: (BytesPerValue Float32 b, Nat b) => DataView Float32 LE Number where
+  get DVProxy = getter "getFloat32" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setFloat32" true
 
--- | Store int8 value at a certain index in a `DataView`.
-setInt8 :: Setter Int8 Int
-setInt8 = setter "setInt8" false
+instance dataViewFloat64BE :: (BytesPerValue Float64 b, Nat b) => DataView Float64 BE Number where
+  get DVProxy = getter "getFloat64" (toInt' (Proxy :: Proxy b)) false
+  set DVProxy = setter "setFloat64" false
 
--- | Store int16 value at a certain index in a `DataView`.
-setInt16be :: Setter Int16 Int
-setInt16be = setter "setInt16" false
-
-setInt16le :: Setter Int16 Int
-setInt16le = setter "setInt16" true
-
--- | Store int32 value at a certain index in a `DataView`.
-setInt32be :: Setter Int32 Int
-setInt32be = setter "setInt32" false
-
-setInt32le :: Setter Int32 Int
-setInt32le = setter "setInt32" true
-
--- | Store uint8 value at a certain index in a `DataView`.
-setUint8 :: Setter Uint8 UInt
-setUint8 = setter "setUint8" false
-
--- | Store uint16 value at a certain index in a `DataView`.
-setUint16be :: Setter Uint16 UInt
-setUint16be = setter "setUint16" false
-
-setUint16le :: Setter Uint16 UInt
-setUint16le = setter "setUint16" true
-
--- | Store uint32 value at a certain index in a `DataView`.
-setUint32be :: Setter Uint32 UInt
-setUint32be = setter "setUint32" false
-
-setUint32le :: Setter Uint32 UInt
-setUint32le = setter "setUint32" true
-
--- | Store float32 value at a certain index in a `DataView`.
-setFloat32be :: Setter Float32 Number
-setFloat32be = setter "setFloat32" false
-
-setFloat32le :: Setter Float32 Number
-setFloat32le = setter "setFloat32" true
-
--- | Store float64 value at a certain index in a `DataView`.
-setFloat64be :: Setter Float64 Number
-setFloat64be = setter "setFloat64" false
-
-setFloat64le :: Setter Float64 Number
-setFloat64le = setter "setFloat64" true
+instance dataViewFloat64LE :: (BytesPerValue Float64 b, Nat b) => DataView Float64 LE Number where
+  get DVProxy = getter "getFloat64" (toInt' (Proxy :: Proxy b)) true
+  set DVProxy = setter "setFloat64" true
