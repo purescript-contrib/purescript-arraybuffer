@@ -51,220 +51,81 @@ byteLength :: DataView -> ByteLength
 
 Represents the length of this view.
 
-#### `Getter`
+#### `DVProxy`
 
 ``` purescript
-type Getter r = DataView -> ByteOffset -> Effect (Maybe r)
+data DVProxy (a :: ArrayViewType) (e :: Endianness)
+  = DVProxy
 ```
 
-Type for all fetching functions.
-
-#### `getInt8`
+#### `Endianness`
 
 ``` purescript
-getInt8 :: Getter Int
+kind Endianness
 ```
 
-Fetch int8 value at a certain index in a `DataView`.
-
-#### `getInt16be`
+#### `BE`
 
 ``` purescript
-getInt16be :: Getter Int
+data BE :: Endianness
 ```
 
-Fetch int16 value at a certain index in a `DataView`.
-
-#### `getInt32be`
-
+##### Instances
 ``` purescript
-getInt32be :: Getter Int
+(BytesPerValue Int8 b, Nat b) => DataView Int8 BE Int
+(BytesPerValue Int16 b, Nat b) => DataView Int16 BE Int
+(BytesPerValue Int32 b, Nat b) => DataView Int32 BE Int
+(BytesPerValue Uint8 b, Nat b) => DataView Uint8 BE UInt
+(BytesPerValue Uint16 b, Nat b) => DataView Uint16 BE UInt
+(BytesPerValue Uint32 b, Nat b) => DataView Uint32 BE UInt
+(BytesPerValue Float32 b, Nat b) => DataView Float32 BE Number
+(BytesPerValue Float64 b, Nat b) => DataView Float64 BE Number
 ```
 
-Fetch int32 value at a certain index in a `DataView`.
-
-#### `getUint8`
+#### `LE`
 
 ``` purescript
-getUint8 :: Getter Int
+data LE :: Endianness
 ```
 
-Fetch uint8 value at a certain index in a `DataView`.
-
-#### `getUint16be`
-
+##### Instances
 ``` purescript
-getUint16be :: Getter Int
+(BytesPerValue Int8 b, Nat b) => DataView Int8 LE Int
+(BytesPerValue Int16 b, Nat b) => DataView Int16 LE Int
+(BytesPerValue Int32 b, Nat b) => DataView Int32 LE Int
+(BytesPerValue Uint8 b, Nat b) => DataView Uint8 LE UInt
+(BytesPerValue Uint16 b, Nat b) => DataView Uint16 LE UInt
+(BytesPerValue Uint32 b, Nat b) => DataView Uint32 LE UInt
+(BytesPerValue Float32 b, Nat b) => DataView Float32 LE Number
+(BytesPerValue Float64 b, Nat b) => DataView Float64 LE Number
 ```
 
-Fetch uint16 value at a certain index in a `DataView`.
-
-#### `getUint32be`
+#### `DataView`
 
 ``` purescript
-getUint32be :: Getter Number
+class (BinaryValue a t) <= DataView (a :: ArrayViewType) (e :: Endianness) t | a -> t where
+  get :: DVProxy a e -> DataView -> ByteOffset -> Effect (Maybe t)
+  set :: DVProxy a e -> DataView -> t -> ByteOffset -> Effect Unit
 ```
 
-Fetch uint32 value at a certain index in a `DataView`.
-
-#### `getFloat32be`
-
+##### Instances
 ``` purescript
-getFloat32be :: Getter Number
-```
-
-Fetch float32 value at a certain index in a `DataView`.
-
-#### `getFloat64be`
-
-``` purescript
-getFloat64be :: Getter Number
-```
-
-Fetch float64 value at a certain index in a `DataView`.
-
-#### `getInt16le`
-
-``` purescript
-getInt16le :: Getter Int
-```
-
-#### `getInt32le`
-
-``` purescript
-getInt32le :: Getter Int
-```
-
-#### `getUint16le`
-
-``` purescript
-getUint16le :: Getter Int
-```
-
-#### `getUint32le`
-
-``` purescript
-getUint32le :: Getter Number
-```
-
-#### `getFloat32le`
-
-``` purescript
-getFloat32le :: Getter Number
-```
-
-#### `getFloat64le`
-
-``` purescript
-getFloat64le :: Getter Number
-```
-
-#### `Setter`
-
-``` purescript
-type Setter r = DataView -> r -> ByteOffset -> Effect Unit
-```
-
-Type for all storing functions.
-
-#### `setInt8`
-
-``` purescript
-setInt8 :: Setter Int
-```
-
-Store int8 value at a certain index in a `DataView`.
-
-#### `setInt16be`
-
-``` purescript
-setInt16be :: Setter Int
-```
-
-Store int16 value at a certain index in a `DataView`.
-
-#### `setInt32be`
-
-``` purescript
-setInt32be :: Setter Int
-```
-
-Store int32 value at a certain index in a `DataView`.
-
-#### `setUint8`
-
-``` purescript
-setUint8 :: Setter Int
-```
-
-Store uint8 value at a certain index in a `DataView`.
-
-#### `setUint16be`
-
-``` purescript
-setUint16be :: Setter Int
-```
-
-Store uint16 value at a certain index in a `DataView`.
-
-#### `setUint32be`
-
-``` purescript
-setUint32be :: Setter Number
-```
-
-Store uint32 value at a certain index in a `DataView`.
-
-#### `setFloat32be`
-
-``` purescript
-setFloat32be :: Setter Number
-```
-
-Store float32 value at a certain index in a `DataView`.
-
-#### `setFloat64be`
-
-``` purescript
-setFloat64be :: Setter Number
-```
-
-Store float64 value at a certain index in a `DataView`.
-
-#### `setInt16le`
-
-``` purescript
-setInt16le :: Setter Int
-```
-
-#### `setInt32le`
-
-``` purescript
-setInt32le :: Setter Int
-```
-
-#### `setUint16le`
-
-``` purescript
-setUint16le :: Setter Int
-```
-
-#### `setUint32le`
-
-``` purescript
-setUint32le :: Setter Number
-```
-
-#### `setFloat32le`
-
-``` purescript
-setFloat32le :: Setter Number
-```
-
-#### `setFloat64le`
-
-``` purescript
-setFloat64le :: Setter Number
+(BytesPerValue Int8 b, Nat b) => DataView Int8 BE Int
+(BytesPerValue Int8 b, Nat b) => DataView Int8 LE Int
+(BytesPerValue Int16 b, Nat b) => DataView Int16 BE Int
+(BytesPerValue Int16 b, Nat b) => DataView Int16 LE Int
+(BytesPerValue Int32 b, Nat b) => DataView Int32 BE Int
+(BytesPerValue Int32 b, Nat b) => DataView Int32 LE Int
+(BytesPerValue Uint8 b, Nat b) => DataView Uint8 BE UInt
+(BytesPerValue Uint8 b, Nat b) => DataView Uint8 LE UInt
+(BytesPerValue Uint16 b, Nat b) => DataView Uint16 BE UInt
+(BytesPerValue Uint16 b, Nat b) => DataView Uint16 LE UInt
+(BytesPerValue Uint32 b, Nat b) => DataView Uint32 BE UInt
+(BytesPerValue Uint32 b, Nat b) => DataView Uint32 LE UInt
+(BytesPerValue Float32 b, Nat b) => DataView Float32 BE Number
+(BytesPerValue Float32 b, Nat b) => DataView Float32 LE Number
+(BytesPerValue Float64 b, Nat b) => DataView Float64 BE Number
+(BytesPerValue Float64 b, Nat b) => DataView Float64 LE Number
 ```
 
 

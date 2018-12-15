@@ -18,14 +18,14 @@ import Partial.Unsafe (unsafePartial)
 
 genDataView :: forall m
              . MonadGen m
-            => ByteLength
-            -> Maybe ByteLength
+            => ByteLength -- ^ Min length
+            -> Maybe ByteLength -- ^ Max length
             -> m DataView
 genDataView a b = whole <$> genArrayBuffer a b
 
 
 
--- | For generating some set of offsets residing inside the generated array
+-- | For generating some set of offsets residing inside the generated array, with some computable value
 data WithOffsetAndValue n (a :: ArrayViewType) (e :: Endianness) t =
   WithOffsetAndValue (Vec n ByteOffset) t DataView
 

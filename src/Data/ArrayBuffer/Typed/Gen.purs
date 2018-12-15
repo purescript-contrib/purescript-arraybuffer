@@ -29,7 +29,7 @@ import Partial.Unsafe (unsafePartial)
 genTypedArray :: forall m a t
                . MonadGen m
               => TA.TypedArray a t
-              => TA.Length -- ^ Minimum length
+              => TA.Length -- ^ Min length
               -> Maybe TA.Length -- ^ Max length
               -> m t
               -> m (ArrayView a)

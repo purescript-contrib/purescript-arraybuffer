@@ -1,3 +1,6 @@
+-- | This module represents type-level mappings between `ArrayViewType`s
+-- | and meaningful data.
+
 module Data.ArrayBuffer.ValueMapping where
 
 import Data.ArrayBuffer.Types
@@ -8,6 +11,7 @@ import Data.Typelevel.Num (D1, D2, D4, D8)
 import Data.UInt (UInt)
 
 
+-- | Maps a `TypedArray`'s binary casted value, to the space occupied by that value, in bytes.
 class BytesPerValue (a :: ArrayViewType) (b :: Type) | a -> b
 
 instance bytesPerValueUint8Clamped :: BytesPerValue Uint8Clamped D1
@@ -21,6 +25,7 @@ instance bytesPerValueFloat32 :: BytesPerValue Float32 D4
 instance bytesPerValueFloat64 :: BytesPerValue Float64 D8
 
 
+-- | Maps a `TypedArray`'s binary casted value, to its computable representation in JavaScript.
 class BinaryValue (a :: ArrayViewType) (t :: Type) | a -> t
 
 instance binaryValueUint8Clamped :: BinaryValue Uint8Clamped UInt

@@ -2,64 +2,16 @@
 
 Functions for generating typed arrays and values.
 
-#### `genUint8ClampedArray`
+#### `genTypedArray`
 
 ``` purescript
-genUint8ClampedArray :: forall m. MonadGen m => m Uint8ClampedArray
-```
-
-#### `genUint32Array`
-
-``` purescript
-genUint32Array :: forall m. MonadGen m => m Uint32Array
-```
-
-#### `genUint16Array`
-
-``` purescript
-genUint16Array :: forall m. MonadGen m => m Uint16Array
-```
-
-#### `genUint8Array`
-
-``` purescript
-genUint8Array :: forall m. MonadGen m => m Uint8Array
-```
-
-#### `genInt32Array`
-
-``` purescript
-genInt32Array :: forall m. MonadGen m => m Int32Array
-```
-
-#### `genInt16Array`
-
-``` purescript
-genInt16Array :: forall m. MonadGen m => m Int16Array
-```
-
-#### `genInt8Array`
-
-``` purescript
-genInt8Array :: forall m. MonadGen m => m Int8Array
-```
-
-#### `genFloat32Array`
-
-``` purescript
-genFloat32Array :: forall m. MonadGen m => m Float32Array
-```
-
-#### `genFloat64Array`
-
-``` purescript
-genFloat64Array :: forall m. MonadGen m => m Float64Array
+genTypedArray :: forall m a t. MonadGen m => TypedArray a t => Length -> Maybe Length -> m t -> m (ArrayView a)
 ```
 
 #### `genUByte`
 
 ``` purescript
-genUByte :: forall m. MonadGen m => m Int
+genUByte :: forall m. MonadGen m => m UInt
 ```
 
 #### `genByte`
@@ -71,7 +23,7 @@ genByte :: forall m. MonadGen m => m Int
 #### `genUChomp`
 
 ``` purescript
-genUChomp :: forall m. MonadGen m => m Int
+genUChomp :: forall m. MonadGen m => m UInt
 ```
 
 #### `genChomp`

@@ -106,7 +106,10 @@ type Length = Int
 -- | #### Creation
 -- |
 -- | - `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
--- |   on top of an existing `ArrayBuffer`.
+-- |   on top of an existing `ArrayBuffer` - Note, `part` and `remainder` may behave unintuitively -
+-- |   when the operation is isomorphic to `whole`, the new TypedArray uses the same buffer as the input,
+-- |   but not when the portion is a sub-array of the original buffer, a new one is made with
+-- |   `Data.ArrayBuffer.ArrayBuffer.slice`.
 -- | - `empty` and `fromArray` are methods for creating pure typed arrays
 -- |
 -- | #### Modification
@@ -133,9 +136,9 @@ class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t wh
   -- | View mapping the whole `ArrayBuffer`.
   whole :: ArrayBuffer -> ArrayView a
   -- | View mapping the rest of an `ArrayBuffer` after an index.
-  remainder :: ArrayBuffer -> Offset -> Effect (ArrayView a)
+  remainder :: ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
   -- | View mapping a region of the `ArrayBuffer`.
-  part :: ArrayBuffer -> Offset -> Length -> Effect (ArrayView a)
+  part :: ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
   -- | Creates an empty typed array, where each value is assigned 0
   empty :: Length -> ArrayView a
   -- | Creates a typed array from an input array of values, to be binary serialized
@@ -493,34 +496,13 @@ foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nu
 -- | is `0`, and likewise if the second argument is the length of the array, then the "sub-array" is actually a
 -- | mutable replica of the original array - the sub-array reference reflects mutations to the original array.
 -- | However, when the sub-array is is actually a smaller contiguous portion of the array, then it behaves
--- | purely.
--- |
--- | **tl;dr**: if you want a duplicate reference of the same typed array, consider either of the following:
--- |
--- | ```
--- | y :: ArrayView _
--- | y = x
--- |
--- | y' :: ArrayView _
--- | y' = subArray x Nothing
--- |
--- | y'' :: ArrayView _
--- | y'' = subArray x (Just (Tuple 0 Nothing))
--- |
--- | y''' :: ArrayView _
--- | y''' = subArray x (Just (Tuple 0 (Just (length x))))
--- | ```
--- |
--- | Otherwise, you'll get an _image_ of the array at the moment, like `slice`.
+-- | purely, because JavaScript interally calls `Data.ArrayBuffer.ArrayBuffer.slice`.
 subArray :: forall a. ArrayView a -> Maybe (Tuple Offset (Maybe Offset)) -> ArrayView a
 subArray a mz = case mz of
   Nothing -> runFn3 subArrayImpl a (toNullable Nothing) (toNullable Nothing)
   Just (Tuple s me) -> case me of
     Nothing -> runFn3 subArrayImpl a (toNullable (Just s)) (toNullable Nothing)
     Just e -> runFn3 subArrayImpl a (toNullable (Just s)) (toNullable (Just e))
-
-
--- FIXME ^ deliberately just create a new typed array from the previous one's buffer?
 
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.

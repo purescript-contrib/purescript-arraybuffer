@@ -11,7 +11,7 @@ import Control.Monad.Gen.Class (class MonadGen)
 
 genArrayBuffer :: forall m
                 . MonadGen m
-               => ByteLength
-               -> Maybe ByteLength
+               => ByteLength -- ^ Min length
+               -> Maybe ByteLength -- ^ Max length
                -> m ArrayBuffer
 genArrayBuffer a b = buffer <$> (genTypedArray a b genUByte :: m Uint8Array)

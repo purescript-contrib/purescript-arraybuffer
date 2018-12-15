@@ -57,32 +57,13 @@ Represents the length of this typed array, in bytes.
 length :: forall a b. BytesPerValue a b => ArrayView a -> Int
 ```
 
-#### `BytesPerValue`
-
-``` purescript
-class BytesPerValue (a :: ArrayViewType) (b :: Type) | a -> b
-```
-
-##### Instances
-``` purescript
-BytesPerValue Uint8Clamped D1
-BytesPerValue Uint32 D4
-BytesPerValue Uint16 D2
-BytesPerValue Uint8 D1
-BytesPerValue Int32 D4
-BytesPerValue Int16 D2
-BytesPerValue Int8 D1
-BytesPerValue Float32 D4
-BytesPerValue Float64 D8
-```
-
 #### `TypedArray`
 
 ``` purescript
-class TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
+class (BinaryValue a t) <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   whole :: ArrayBuffer -> ArrayView a
-  remainder :: ArrayBuffer -> Offset -> Effect (ArrayView a)
-  part :: ArrayBuffer -> Offset -> Length -> Effect (ArrayView a)
+  remainder :: ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
+  part :: ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
   empty :: Length -> ArrayView a
   fromArray :: Array t -> ArrayView a
   fill :: ArrayView a -> t -> Maybe (Tuple Offset (Maybe Offset)) -> Effect Unit
@@ -110,7 +91,10 @@ Typeclass that associates a measured user-level type with a typed array.
 #### Creation
 
 - `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
-  on top of an existing `ArrayBuffer`.
+  on top of an existing `ArrayBuffer` - Note, `part` and `remainder` may behave unintuitively -
+  when the operation is isomorphic to `whole`, the new TypedArray uses the same buffer as the input,
+  but not when the portion is a sub-array of the original buffer, a new one is made with
+  `Data.ArrayBuffer.ArrayBuffer.slice`.
 - `empty` and `fromArray` are methods for creating pure typed arrays
 
 #### Modification
@@ -136,10 +120,10 @@ Typeclass that associates a measured user-level type with a typed array.
 
 ##### Instances
 ``` purescript
-TypedArray Uint8Clamped Int
+TypedArray Uint8Clamped UInt
 TypedArray Uint32 UInt
-TypedArray Uint16 Int
-TypedArray Uint8 Int
+TypedArray Uint16 UInt
+TypedArray Uint8 UInt
 TypedArray Int32 Int
 TypedArray Int16 Int
 TypedArray Int8 Int
@@ -239,25 +223,7 @@ Returns a new typed array view of the same buffer, beginning at the index and en
 is `0`, and likewise if the second argument is the length of the array, then the "sub-array" is actually a
 mutable replica of the original array - the sub-array reference reflects mutations to the original array.
 However, when the sub-array is is actually a smaller contiguous portion of the array, then it behaves
-purely.
-
-**tl;dr**: if you want a duplicate reference of the same typed array, consider either of the following:
-
-```
-y :: ArrayView _
-y = x
-
-y' :: ArrayView _
-y' = subArray x Nothing
-
-y'' :: ArrayView _
-y'' = subArray x (Just (Tuple 0 Nothing))
-
-y''' :: ArrayView _
-y''' = subArray x (Just (Tuple 0 (Just (length x))))
-```
-
-Otherwise, you'll get an _image_ of the array at the moment, like `slice`.
+purely, because JavaScript interally calls `Data.ArrayBuffer.ArrayBuffer.slice`.
 
 #### `toString`
 
