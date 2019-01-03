@@ -37,60 +37,25 @@ exports.lengthImpl = function lemgthImpl (v) {
 
 // Typed Arrays
 
-exports.newUint8ClampedArray = function newUint8ClampedArray (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Uint8ClampedArray(a)
-                                       : new Uint8ClampedArray(a,mb)
-                         )
-                       : new Uint8ClampedArray(a,mb,mc);
-};
-exports.newUint32Array = function newUint32Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Uint32Array(a)
-                                       : new Uint32Array(a,mb)
-                         )
-                       : new Uint32Array(a,mb,mc);
-};
-exports.newUint16Array = function newUint16Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Uint16Array(a)
-                                       : new Uint16Array(a,mb)
-                         )
-                       : new Uint16Array(a,mb,mc);
-};
-exports.newUint8Array = function newUint8Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Uint8Array(a)
-                                       : new Uint8Array(a,mb)
-                         )
-                       : new Uint8Array(a,mb,mc);
-};
-exports.newInt32Array = function newInt32Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Int32Array(a)
-                                       : new Int32Array(a,mb)
-                         )
-                       : new Int32Array(a,mb,mc);
-};
-exports.newInt16Array = function newInt16Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Int16Array(a)
-                                       : new Int16Array(a,mb)
-                         )
-                       : new Int16Array(a,mb,mc);
-};
-exports.newInt8Array = function newInt8Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Int8Array(a)
-                                       : new Int8Array(a,mb)
-                         )
-                       : new Int8Array(a,mb,mc);
-};
-exports.newFloat32Array = function newFloat32Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Float32Array(a)
-                                       : new Float32Array(a,mb)
-                         )
-                       : new Float32Array(a,mb,mc);
-};
-exports.newFloat64Array = function newFloat64Array (a,mb,mc) {
-    return mc === null ? ( mb === null ? new Float64Array(a)
-                                       : new Float64Array(a,mb)
-                         )
-                       : new Float64Array(a,mb,mc);
-};
+
+function newArray (f) {
+    return function newArray_ (a,mb,mc) {
+        return mc === null ? ( mb === null ? new f(a)
+                                           : new f(a,mb)
+                             )
+                           : new f(a,mb,mc);
+    };
+}
+
+exports.newUint8ClampedArray = newArray(Uint8ClampedArray);
+exports.newUint32Array = newArray(Uint32Array);
+exports.newUint16Array = newArray(Uint16Array);
+exports.newUint8Array = newArray(Uint8Array);
+exports.newInt32Array = newArray(Int32Array);
+exports.newInt16Array = newArray(Int16Array);
+exports.newInt8Array = newArray(Int8Array);
+exports.newFloat32Array = newArray(Float32Array);
+exports.newFloat64Array = newArray(Float64Array);
 
 
 // ------
