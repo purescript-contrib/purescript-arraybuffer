@@ -18,14 +18,15 @@ import Data.ArrayBuffer.Types
   , Int32, Int16, Int8, Uint32, Uint16, Uint8, Float32, Float64)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 
-import Prelude (Unit, const, pure, (<$>))
+import Prelude (Unit)
 import Data.Maybe (Maybe(..))
 import Data.UInt (UInt)
 import Data.Typelevel.Num (toInt', class Nat)
 import Type.Proxy (Proxy (..))
 import Effect (Effect)
-import Effect.Exception (catchException)
-import Effect.Uncurried (EffectFn5, EffectFn3, EffectFn2, runEffectFn5, runEffectFn3, runEffectFn2)
+import Effect.Uncurried
+  ( EffectFn5, EffectFn6, EffectFn3, EffectFn2
+  , runEffectFn5, runEffectFn6, runEffectFn3, runEffectFn2)
 
 
 
@@ -68,12 +69,13 @@ class BinaryValue a t <= DataView (a :: ArrayViewType) (e :: Endianness) t | a -
   set :: DVProxy a e -> DataView -> t -> ByteOffset -> Effect Unit
 
 
-foreign import getterImpl :: forall t. EffectFn5 String ByteLength Boolean DataView ByteOffset t
+foreign import getterImpl :: forall t
+                           . EffectFn6 { just :: t -> Maybe t
+                                       , nothing :: Maybe t
+                                       } String ByteLength Boolean DataView ByteOffset (Maybe t)
 
 getter :: forall t. String -> ByteLength -> Boolean -> DataView -> ByteOffset -> Effect (Maybe t)
-getter p l e = \d o ->
-  let x = runEffectFn5 getterImpl p l e d o
-  in  catchException (const (pure Nothing)) (Just <$> x)
+getter p l e = \d o -> runEffectFn6 getterImpl {just: Just, nothing: Nothing} p l e d o
 
 foreign import setterImpl :: forall t. EffectFn5 String Boolean DataView t ByteOffset Unit
 
