@@ -27,11 +27,13 @@ import Test.QuickCheck.Gen (Gen)
 
 dataViewTests :: Ref Int -> Effect Unit
 dataViewTests count = do
-  log "    - set x o => get o === Just x"
-  placingAValueIsThereTests count
+  log "    - setBE x o => getBE o === Just x"
+  placingAValueIsThereTestsBE count
+  log "    - setLE x o => getLE o === Just x"
+  placingAValueIsThereTestsLE count
 
 
-type TestableViewF a b n e t q =
+type TestableViewF a b n t q =
      Show t
   => Eq t
   => Ord t
@@ -39,103 +41,75 @@ type TestableViewF a b n e t q =
   => Arbitrary t
   => BytesPerValue a b
   => Nat b
-  => DV.DataView a e t
-  => WithOffsetAndValue n a e t
+  => DV.DataView a t
+  => WithOffsetAndValue n a t
   -> q
 
 
-overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b e t. TestableViewF a b n e t q) -> Effect Unit
+overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableViewF a b n t q) -> Effect Unit
 overAll count f = do
   void (Ref.modify (\x -> x + 1) count)
-  log "      - Uint32 BE"
+  log "      - Uint32"
   quickCheckGen $
-    let f' :: TestableViewF Uint32 D4 n DV.BE UInt q
+    let f' :: TestableViewF Uint32 D4 n UInt q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUWord))
-  log "      - Uint32 LE"
+  log "      - Uint16"
   quickCheckGen $
-    let f' :: TestableViewF Uint32 D4 n DV.LE UInt q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUWord))
-  log "      - Uint16 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Uint16 D2 n DV.BE UInt q
+    let f' :: TestableViewF Uint16 D2 n UInt q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUChomp))
-  log "      - Uint16 LE"
+  log "      - Uint8"
   quickCheckGen $
-    let f' :: TestableViewF Uint16 D2 n DV.LE UInt q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUChomp))
-  log "      - Uint8 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Uint8 D1 n DV.BE UInt q
+    let f' :: TestableViewF Uint8 D1 n UInt q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUByte))
-  log "      - Uint8 LE"
+  log "      - Int32"
   quickCheckGen $
-    let f' :: TestableViewF Uint8 D1 n DV.LE UInt q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUByte))
-  log "      - Int32 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Int32 D4 n DV.BE Int q
+    let f' :: TestableViewF Int32 D4 n Int q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genWord))
-  log "      - Int32 LE"
+  log "      - Int16"
   quickCheckGen $
-    let f' :: TestableViewF Int32 D4 n DV.LE Int q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genWord))
-  log "      - Int16 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Int16 D2 n DV.BE Int q
+    let f' :: TestableViewF Int16 D2 n Int q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genChomp))
-  log "      - Int16 LE"
+  log "      - Int8"
   quickCheckGen $
-    let f' :: TestableViewF Int16 D2 n DV.LE Int q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genChomp))
-  log "      - Int8 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Int8 D1 n DV.BE Int q
+    let f' :: TestableViewF Int8 D1 n Int q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genByte))
-  log "      - Int8 LE"
+  log "      - Float32"
   quickCheckGen $
-    let f' :: TestableViewF Int8 D1 n DV.LE Int q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genByte))
-  log "      - Float32 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Float32 D4 n DV.BE Number q
+    let f' :: TestableViewF Float32 D4 n Number q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genFloat32))
-  log "      - Float32 LE"
+  log "      - Float64"
   quickCheckGen $
-    let f' :: TestableViewF Float32 D4 n DV.LE Number q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genFloat32))
-  log "      - Float64 BE"
-  quickCheckGen $
-    let f' :: TestableViewF Float64 D8 n DV.BE Number q
-        f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genFloat64))
-  log "      - Float64 LE"
-  quickCheckGen $
-    let f' :: TestableViewF Float64 D8 n DV.LE Number q
+    let f' :: TestableViewF Float64 D8 n Number q
         f' = f
     in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genFloat64))
 
 
-placingAValueIsThereTests :: Ref Int -> Effect Unit
-placingAValueIsThereTests count = overAll count placingAValueIsThere
+placingAValueIsThereTestsBE :: Ref Int -> Effect Unit
+placingAValueIsThereTestsBE count = overAll count placingAValueIsThere
   where
-    placingAValueIsThere :: forall a b e t. TestableViewF a b D1 e t Result
+    placingAValueIsThere :: forall a b t. TestableViewF a b D1 t Result
     placingAValueIsThere (WithOffsetAndValue os t xs) =
       let o = Vec.head os
       in  unsafePerformEffect do
-        DV.set (DV.DVProxy :: DV.DVProxy a e) xs t o
-        my <- DV.get (DV.DVProxy :: DV.DVProxy a e) xs o
+        _ <- DV.setBE (DV.AProxy :: DV.AProxy a) xs t o
+        my <- DV.getBE (DV.AProxy :: DV.AProxy a) xs o
+        pure (my === Just t)
+
+
+placingAValueIsThereTestsLE :: Ref Int -> Effect Unit
+placingAValueIsThereTestsLE count = overAll count placingAValueIsThere
+  where
+    placingAValueIsThere :: forall a b t. TestableViewF a b D1 t Result
+    placingAValueIsThere (WithOffsetAndValue os t xs) =
+      let o = Vec.head os
+      in  unsafePerformEffect do
+        _ <- DV.setLE (DV.AProxy :: DV.AProxy a) xs t o
+        my <- DV.getLE (DV.AProxy :: DV.AProxy a) xs o
         pure (my === Just t)

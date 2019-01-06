@@ -29,11 +29,15 @@ exports.byteLength = function byteLength (v) {
 
 exports.getterImpl = function getterImpl (data, v, o) {
     return ((o + data.bytesPerValue) >>> 0) <= v.byteLength
-        ? data.just (v[data.functionName].call(v,o,data.endian))
+        ? data.just (v[data.functionName].call(v,o,data.littleEndian))
         : data.nothing;
 };
 
 exports.setterImpl = function setterImpl (data,v,n,o) {
-    var f = v[data.functionName];
-    f.call(v,o,n,data.endian);
+    if (((o + data.bytesPerValue) >>> 0) <= v.byteLength) {
+        v[data.functionName].call(v,o,n,data.littleEndian);
+        return true;
+    } else {
+        return false;
+    }
 };

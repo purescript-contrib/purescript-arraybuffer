@@ -8,9 +8,9 @@ module Data.ArrayBuffer.DataView
   , buffer
   , byteOffset
   , byteLength
-  , DVProxy (..), kind Endianness, BE, LE
+  , AProxy (..)
   , class DataView
-  , get, set
+  , getBE, getLE, setBE, setLE
   ) where
 
 import Data.ArrayBuffer.Types
@@ -56,31 +56,28 @@ foreign import byteOffset :: DataView -> ByteOffset
 foreign import byteLength :: DataView -> ByteLength
 
 
-
-data DVProxy (a :: ArrayViewType) (e :: Endianness) = DVProxy
-
-foreign import kind Endianness
-foreign import data BE :: Endianness
-foreign import data LE :: Endianness
+data AProxy (a :: ArrayViewType) = AProxy
 
 
-class BinaryValue a t <= DataView (a :: ArrayViewType) (e :: Endianness) t | a -> t where
-  get :: DVProxy a e -> DataView -> ByteOffset -> Effect (Maybe t)
-  set :: DVProxy a e -> DataView -> t -> ByteOffset -> Effect Unit
+class BinaryValue a t <= DataView (a :: ArrayViewType) t | a -> t where
+  getLE :: AProxy a -> DataView -> ByteOffset -> Effect (Maybe t)
+  getBE :: AProxy a -> DataView -> ByteOffset -> Effect (Maybe t)
+  setBE :: AProxy a -> DataView -> t -> ByteOffset -> Effect Boolean
+  setLE :: AProxy a -> DataView -> t -> ByteOffset -> Effect Boolean
 
 
 foreign import getterImpl :: forall t
                            . EffectFn3 { just :: t -> Maybe t
                                        , nothing :: Maybe t
                                        , functionName :: String
-                                       , endian :: Boolean
+                                       , littleEndian :: Boolean
                                        , bytesPerValue :: ByteLength
                                        } DataView ByteOffset (Maybe t)
 
 getter :: forall t
         . { functionName :: String
           , bytesPerValue :: ByteLength
-          , endian :: Boolean
+          , littleEndian :: Boolean
           }
        -> DataView -> ByteOffset -> Effect (Maybe t)
 getter data' =
@@ -88,76 +85,68 @@ getter data' =
     { just: Just
     , nothing: Nothing
     , functionName: data'.functionName
-    , endian: data'.endian
+    , littleEndian: data'.littleEndian
     , bytesPerValue: data'.bytesPerValue
     }
 
-foreign import setterImpl :: forall t. EffectFn4 {functionName :: String, endian :: Boolean} DataView t ByteOffset Unit
+foreign import setterImpl :: forall t
+                           . EffectFn4 { functionName :: String
+                                       , littleEndian :: Boolean
+                                       , bytesPerValue :: ByteLength
+                                       } DataView t ByteOffset Boolean
 
-setter :: forall t. {functionName :: String, endian :: Boolean} -> DataView -> t -> ByteOffset -> Effect Unit
+setter :: forall t
+        . { functionName :: String
+          , bytesPerValue :: ByteLength
+          , littleEndian :: Boolean
+          } -> DataView -> t -> ByteOffset -> Effect Boolean
 setter = runEffectFn4 setterImpl
 
 
-instance dataViewInt8BE :: (BytesPerValue Int8 b, Nat b) => DataView Int8 BE Int where
-  get DVProxy = getter {functionName: "getInt8", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setInt8", endian: false}
+instance dataViewInt8 :: (BytesPerValue Int8 b, Nat b) => DataView Int8 Int where
+  getBE AProxy = getter {functionName: "getInt8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setInt8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getInt8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setInt8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewInt8LE :: (BytesPerValue Int8 b, Nat b) => DataView Int8 LE Int where
-  get DVProxy = getter {functionName: "getInt8", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setInt8", endian: true}
+instance dataViewInt16 :: (BytesPerValue Int16 b, Nat b) => DataView Int16 Int where
+  getBE AProxy = getter {functionName: "getInt16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setInt16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getInt16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setInt16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewInt16BE :: (BytesPerValue Int16 b, Nat b) => DataView Int16 BE Int where
-  get DVProxy = getter {functionName: "getInt16", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setInt16", endian: false}
+instance dataViewInt32 :: (BytesPerValue Int32 b, Nat b) => DataView Int32 Int where
+  getBE AProxy = getter {functionName: "getInt32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setInt32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getInt32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setInt32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewInt16LE :: (BytesPerValue Int16 b, Nat b) => DataView Int16 LE Int where
-  get DVProxy = getter {functionName: "getInt16", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setInt16", endian: true}
+instance dataViewUint8 :: (BytesPerValue Uint8 b, Nat b) => DataView Uint8 UInt where
+  getBE AProxy = getter {functionName: "getUint8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setUint8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getUint8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setUint8", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewInt32BE :: (BytesPerValue Int32 b, Nat b) => DataView Int32 BE Int where
-  get DVProxy = getter {functionName: "getInt32", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setInt32", endian: false}
+instance dataViewUint16 :: (BytesPerValue Uint16 b, Nat b) => DataView Uint16 UInt where
+  getBE AProxy = getter {functionName: "getUint16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setUint16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getUint16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setUint16", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewInt32LE :: (BytesPerValue Int32 b, Nat b) => DataView Int32 LE Int where
-  get DVProxy = getter {functionName: "getInt32", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setInt32", endian: true}
+instance dataViewUint32 :: (BytesPerValue Uint32 b, Nat b) => DataView Uint32 UInt where
+  getBE AProxy = getter {functionName: "getUint32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setUint32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getUint32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setUint32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewUint8BE :: (BytesPerValue Uint8 b, Nat b) => DataView Uint8 BE UInt where
-  get DVProxy = getter {functionName: "getUint8", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setUint8", endian: false}
+instance dataViewFloat32 :: (BytesPerValue Float32 b, Nat b) => DataView Float32 Number where
+  getBE AProxy = getter {functionName: "getFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewUint8LE :: (BytesPerValue Uint8 b, Nat b) => DataView Uint8 LE UInt where
-  get DVProxy = getter {functionName: "getUint8", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setUint8", endian: true}
-
-instance dataViewUint16BE :: (BytesPerValue Uint16 b, Nat b) => DataView Uint16 BE UInt where
-  get DVProxy = getter {functionName: "getUint16", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setUint16", endian: false}
-
-instance dataViewUint16LE :: (BytesPerValue Uint16 b, Nat b) => DataView Uint16 LE UInt where
-  get DVProxy = getter {functionName: "getUint16", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setUint16", endian: true}
-
-instance dataViewUint32BE :: (BytesPerValue Uint32 b, Nat b) => DataView Uint32 BE UInt where
-  get DVProxy = getter {functionName: "getUint32", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setUint32", endian: false}
-
-instance dataViewUint32LE :: (BytesPerValue Uint32 b, Nat b) => DataView Uint32 LE UInt where
-  get DVProxy = getter {functionName: "getUint32", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setUint32", endian: true}
-
-instance dataViewFloat32BE :: (BytesPerValue Float32 b, Nat b) => DataView Float32 BE Number where
-  get DVProxy = getter {functionName: "getFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setFloat32", endian: false}
-
-instance dataViewFloat32LE :: (BytesPerValue Float32 b, Nat b) => DataView Float32 LE Number where
-  get DVProxy = getter {functionName: "getFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setFloat32", endian: true}
-
-instance dataViewFloat64BE :: (BytesPerValue Float64 b, Nat b) => DataView Float64 BE Number where
-  get DVProxy = getter {functionName: "getFloat64", bytesPerValue: toInt' (Proxy :: Proxy b), endian: false}
-  set DVProxy = setter {functionName: "setFloat64", endian: false}
-
-instance dataViewFloat64LE :: (BytesPerValue Float64 b, Nat b) => DataView Float64 LE Number where
-  get DVProxy = getter {functionName: "getFloat64", bytesPerValue: toInt' (Proxy :: Proxy b), endian: true}
-  set DVProxy = setter {functionName: "setFloat64", endian: true}
+instance dataViewFloat64 :: (BytesPerValue Float64 b, Nat b) => DataView Float64 Number where
+  getBE AProxy = getter {functionName: "getFloat64", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  setBE AProxy = setter {functionName: "setFloat64", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
+  getLE AProxy = getter {functionName: "getFloat64", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
+  setLE AProxy = setter {functionName: "setFloat64", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
