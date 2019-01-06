@@ -33,7 +33,7 @@ exports.getterImpl = function getterImpl (data, v, o) {
         : data.nothing;
 };
 
-exports.setterImpl = function setterImpl (s,e,v,n,o) {
-    var f = v[s];
-    f.call(v,o,n,e);
+exports.setterImpl = function setterImpl (data,v,n,o) {
+    var f = v[data.functionName];
+    f.call(v,o,n,data.endian);
 };
