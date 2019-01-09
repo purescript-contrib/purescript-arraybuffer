@@ -2,11 +2,10 @@ module Test.Properties.DataView where
 
 
 import Data.ArrayBuffer.Types
-  ( DataView
-  , Uint32, Uint16, Uint8, Int32, Int16, Int8, Float32, Float64)
+  ( Uint32, Uint16, Uint8, Int32, Int16, Int8, Float32, Float64)
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue (..))
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.ArrayBuffer.Typed.Gen
   (genUWord, genWord, genUChomp, genChomp, genUByte, genByte, genFloat32, genFloat64)
 
@@ -20,8 +19,7 @@ import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Test.QuickCheck (class Testable, quickCheckGen, class Arbitrary, arbitrary, Result, (===))
-import Test.QuickCheck.Gen (Gen)
+import Test.QuickCheck (class Testable, quickCheckGen, Result, (===))
 
 
 
