@@ -18,11 +18,10 @@ import Data.Tuple (Tuple (..))
 import Data.Typelevel.Num (toInt', class Nat, D0, D1, D5)
 import Data.Vec (head) as Vec
 import Data.Array as Array
-import Data.HeytingAlgebra (implies)
 import Type.Proxy (Proxy (..))
-import Test.QuickCheck (quickCheckGen, Result (..), (===), (/==), class Testable, class Arbitrary, (<?>))
+import Test.QuickCheck (quickCheckGen, Result (..), (===), (/==), class Testable, (<?>))
 import Test.QuickCheck.Gen (Gen)
-import Test.QuickCheck.Combinators ((&=&), (|=|), (==>))
+import Test.QuickCheck.Combinators ((==>))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
@@ -116,7 +115,6 @@ type TestableArrayF a b n t q =
   => Eq t
   => Ord t
   => Semiring t
-  => Arbitrary t
   => TypedArray a t
   => BytesPerValue a b
   => Nat b

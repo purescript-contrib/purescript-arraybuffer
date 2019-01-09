@@ -38,7 +38,6 @@ type TestableViewF a b n t q =
   => Eq t
   => Ord t
   => Semiring t
-  => Arbitrary t
   => BytesPerValue a b
   => Nat b
   => DV.DataView a t
@@ -53,42 +52,42 @@ overAll count f = do
   quickCheckGen $
     let f' :: TestableViewF Uint32 D4 n UInt q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUWord))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUWord
   log "      - Uint16"
   quickCheckGen $
     let f' :: TestableViewF Uint16 D2 n UInt q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUChomp))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUChomp
   log "      - Uint8"
   quickCheckGen $
     let f' :: TestableViewF Uint8 D1 n UInt q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genUByte))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUByte
   log "      - Int32"
   quickCheckGen $
     let f' :: TestableViewF Int32 D4 n Int q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genWord))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genWord
   log "      - Int16"
   quickCheckGen $
     let f' :: TestableViewF Int16 D2 n Int q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genChomp))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genChomp
   log "      - Int8"
   quickCheckGen $
     let f' :: TestableViewF Int8 D1 n Int q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genByte))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genByte
   log "      - Float32"
   quickCheckGen $
     let f' :: TestableViewF Float32 D4 n Number q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genFloat32))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat32
   log "      - Float64"
   quickCheckGen $
     let f' :: TestableViewF Float64 D8 n Number q
         f' = f
-    in  (f' <$> (genWithOffsetAndValue (genDataView 20 Nothing) genFloat64))
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat64
 
 
 placingAValueIsThereTestsBE :: Ref Int -> Effect Unit

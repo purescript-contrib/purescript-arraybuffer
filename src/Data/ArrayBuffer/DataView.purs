@@ -18,7 +18,6 @@ import Data.ArrayBuffer.Types
   , Int32, Int16, Int8, Uint32, Uint16, Uint8, Float32, Float64)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 
-import Prelude (Unit)
 import Data.Maybe (Maybe(..))
 import Data.UInt (UInt)
 import Data.Typelevel.Num (toInt', class Nat)
