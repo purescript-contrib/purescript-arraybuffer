@@ -5,7 +5,7 @@ import Prelude
 
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue(..))
-import Data.ArrayBuffer.Typed.Gen (genByte, genFloat32, genFloat64, genInt, genShort, genUByte, genUInt, genUShort)
+import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genUint16, genUint32, genUint8)
 import Data.ArrayBuffer.Types (Uint32, Uint16, Uint8, Int32, Int16, Int8, Float32, Float64)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..))
@@ -48,37 +48,44 @@ overAll count f = do
   quickCheckGen $
     let f' :: TestableViewF Uint32 D4 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUInt
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint32
+
   log "      - Uint16"
   quickCheckGen $
     let f' :: TestableViewF Uint16 D2 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUShort
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint16
+
   log "      - Uint8"
   quickCheckGen $
     let f' :: TestableViewF Uint8 D1 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUByte
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint8
+
   log "      - Int32"
   quickCheckGen $
     let f' :: TestableViewF Int32 D4 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt32
+
   log "      - Int16"
   quickCheckGen $
     let f' :: TestableViewF Int16 D2 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genShort
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt16
+
   log "      - Int8"
   quickCheckGen $
     let f' :: TestableViewF Int8 D1 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genByte
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt8
+
   log "      - Float32"
   quickCheckGen $
     let f' :: TestableViewF Float32 D4 n Number q
         f' = f
     in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat32
+
   log "      - Float64"
   quickCheckGen $
     let f' :: TestableViewF Float64 D8 n Number q

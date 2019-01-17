@@ -34,23 +34,23 @@ genTypedArray lo mhi gen = sized \s ->
   in  TA.fromArray <$> replicateA s' gen
 
 
-genUByte :: forall m. MonadGen m => m UInt
-genUByte = UInt.fromInt <$> chooseInt 0 255
+genUint8 :: forall m. MonadGen m => m UInt
+genUint8 = UInt.fromInt <$> chooseInt 0 255
 
-genByte :: forall m. MonadGen m => m Int
-genByte = chooseInt (-128) 127
+genInt8 :: forall m. MonadGen m => m Int
+genInt8 = chooseInt (-128) 127
 
-genUShort :: forall m. MonadGen m => m UInt
-genUShort = UInt.fromInt <$> chooseInt 0 65535
+genUint16 :: forall m. MonadGen m => m UInt
+genUint16 = UInt.fromInt <$> chooseInt 0 65535
 
-genShort :: forall m. MonadGen m => m Int
-genShort = chooseInt (-32768) 32767
+genInt16 :: forall m. MonadGen m => m Int
+genInt16 = chooseInt (-32768) 32767
 
-genUInt :: forall m. MonadGen m => m UInt
-genUInt = UInt.genUInt bottom top
+genUint32 :: forall m. MonadGen m => m UInt
+genUint32 = UInt.genUInt bottom top
 
-genInt :: forall m. MonadGen m => m Int
-genInt = chooseInt bottom top
+genInt32 :: forall m. MonadGen m => m Int
+genInt32 = chooseInt bottom top
 
 foreign import toFloat32 :: Number -> Number
 

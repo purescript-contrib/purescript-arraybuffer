@@ -6,7 +6,7 @@ import Prelude
 import Data.Array as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
-import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genByte, genFloat32, genFloat64, genInt, genShort, genTypedArray, genUByte, genUInt, genUShort, genWithOffset)
+import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithOffset)
 import Data.ArrayBuffer.Types (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float32Array, Float64Array)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..))
@@ -120,22 +120,31 @@ type TestableArrayF a b n t q =
 overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
 overAll count f = do
   void (Ref.modify (\x -> x + 1) count)
+
   log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUByte :: Gen Uint8ClampedArray))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint8 :: Gen Uint8ClampedArray))
+
   log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUInt :: Gen Uint32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint32 :: Gen Uint32Array))
+
   log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUShort :: Gen Uint16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint16 :: Gen Uint16Array))
+
   log "      - Uint8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUByte :: Gen Uint8Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint8 :: Gen Uint8Array))
+
   log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt :: Gen Int32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt32 :: Gen Int32Array))
+
   log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genShort :: Gen Int16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt16 :: Gen Int16Array))
+
   log "      - Int8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genByte :: Gen Int8Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt8 :: Gen Int8Array))
+
   log "      - Float32Array"
   quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat32 :: Gen Float32Array))
+
   log "      - Float64Array"
   quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat64 :: Gen Float64Array))
 
