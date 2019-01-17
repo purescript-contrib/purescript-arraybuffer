@@ -89,7 +89,7 @@ type Offset = Int
 -- | Value-oriented array length
 type Length = Int
 
--- | Represents a range of indicies, where if omitted, it represents the whole span.
+-- | Represents a range of indices, where if omitted, it represents the whole span.
 -- | If only the second argument is omitted, then it represents the remainder of the span after the first index.
 type Range = Maybe (Tuple Offset (Maybe Offset))
 
