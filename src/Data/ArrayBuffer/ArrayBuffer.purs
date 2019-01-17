@@ -9,9 +9,9 @@ module Data.ArrayBuffer.ArrayBuffer
 
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 import Data.Function.Uncurried (Fn3, runFn3)
+import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toNullable)
-import Data.Maybe (Maybe (..))
-import Data.Tuple (Tuple (..))
+import Data.Tuple (Tuple(..))
 
 
 -- | Create an `ArrayBuffer` with the given capacity.

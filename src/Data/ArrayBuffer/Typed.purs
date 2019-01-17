@@ -18,28 +18,18 @@ module Data.ArrayBuffer.Typed
   , toString, toString', toArray
   ) where
 
+import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
-import Data.ArrayBuffer.Types
-  ( ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength
-  , Float64Array, Float32Array
-  , Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
-  , Float64, Float32
-  , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
-
-
-import Prelude (Unit, pure, (<$>), (<<<), ($))
-import Effect (Effect)
-import Effect.Uncurried
-  ( EffectFn4, EffectFn3, EffectFn2, EffectFn1
-  , runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1
-  , mkEffectFn2, mkEffectFn3)
-import Effect.Unsafe (unsafePerformEffect)
-import Data.Tuple (Tuple (..))
+import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable, toNullable, toMaybe)
+import Data.Nullable (Nullable, toMaybe, toNullable)
+import Data.Tuple (Tuple(..))
 import Data.UInt (UInt)
 import Data.UInt (fromNumber, toNumber) as UInt
-import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
+import Effect (Effect)
+import Effect.Uncurried (EffectFn4, EffectFn3, EffectFn2, EffectFn1, runEffectFn4, runEffectFn3, runEffectFn2, runEffectFn1, mkEffectFn2, mkEffectFn3)
+import Effect.Unsafe (unsafePerformEffect)
+import Prelude (Unit, pure, (<$>), (<<<), ($))
 
 
 -- | Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill

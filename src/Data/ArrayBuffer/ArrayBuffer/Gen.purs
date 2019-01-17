@@ -1,12 +1,11 @@
 module Data.ArrayBuffer.ArrayBuffer.Gen where
 
-import Data.ArrayBuffer.Typed.Gen (genUByte, genTypedArray)
-import Data.ArrayBuffer.Typed (buffer)
-import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, Uint8Array)
-
-import Prelude ((<$>))
-import Data.Maybe (Maybe)
 import Control.Monad.Gen.Class (class MonadGen)
+import Data.ArrayBuffer.Typed (buffer)
+import Data.ArrayBuffer.Typed.Gen (genUByte, genTypedArray)
+import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, Uint8Array)
+import Data.Maybe (Maybe)
+import Prelude ((<$>))
 
 
 genArrayBuffer :: forall m

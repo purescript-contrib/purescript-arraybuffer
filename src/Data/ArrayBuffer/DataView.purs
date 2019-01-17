@@ -13,19 +13,14 @@ module Data.ArrayBuffer.DataView
   , getBE, getLE, setBE, setLE
   ) where
 
-import Data.ArrayBuffer.Types
-  ( ByteOffset, DataView, ByteLength, ArrayBuffer, kind ArrayViewType
-  , Int32, Int16, Int8, Uint32, Uint16, Uint8, Float32, Float64)
+import Data.ArrayBuffer.Types (ByteOffset, DataView, ByteLength, ArrayBuffer, kind ArrayViewType, Int32, Int16, Int8, Uint32, Uint16, Uint8, Float32, Float64)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
-
 import Data.Maybe (Maybe(..))
-import Data.UInt (UInt)
 import Data.Typelevel.Num (toInt', class Nat)
-import Type.Proxy (Proxy (..))
+import Data.UInt (UInt)
 import Effect (Effect)
-import Effect.Uncurried
-  ( EffectFn4, EffectFn3, EffectFn2
-  , runEffectFn4, runEffectFn3, runEffectFn2)
+import Effect.Uncurried (EffectFn2, EffectFn3, EffectFn4, runEffectFn2, runEffectFn3, runEffectFn4)
+import Type.Proxy (Proxy(..))
 
 
 
