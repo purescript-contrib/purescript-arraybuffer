@@ -1,32 +1,27 @@
 module Test.Properties.TypedArray where
 
 
-import Data.ArrayBuffer.Types
-  (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array
-  , Float32Array, Float64Array)
-import Data.ArrayBuffer.Typed as TA
-import Data.ArrayBuffer.Typed (class TypedArray)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
-import Data.ArrayBuffer.Typed.Gen
-  ( genUByte, genUChomp, genUWord
-  , genByte, genChomp, genWord, genFloat32, genFloat64
-  , WithOffset (..), genWithOffset, genTypedArray)
-
 import Prelude
-import Data.Maybe (Maybe (..))
-import Data.Tuple (Tuple (..))
+
+import Data.Array as Array
+import Data.ArrayBuffer.Typed (class TypedArray)
+import Data.ArrayBuffer.Typed as TA
+import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genByte, genFloat32, genFloat64, genInt, genShort, genTypedArray, genUByte, genUInt, genUShort, genWithOffset)
+import Data.ArrayBuffer.Types (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float32Array, Float64Array)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (toInt', class Nat, D0, D1, D5)
 import Data.Vec (head) as Vec
-import Data.Array as Array
-import Type.Proxy (Proxy (..))
-import Test.QuickCheck (quickCheckGen, Result (..), (===), (/==), class Testable, (<?>))
-import Test.QuickCheck.Gen (Gen)
-import Test.QuickCheck.Combinators ((==>))
 import Effect (Effect)
-import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
+import Test.QuickCheck (quickCheckGen, Result(..), (===), (/==), class Testable, (<?>))
+import Test.QuickCheck.Combinators ((==>))
+import Test.QuickCheck.Gen (Gen)
+import Type.Proxy (Proxy(..))
 
 
 typedArrayTests :: Ref Int -> Effect Unit
@@ -128,15 +123,15 @@ overAll count f = do
   log "      - Uint8ClampedArray"
   quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUByte :: Gen Uint8ClampedArray))
   log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUWord :: Gen Uint32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUInt :: Gen Uint32Array))
   log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUChomp :: Gen Uint16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUShort :: Gen Uint16Array))
   log "      - Uint8Array"
   quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUByte :: Gen Uint8Array))
   log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genWord :: Gen Int32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt :: Gen Int32Array))
   log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genChomp :: Gen Int16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genShort :: Gen Int16Array))
   log "      - Int8Array"
   quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genByte :: Gen Int8Array))
   log "      - Float32Array"
@@ -629,6 +624,3 @@ copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
             TA.setTyped xs' Nothing ys
             TA.copyWithin xs 0 o Nothing
       in  TA.toArray xs === TA.toArray xs'
-
-
-
