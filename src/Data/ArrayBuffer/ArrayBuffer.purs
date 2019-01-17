@@ -10,7 +10,7 @@ module Data.ArrayBuffer.ArrayBuffer
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 import Data.Function.Uncurried (Fn3, runFn3)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable, null, toNullable)
+import Data.Nullable (Nullable, notNull, null)
 import Data.Tuple (Tuple(..))
 
 
@@ -27,5 +27,5 @@ slice :: ArrayBuffer -> Maybe (Tuple ByteOffset (Maybe ByteOffset)) -> ArrayBuff
 slice a mz = case mz of
   Nothing -> runFn3 sliceImpl a null null
   Just (Tuple s me) -> case me of
-    Nothing -> runFn3 sliceImpl a (toNullable (Just s)) null
-    Just e -> runFn3 sliceImpl a (toNullable (Just s)) (toNullable (Just e))
+    Nothing -> runFn3 sliceImpl a (notNull s) null
+    Just e -> runFn3 sliceImpl a (notNull s) (notNull e)

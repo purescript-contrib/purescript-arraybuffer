@@ -22,7 +22,7 @@ import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteO
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable, null, toMaybe, toNullable)
+import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
 import Data.Tuple (Tuple(..))
 import Data.UInt (UInt)
 import Data.UInt (fromNumber, toNumber) as UInt
@@ -177,8 +177,8 @@ class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t wh
 
 instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a null null)
-  remainder a x = runEffectFn3 newUint8ClampedArray a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newUint8ClampedArray a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newUint8ClampedArray a (notNull x) null
+  part a x y = runEffectFn3 newUint8ClampedArray a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint8ClampedArray n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -186,8 +186,8 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -205,8 +205,8 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayUint32 :: TypedArray Uint32 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint32Array a null null)
-  remainder a x = runEffectFn3 newUint32Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newUint32Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newUint32Array a (notNull x) null
+  part a x y = runEffectFn3 newUint32Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint32Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint32Array (UInt.toNumber <$> a) null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 (p <<< UInt.fromNumber))
@@ -214,8 +214,8 @@ instance typedArrayUint32 :: TypedArray Uint32 UInt where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a (UInt.toNumber x) null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a (UInt.toNumber x) (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a (UInt.toNumber x) (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a (UInt.toNumber x) (notNull s) null
+      Just e -> runEffectFn4 fillImpl a (UInt.toNumber x) (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) (UInt.toNumber <$> x)
   map f a = unsafePerformEffect $ runEffectFn2 mapImpl a $
     mkEffectFn2 \x o -> pure $ UInt.toNumber $ f (UInt.fromNumber x) o
@@ -234,8 +234,8 @@ instance typedArrayUint32 :: TypedArray Uint32 UInt where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayUint16 :: TypedArray Uint16 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint16Array a null null)
-  remainder a x = runEffectFn3 newUint16Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newUint16Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newUint16Array a (notNull x) null
+  part a x y = runEffectFn3 newUint16Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint16Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint16Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -243,8 +243,8 @@ instance typedArrayUint16 :: TypedArray Uint16 UInt where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -262,8 +262,8 @@ instance typedArrayUint16 :: TypedArray Uint16 UInt where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayUint8 :: TypedArray Uint8 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint8Array a null null)
-  remainder a x = runEffectFn3 newUint8Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newUint8Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newUint8Array a (notNull x) null
+  part a x y = runEffectFn3 newUint8Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint8Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint8Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -271,8 +271,8 @@ instance typedArrayUint8 :: TypedArray Uint8 UInt where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -290,8 +290,8 @@ instance typedArrayUint8 :: TypedArray Uint8 UInt where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayInt32 :: TypedArray Int32 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt32Array a null null)
-  remainder a x = runEffectFn3 newInt32Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newInt32Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newInt32Array a (notNull x) null
+  part a x y = runEffectFn3 newInt32Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newInt32Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newInt32Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -299,8 +299,8 @@ instance typedArrayInt32 :: TypedArray Int32 Int where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -318,8 +318,8 @@ instance typedArrayInt32 :: TypedArray Int32 Int where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayInt16 :: TypedArray Int16 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt16Array a null null)
-  remainder a x = runEffectFn3 newInt16Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newInt16Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newInt16Array a (notNull x) null
+  part a x y = runEffectFn3 newInt16Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newInt16Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newInt16Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -327,8 +327,8 @@ instance typedArrayInt16 :: TypedArray Int16 Int where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -346,8 +346,8 @@ instance typedArrayInt16 :: TypedArray Int16 Int where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayInt8 :: TypedArray Int8 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt8Array a null null)
-  remainder a x = runEffectFn3 newInt8Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newInt8Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newInt8Array a (notNull x) null
+  part a x y = runEffectFn3 newInt8Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newInt8Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newInt8Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -355,8 +355,8 @@ instance typedArrayInt8 :: TypedArray Int8 Int where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -374,8 +374,8 @@ instance typedArrayInt8 :: TypedArray Int8 Int where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayFloat32 :: TypedArray Float32 Number where
   whole a = unsafePerformEffect (runEffectFn3 newFloat32Array a null null)
-  remainder a x = runEffectFn3 newFloat32Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newFloat32Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newFloat32Array a (notNull x) null
+  part a x y = runEffectFn3 newFloat32Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newFloat32Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newFloat32Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -383,8 +383,8 @@ instance typedArrayFloat32 :: TypedArray Float32 Number where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -402,8 +402,8 @@ instance typedArrayFloat32 :: TypedArray Float32 Number where
   lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 instance typedArrayFloat64 :: TypedArray Float64 Number where
   whole a = unsafePerformEffect (runEffectFn3 newFloat64Array a null null)
-  remainder a x = runEffectFn3 newFloat64Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newFloat64Array a (toNullable (Just x)) (toNullable (Just y))
+  remainder a x = runEffectFn3 newFloat64Array a (notNull x) null
+  part a x y = runEffectFn3 newFloat64Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newFloat64Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newFloat64Array a null null)
   all p a = runEffectFn2 everyImpl a (mkEffectFn2 p)
@@ -411,8 +411,8 @@ instance typedArrayFloat64 :: TypedArray Float64 Number where
   fill a x mz = case mz of
     Nothing -> runEffectFn4 fillImpl a x null null
     Just (Tuple s mq) -> case mq of
-      Nothing -> runEffectFn4 fillImpl a x (toNullable (Just s)) null
-      Just e -> runEffectFn4 fillImpl a x (toNullable (Just s)) (toNullable (Just e))
+      Nothing -> runEffectFn4 fillImpl a x (notNull s) null
+      Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
   set a mo x = runEffectFn3 setImpl a (toNullable mo) x
   map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
   traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
@@ -471,8 +471,8 @@ slice :: forall a. ArrayView a -> Range -> ArrayView a
 slice a mz = case mz of
   Nothing -> runFn3 sliceImpl a null null
   Just (Tuple s me) -> case me of
-    Nothing -> runFn3 sliceImpl a (toNullable (Just s)) null
-    Just e -> runFn3 sliceImpl a (toNullable (Just s)) (toNullable (Just e))
+    Nothing -> runFn3 sliceImpl a (notNull s) null
+    Just e -> runFn3 sliceImpl a (notNull s) (notNull e)
 
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
@@ -495,8 +495,8 @@ subArray :: forall a. ArrayView a -> Range -> ArrayView a
 subArray a mz = case mz of
   Nothing -> runFn3 subArrayImpl a null null
   Just (Tuple s me) -> case me of
-    Nothing -> runFn3 subArrayImpl a (toNullable (Just s)) null
-    Just e -> runFn3 subArrayImpl a (toNullable (Just s)) (toNullable (Just e))
+    Nothing -> runFn3 subArrayImpl a (notNull s) null
+    Just e -> runFn3 subArrayImpl a (notNull s) (notNull e)
 
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
