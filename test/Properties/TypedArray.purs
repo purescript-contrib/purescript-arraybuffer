@@ -2,7 +2,8 @@ module Test.Properties.TypedArray where
 
 
 import Prelude
-
+import Debug.Trace(spy)
+import Data.Array (drop, take)
 import Data.Array as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
@@ -27,6 +28,8 @@ import Type.Proxy (Proxy(..))
 
 typedArrayTests :: Ref Int -> Effect Unit
 typedArrayTests count = do
+  log "XXXXXX"
+  partBehavesLikeTakeDrop count
   log "    - byteLength x / bytesPerValue === length x"
   byteLengthDivBytesPerValueTests count
   log "    - fromArray (toArray x) === x"
@@ -123,32 +126,44 @@ overAll count f = do
   void (Ref.modify (\x -> x + 1) count)
 
   log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint8 :: Gen Uint8ClampedArray))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genUint8 :: Gen Uint8ClampedArray))
 
   log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint32 :: Gen Uint32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genUint32 :: Gen Uint32Array))
 
   log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint16 :: Gen Uint16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genUint16 :: Gen Uint16Array))
 
   log "      - Uint8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint8 :: Gen Uint8Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genUint8 :: Gen Uint8Array))
 
   log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt32 :: Gen Int32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genInt32 :: Gen Int32Array))
 
   log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt16 :: Gen Int16Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genInt16 :: Gen Int16Array))
 
   log "      - Int8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt8 :: Gen Int8Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genInt8 :: Gen Int8Array))
 
   log "      - Float32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat32 :: Gen Float32Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genFloat32 :: Gen Float32Array))
 
   log "      - Float64Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat64 :: Gen Float64Array))
+  quickCheckGen (f <$> genWithOffset (genTypedArray genFloat64 :: Gen Float64Array))
 
+
+partBehavesLikeTakeDrop :: Ref Int -> Effect Unit
+partBehavesLikeTakeDrop count = overAll count f
+  where
+    f :: forall a b t. TestableArrayF a b D0 t Result
+    f (WithOffset _ a) =
+      let n = 2
+          na = TA.toArray a
+          ba = TA.buffer (spy "arr" a)
+          pa :: ArrayView a
+          pa = TA.part ba n n
+      in  take n (drop n na) === TA.toArray pa
 
 byteLengthDivBytesPerValueTests :: Ref Int -> Effect Unit
 byteLengthDivBytesPerValueTests count = overAll count byteLengthDivBytesPerValueEqLength

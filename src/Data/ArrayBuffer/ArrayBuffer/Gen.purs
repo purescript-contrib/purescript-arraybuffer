@@ -10,7 +10,5 @@ import Prelude ((<$>))
 
 genArrayBuffer :: forall m
                 . MonadGen m
-               => ByteLength -- ^ Min length
-               -> Maybe ByteLength -- ^ Max length
-               -> m ArrayBuffer
-genArrayBuffer a b = buffer <$> (genTypedArray a b genUint8 :: m Uint8Array)
+               => m ArrayBuffer
+genArrayBuffer = buffer <$> (genTypedArray genUint8 :: m Uint8Array)

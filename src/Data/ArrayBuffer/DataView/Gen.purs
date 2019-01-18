@@ -17,10 +17,8 @@ import Type.Proxy (Proxy(..))
 
 genDataView :: forall m
              . MonadGen m
-            => ByteLength -- ^ Min length
-            -> Maybe ByteLength -- ^ Max length
-            -> m DataView
-genDataView a b = whole <$> genArrayBuffer a b
+            => m DataView
+genDataView = whole <$> genArrayBuffer
 
 
 

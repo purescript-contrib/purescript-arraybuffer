@@ -48,49 +48,49 @@ overAll count f = do
   quickCheckGen $
     let f' :: TestableViewF Uint32 D4 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint32
+    in  f' <$> genWithOffsetAndValue genDataView genUint32
 
   log "      - Uint16"
   quickCheckGen $
     let f' :: TestableViewF Uint16 D2 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint16
+    in  f' <$> genWithOffsetAndValue genDataView genUint16
 
   log "      - Uint8"
   quickCheckGen $
     let f' :: TestableViewF Uint8 D1 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint8
+    in  f' <$> genWithOffsetAndValue genDataView genUint8
 
   log "      - Int32"
   quickCheckGen $
     let f' :: TestableViewF Int32 D4 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt32
+    in  f' <$> genWithOffsetAndValue genDataView genInt32
 
   log "      - Int16"
   quickCheckGen $
     let f' :: TestableViewF Int16 D2 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt16
+    in  f' <$> genWithOffsetAndValue genDataView genInt16
 
   log "      - Int8"
   quickCheckGen $
     let f' :: TestableViewF Int8 D1 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt8
+    in  f' <$> genWithOffsetAndValue genDataView genInt8
 
   log "      - Float32"
   quickCheckGen $
     let f' :: TestableViewF Float32 D4 n Number q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat32
+    in  f' <$> genWithOffsetAndValue genDataView genFloat32
 
   log "      - Float64"
   quickCheckGen $
     let f' :: TestableViewF Float64 D8 n Number q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat64
+    in  f' <$> genWithOffsetAndValue genDataView genFloat64
 
 
 placingAValueIsThereTestsBE :: Ref Int -> Effect Unit

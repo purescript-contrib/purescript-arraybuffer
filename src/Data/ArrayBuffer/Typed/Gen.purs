@@ -9,7 +9,7 @@ import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Generic.Rep (class Generic)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Data.UInt (fromInt) as UInt
@@ -24,14 +24,14 @@ import Type.Proxy (Proxy(..))
 genTypedArray :: forall m a t
                . MonadGen m
               => TA.TypedArray a t
-              => TA.Length -- ^ Min length
-              -> Maybe TA.Length -- ^ Max length
-              -> m t
+              => m t
               -> m (ArrayView a)
-genTypedArray lo mhi gen = sized \s ->
-  let hi = fromMaybe s mhi
-      s' = clamp lo hi s
-  in  TA.fromArray <$> replicateA s' gen
+genTypedArray gen = sized \s -> do
+  n <- chooseInt 0 s
+  a <- replicateA n gen
+  pure $ TA.fromArray a
+--  chooseInt 0 s >>= flip replicateA gen >>= TA.fromArray
+  --TA.fromArray <$> flip replicateA gen <*> chooseInt 0 s
 
 
 genUint8 :: forall m. MonadGen m => m UInt
@@ -58,7 +58,8 @@ genFloat32 :: forall m. MonadGen m => m Number
 genFloat32 = toFloat32 <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
 
 genFloat64 :: forall m. MonadGen m => m Number
-genFloat64 = chooseFloat (-1.7976931348623157e+308) 1.7976931348623157e+308
+genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+308/div)
+  where div = 4.0
 
 -- | For generating some set of offsets residing inside the generated array
 data WithOffset n a = WithOffset (Vec n TA.Offset) (ArrayView a)
