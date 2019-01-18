@@ -306,10 +306,7 @@ foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nu
 subArray :: forall a. ArrayView a -> Range -> ArrayView a
 subArray a mz = case mz of
   Nothing -> runFn3 subArrayImpl a null null
-  Just (Tuple s me) -> case me of
-    Nothing -> runFn3 subArrayImpl a (notNull s) null
-    Just e -> runFn3 subArrayImpl a (notNull s) (notNull e)
-
+  Just (Tuple s me) -> runFn3 subArrayImpl a (notNull s) (toNullable me)
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
 foreign import toString :: forall a. ArrayView a -> String
