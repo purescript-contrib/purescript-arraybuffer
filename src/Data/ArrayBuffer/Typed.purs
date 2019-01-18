@@ -156,7 +156,7 @@ whole a = unsafePerformEffect (runEffectFn3 create a null null)
 
 -- | View mapping the rest of an `ArrayBuffer` after an index.
 remainder :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
-remainder a x = runEffectFn3 create a (toNullable (Just x)) null
+remainder a x = runEffectFn3 create a (notNull x) null
 
 -- | View mapping a region of the `ArrayBuffer`.
 part :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
