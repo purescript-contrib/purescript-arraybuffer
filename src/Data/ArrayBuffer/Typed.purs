@@ -174,7 +174,7 @@ fromArray a = unsafePerformEffect (runEffectFn3 create a null null)
 fill :: forall a t. TypedArray a t => ArrayView a -> t -> Range -> Effect Unit
 fill a x mz = case mz of
   Nothing -> runEffectFn4 fillImpl a x null null
-  Just (Tuple s mq) -> runEffectFn4 fillImpl a x (notNull s) (toNullable mq)
+  Just (Tuple s me) -> runEffectFn4 fillImpl a x (notNull s) (toNullable me)
 
 -- | Stores multiple values into the typed array
 set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Unit
