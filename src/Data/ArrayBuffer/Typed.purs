@@ -30,6 +30,7 @@ import Data.UInt (UInt)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Effect.Unsafe (unsafePerformEffect)
+import Partial.Unsafe (unsafePartial)
 
 
 -- | Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
@@ -210,8 +211,8 @@ elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Boolea
 elem x mo a = runFn3 includesImpl a x (toNullable mo)
 
 -- | Fetch element at index.
-unsafeAt :: forall a t. TypedArray a t => Offset -> ArrayView a -> Effect t
-unsafeAt o a = runEffectFn2 unsafeAtImpl a o
+unsafeAt :: forall a t. TypedArray a t => Partial => ArrayView a -> Offset -> t
+unsafeAt = runFn2 unsafeAtImpl
 
 -- | Folding from the left
 foldlM :: forall a t b. TypedArray a t => (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
@@ -318,7 +319,7 @@ toString' :: forall a. ArrayView a -> String -> String
 toString' = runFn2 joinImpl
 
 
-foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
+foreign import unsafeAtImpl :: forall a b. Fn2 (ArrayView a) Offset b
 
 foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
 
@@ -328,10 +329,9 @@ hasIndex = runFn2 hasIndexImpl
 
 -- | Fetch element at index.
 at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
-at a n = do
-  if a `hasIndex` n
-    then Just (unsafePerformEffect (unsafeAt n a))
-    else Nothing
+at a n = if a `hasIndex` n
+         then Just (unsafePartial (unsafeAt a n))
+         else Nothing
 
 infixl 3 at as !
 

@@ -18,6 +18,7 @@ import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
+import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (quickCheckGen, Result(..), (===), (/==), class Testable, (<?>))
 import Test.QuickCheck.Combinators ((==>))
 import Test.QuickCheck.Gen (Gen)
@@ -251,7 +252,7 @@ withOffsetElemTests count = overAll count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) =
-      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt o xs)) Nothing xs) os
+      Array.all (\o -> TA.elem (unsafePartial (TA.unsafeAt xs o)) Nothing xs) os
         <?> "All doesn't have an elem of itself"
 
 
