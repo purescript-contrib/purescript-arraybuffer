@@ -30,9 +30,6 @@ genTypedArray gen = sized \s -> do
   n <- chooseInt 0 s
   a <- replicateA n gen
   pure $ TA.fromArray a
---  chooseInt 0 s >>= flip replicateA gen >>= TA.fromArray
-  --TA.fromArray <$> flip replicateA gen <*> chooseInt 0 s
-
 
 genUint8 :: forall m. MonadGen m => m UInt
 genUint8 = UInt.fromInt <$> chooseInt 0 255
