@@ -9,9 +9,9 @@ module Data.ArrayBuffer.ArrayBuffer
 
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteOffset, ByteLength)
 import Data.Function.Uncurried (Fn3, runFn3)
-import Data.Nullable (Nullable, toNullable)
-import Data.Maybe (Maybe (..))
-import Data.Tuple (Tuple (..))
+import Data.Maybe (Maybe(..))
+import Data.Nullable (Nullable, notNull, null)
+import Data.Tuple (Tuple(..))
 
 
 -- | Create an `ArrayBuffer` with the given capacity.
@@ -25,7 +25,7 @@ foreign import sliceImpl :: Fn3 ArrayBuffer (Nullable ByteOffset) (Nullable Byte
 -- | Returns a new `ArrayBuffer` whose contents are a copy of this ArrayBuffer's bytes from begin, inclusive, up to end, exclusive.
 slice :: ArrayBuffer -> Maybe (Tuple ByteOffset (Maybe ByteOffset)) -> ArrayBuffer
 slice a mz = case mz of
-  Nothing -> runFn3 sliceImpl a (toNullable Nothing) (toNullable Nothing)
+  Nothing -> runFn3 sliceImpl a null null
   Just (Tuple s me) -> case me of
-    Nothing -> runFn3 sliceImpl a (toNullable (Just s)) (toNullable Nothing)
-    Just e -> runFn3 sliceImpl a (toNullable (Just s)) (toNullable (Just e))
+    Nothing -> runFn3 sliceImpl a (notNull s) null
+    Just e -> runFn3 sliceImpl a (notNull s) (notNull e)

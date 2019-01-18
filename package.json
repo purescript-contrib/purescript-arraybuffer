@@ -1,12 +1,9 @@
 {
   "name": "purescript-arraybuffer",
-  "version": "7.0.0",
+  "version": "9.0.0",
   "main": "index.js",
   "repository": "git@github.com:jacereda/purescript-arraybuffer.git",
   "author": "https://github.com/jacereda",
   "license": "MIT",
-  "devDependencies": {
-    "text-encoding": "^0.6.4"
-  }
-
+  "devDependencies": {}
 }

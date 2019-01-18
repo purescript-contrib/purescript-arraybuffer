@@ -3,10 +3,7 @@
 
 module Data.ArrayBuffer.ValueMapping where
 
-import Data.ArrayBuffer.Types
-  ( kind ArrayViewType
-  , Float64, Float32
-  , Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
+import Data.ArrayBuffer.Types (kind ArrayViewType, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.Typelevel.Num (D1, D2, D4, D8)
 import Data.UInt (UInt)
 

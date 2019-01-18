@@ -1,24 +1,22 @@
 module Test.Properties.DataView where
 
 
-import Data.ArrayBuffer.Types
-  ( Uint32, Uint16, Uint8, Int32, Int16, Int8, Float32, Float64)
-import Data.ArrayBuffer.DataView as DV
-import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue (..))
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
-import Data.ArrayBuffer.Typed.Gen
-  (genUWord, genWord, genUChomp, genChomp, genUByte, genByte, genFloat32, genFloat64)
-
 import Prelude
-import Data.Vec (head) as Vec
-import Data.UInt (UInt)
-import Data.Maybe (Maybe (..))
+
+import Data.ArrayBuffer.DataView as DV
+import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue(..))
+import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genUint16, genUint32, genUint8)
+import Data.ArrayBuffer.Types (Uint32, Uint16, Uint8, Int32, Int16, Int8, Float32, Float64)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, D1, D2, D4, D8)
+import Data.UInt (UInt)
+import Data.Vec (head) as Vec
 import Effect (Effect)
-import Effect.Unsafe (unsafePerformEffect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
+import Effect.Unsafe (unsafePerformEffect)
 import Test.QuickCheck (class Testable, quickCheckGen, Result, (===))
 
 
@@ -50,37 +48,44 @@ overAll count f = do
   quickCheckGen $
     let f' :: TestableViewF Uint32 D4 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUWord
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint32
+
   log "      - Uint16"
   quickCheckGen $
     let f' :: TestableViewF Uint16 D2 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUChomp
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint16
+
   log "      - Uint8"
   quickCheckGen $
     let f' :: TestableViewF Uint8 D1 n UInt q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUByte
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genUint8
+
   log "      - Int32"
   quickCheckGen $
     let f' :: TestableViewF Int32 D4 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genWord
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt32
+
   log "      - Int16"
   quickCheckGen $
     let f' :: TestableViewF Int16 D2 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genChomp
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt16
+
   log "      - Int8"
   quickCheckGen $
     let f' :: TestableViewF Int8 D1 n Int q
         f' = f
-    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genByte
+    in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genInt8
+
   log "      - Float32"
   quickCheckGen $
     let f' :: TestableViewF Float32 D4 n Number q
         f' = f
     in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat32
+
   log "      - Float64"
   quickCheckGen $
     let f' :: TestableViewF Float64 D8 n Number q

@@ -2,28 +2,23 @@
 
 module Data.ArrayBuffer.Typed.Gen where
 
-import Data.ArrayBuffer.Types (ArrayView)
-import Data.ArrayBuffer.Typed as TA
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
-
 import Prelude
-import Math as M
-import Data.Maybe (Maybe (..))
-import Data.Int as I
+
+import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
+import Data.ArrayBuffer.Typed as TA
+import Data.ArrayBuffer.Types (ArrayView)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.Generic.Rep (class Generic)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
-import Data.UInt (fromInt, fromNumber) as UInt
-import Data.String.CodeUnits as S
-import Data.Float.Parse (parseFloat)
+import Data.UInt (fromInt) as UInt
+import Data.UInt.Gen (genUInt) as UInt
+import Data.Unfoldable (replicateA)
 import Data.Vec (Vec)
 import Data.Vec (fromArray) as Vec
-import Data.Generic.Rep (class Generic)
-import Data.Typelevel.Num (class Nat, toInt')
-import Data.Unfoldable (replicateA)
-import Type.Proxy (Proxy (..))
-import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Partial.Unsafe (unsafePartial)
-
-
+import Type.Proxy (Proxy(..))
 
 
 genTypedArray :: forall m a t
@@ -33,58 +28,37 @@ genTypedArray :: forall m a t
               -> Maybe TA.Length -- ^ Max length
               -> m t
               -> m (ArrayView a)
-genTypedArray q1 mq2 gen = sized \s ->
-  let s'' = s `max` q1
-      s' = case mq2 of
-        Nothing -> s''
-        Just q2 -> s'' `min` q2
+genTypedArray lo mhi gen = sized \s ->
+  let hi = fromMaybe s mhi
+      s' = clamp lo hi s
   in  TA.fromArray <$> replicateA s' gen
 
 
+genUint8 :: forall m. MonadGen m => m UInt
+genUint8 = UInt.fromInt <$> chooseInt 0 255
 
-genUByte :: forall m. MonadGen m => m UInt
-genUByte = UInt.fromInt <$> chooseInt 0 ((I.pow 2 8) - 1)
+genInt8 :: forall m. MonadGen m => m Int
+genInt8 = chooseInt (-128) 127
 
-genByte :: forall m. MonadGen m => m Int
-genByte =
-  let j = I.pow 2 4
-  in  chooseInt (negate j) (j - 1)
+genUint16 :: forall m. MonadGen m => m UInt
+genUint16 = UInt.fromInt <$> chooseInt 0 65535
 
-genUChomp :: forall m. MonadGen m => m UInt
-genUChomp = UInt.fromInt <$> chooseInt 0 ((I.pow 2 16) - 1)
+genInt16 :: forall m. MonadGen m => m Int
+genInt16 = chooseInt (-32768) 32767
 
-genChomp :: forall m. MonadGen m => m Int
-genChomp =
-  let j = I.pow 2 8
-  in  chooseInt (negate j) (j - 1)
+genUint32 :: forall m. MonadGen m => m UInt
+genUint32 = UInt.genUInt bottom top
 
-genUWord :: forall m. MonadGen m => m UInt
-genUWord = UInt.fromNumber <$> chooseFloat 0.0 ((M.pow 2.0 32.0) - 1.0)
+genInt32 :: forall m. MonadGen m => m Int
+genInt32 = chooseInt bottom top
 
-genWord :: forall m. MonadGen m => m Int
-genWord =
-  let j = I.pow 2 16
-  in  chooseInt (negate j) (j - 1)
+foreign import toFloat32 :: Number -> Number
 
 genFloat32 :: forall m. MonadGen m => m Number
-genFloat32 =
-  let maxFloat32 = (1.0 - (M.pow 2.0 (-24.0))) * (M.pow 2.0 128.0)
-      minFloat32 = -maxFloat32 -- because of sign bit
-      reformat :: String -> String
-      reformat s =
-        let pre = S.takeWhile (\c -> c /= '.') s
-            suf = S.dropWhile (\c -> c /= '.') s
-        in  pre <> "." <> S.take 6 suf
-      fix :: Number -> Number
-      fix x = unsafePartial $ case parseFloat (reformat (show x)) of
-        Just y -> y
-  in  fix <$> chooseFloat minFloat32 maxFloat32
-  -- roughly estimated because of variable precision between 6 and 9 digs
+genFloat32 = toFloat32 <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
 
 genFloat64 :: forall m. MonadGen m => m Number
-genFloat64 = chooseFloat (-1.7e308) 1.7e308
-
-
+genFloat64 = chooseFloat (-1.7976931348623157e+308) 1.7976931348623157e+308
 
 -- | For generating some set of offsets residing inside the generated array
 data WithOffset n a = WithOffset (Vec n TA.Offset) (ArrayView a)

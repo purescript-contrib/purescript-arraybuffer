@@ -1,12 +1,11 @@
 module Test.Properties where
 
-import Test.Properties.TypedArray (typedArrayTests)
-import Test.Properties.DataView (dataViewTests)
-
-import Prelude (Unit, bind, discard, ($), (<>), (*), show)
 import Effect (Effect)
-import Effect.Ref (new, read) as Ref
 import Effect.Console (log)
+import Effect.Ref (new, read) as Ref
+import Prelude (Unit, bind, discard, ($), (<>), (*), show)
+import Test.Properties.DataView (dataViewTests)
+import Test.Properties.TypedArray (typedArrayTests)
 
 
 propertiesTests :: Effect Unit

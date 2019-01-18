@@ -1,19 +1,18 @@
 module Data.ArrayBuffer.DataView.Gen where
 
+import Control.Monad.Gen.Class (class MonadGen, chooseInt)
 import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
 import Data.ArrayBuffer.DataView (whole, byteLength, class DataView)
 import Data.ArrayBuffer.Types (DataView, ByteLength, ByteOffset, kind ArrayViewType)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
-
-import Prelude ((<$>), bind, pure, (-), ($))
-import Data.Maybe (Maybe (Just))
-import Data.Vec (Vec)
-import Data.Vec (fromArray) as Vec
+import Data.Maybe (Maybe(Just))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.Unfoldable (replicateA)
-import Control.Monad.Gen.Class (class MonadGen, chooseInt)
-import Type.Proxy (Proxy (..))
+import Data.Vec (Vec)
+import Data.Vec (fromArray) as Vec
 import Partial.Unsafe (unsafePartial)
+import Prelude ((<$>), bind, pure, (-), ($))
+import Type.Proxy (Proxy(..))
 
 
 genDataView :: forall m
