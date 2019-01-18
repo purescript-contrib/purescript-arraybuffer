@@ -2,7 +2,7 @@ module Test.Properties.TypedArray where
 
 
 import Prelude
-import Debug.Trace(spy)
+
 import Data.Array (drop, take)
 import Data.Array as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
@@ -160,7 +160,7 @@ partBehavesLikeTakeDrop count = overAll count f
     f (WithOffset _ a) =
       let n = 2
           na = TA.toArray a
-          ba = TA.buffer (spy "arr" a)
+          ba = TA.buffer a
           pa :: ArrayView a
           pa = TA.part ba n n
       in  take n (drop n na) === TA.toArray pa
@@ -199,11 +199,11 @@ setSingletonIsEqTests count = overAll count setSingletonIsEq
   where
     setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
     setSingletonIsEq (WithOffset os xs) = unsafePerformEffect do
-      let x = case TA.at xs 0 of
-            Nothing -> zero
-            Just y -> y
-      TA.set xs (Just (Vec.head os)) [x]
-      pure (TA.at xs (Vec.head os) === Just x)
+      case TA.at xs 0 of
+            Nothing -> pure Success
+            Just x -> do
+              _ <- TA.set xs (Just (Vec.head os)) [x]
+              pure (TA.at xs (Vec.head os) === Just x)
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -428,7 +428,7 @@ setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIden
       let ys = TA.toArray xs
           zsSub = TA.subArray xs Nothing
           zs = unsafePerformEffect do
-            TA.setTyped xs Nothing zsSub
+            _ <- TA.setTyped xs Nothing zsSub
             pure (TA.toArray xs)
       in  zs === ys
 
@@ -642,6 +642,6 @@ copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
           xs' = TA.fromArray (TA.toArray xs) :: ArrayView a
           _ = unsafePerformEffect do
             let ys = TA.slice xs' (Just (Tuple o Nothing))
-            TA.setTyped xs' Nothing ys
+            _ <- TA.setTyped xs' Nothing ys
             TA.copyWithin xs 0 o Nothing
       in  TA.toArray xs === TA.toArray xs'

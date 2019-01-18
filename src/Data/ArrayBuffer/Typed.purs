@@ -20,10 +20,11 @@ module Data.ArrayBuffer.Typed
 
 import Prelude
 
+import Data.Array (length) as A
 import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 import Data.Function.Uncurried (Fn2, Fn3, mkFn2, runFn2, runFn3)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
 import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, toInt')
@@ -49,7 +50,7 @@ foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
 foreign import lengthImpl :: forall a. ArrayView a -> Length
 
-length :: forall a. ArrayView a -> Int
+length :: forall a. ArrayView a -> Length
 length = lengthImpl
 
 
@@ -169,7 +170,7 @@ part :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffe
 part a x y = part' a o y
   where o = x * toInt' (Proxy :: Proxy b)
 
-part' :: forall a b t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> ArrayView a
+part' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> ArrayView a
 part' a x y = runFn3 create a (notNull x) (notNull y)
 
 -- | Creates an empty typed array, where each value is assigned 0
@@ -187,8 +188,8 @@ fill a x mz = case mz of
   Just (Tuple s me) -> runEffectFn4 fillImpl a x (notNull s) (toNullable me)
 
 -- | Stores multiple values into the typed array
-set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Unit
-set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Boolean
+set = setInternal A.length
 
 -- | Maps a new value over the typed array, creating a new buffer and typed array as well.
 map :: forall a t. TypedArray a t => (t -> Offset -> t) -> ArrayView a -> ArrayView a
@@ -279,12 +280,19 @@ foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 reverse :: forall a. ArrayView a -> Effect Unit
 reverse = runEffectFn1 reverseImpl
 
-foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) (Nullable Offset) b Unit
+foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) Offset b Unit
+
+setInternal :: forall a b. (b -> Length) -> ArrayView a -> Maybe Offset -> b -> Effect Boolean
+setInternal lenfn a mo b =
+  let o = fromMaybe 0 mo
+  in if o >= 0 && lenfn b <= length a - o
+     then runEffectFn3 setImpl a o b *> pure true
+     else pure false
 
 
 -- | Stores multiple values in the typed array, reading input values from the second typed array.
-setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Unit
-setTyped a mo x = runEffectFn3 setImpl a (toNullable mo) x
+setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Boolean
+setTyped = setInternal length
 
 
 -- | Copy the entire contents of the typed array into a new buffer.

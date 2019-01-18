@@ -3,7 +3,7 @@ module Data.ArrayBuffer.DataView.Gen where
 import Control.Monad.Gen.Class (class MonadGen, chooseInt)
 import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
 import Data.ArrayBuffer.DataView (whole, byteLength, class DataView)
-import Data.ArrayBuffer.Types (DataView, ByteLength, ByteOffset, kind ArrayViewType)
+import Data.ArrayBuffer.Types (DataView, ByteOffset, kind ArrayViewType)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(Just))
 import Data.Typelevel.Num (class Nat, toInt')
