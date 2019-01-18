@@ -285,10 +285,7 @@ foreign import sliceImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nulla
 slice :: forall a. ArrayView a -> Range -> ArrayView a
 slice a mz = case mz of
   Nothing -> runFn3 sliceImpl a null null
-  Just (Tuple s me) -> case me of
-    Nothing -> runFn3 sliceImpl a (notNull s) null
-    Just e -> runFn3 sliceImpl a (notNull s) (notNull e)
-
+  Just (Tuple s me) -> runFn3 sliceImpl a (notNull s) (toNullable me)
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
