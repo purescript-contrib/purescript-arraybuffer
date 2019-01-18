@@ -137,43 +137,6 @@ class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t wh
   empty :: Length -> ArrayView a
   -- | Creates a typed array from an input array of values, to be binary serialized
   fromArray :: Array t -> ArrayView a
-  -- | Fill the array with a value
-  fill :: ArrayView a -> t -> Range -> Effect Unit
-  -- | Stores multiple values into the typed array
-  set :: ArrayView a -> Maybe Offset -> Array t -> Effect Unit
-  -- | Maps a new value over the typed array, creating a new buffer and typed array aswell.
-  map :: (t -> Offset -> t) -> ArrayView a -> ArrayView a
-  -- | Traverses over each value, returning a new one
-  traverse :: (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
-  -- | Traverses over each value
-  traverse_ :: (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
-  -- | Test a predicate to pass on all values
-  all :: (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-  -- | Test a predicate to pass on any value
-  any :: (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-  -- | Returns a new typed array with all values that pass the predicate
-  filter :: (t -> Offset -> Boolean) -> ArrayView a -> ArrayView a
-  -- | Tests if a value is an element of the typed array
-  elem :: t -> Maybe Offset -> ArrayView a -> Boolean
-  -- | Fetch element at index.
-  unsafeAt :: Offset -> ArrayView a -> Effect t
-  -- | Folding from the left
-  foldlM :: forall b. (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
-  -- | Assumes the typed array is non-empty
-  foldl1M :: (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
-  -- | Folding from the right
-  foldrM :: forall b. (t -> b -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
-  -- | Assumes the typed array is non-empty
-  foldr1M :: (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
-  -- | Returns the first value satisfying the predicate
-  find :: (t -> Offset -> Boolean) -> ArrayView a -> Maybe t
-  -- | Returns the first index of the value satisfying the predicate
-  findIndex :: (t -> Offset -> Boolean) -> ArrayView a -> Maybe Offset
-  -- | Returns the first index of the element, if it exists, from the left
-  indexOf :: t -> Maybe Offset -> ArrayView a -> Maybe Offset
-  -- | Returns the first index of the element, if it exists, from the right
-  lastIndexOf :: t -> Maybe Offset -> ArrayView a -> Maybe Offset
-
 
 instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a null null)
@@ -181,292 +144,130 @@ instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   part a x y = runEffectFn3 newUint8ClampedArray a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint8ClampedArray n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayUint32 :: TypedArray Uint32 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint32Array a null null)
   remainder a x = runEffectFn3 newUint32Array a (notNull x) null
   part a x y = runEffectFn3 newUint32Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint32Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint32Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayUint16 :: TypedArray Uint16 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint16Array a null null)
   remainder a x = runEffectFn3 newUint16Array a (notNull x) null
   part a x y = runEffectFn3 newUint16Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint16Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint16Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayUint8 :: TypedArray Uint8 UInt where
   whole a = unsafePerformEffect (runEffectFn3 newUint8Array a null null)
   remainder a x = runEffectFn3 newUint8Array a (notNull x) null
   part a x y = runEffectFn3 newUint8Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newUint8Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newUint8Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayInt32 :: TypedArray Int32 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt32Array a null null)
   remainder a x = runEffectFn3 newInt32Array a (notNull x) null
   part a x y = runEffectFn3 newInt32Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newInt32Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newInt32Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayInt16 :: TypedArray Int16 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt16Array a null null)
   remainder a x = runEffectFn3 newInt16Array a (notNull x) null
   part a x y = runEffectFn3 newInt16Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newInt16Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newInt16Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayInt8 :: TypedArray Int8 Int where
   whole a = unsafePerformEffect (runEffectFn3 newInt8Array a null null)
   remainder a x = runEffectFn3 newInt8Array a (notNull x) null
   part a x y = runEffectFn3 newInt8Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newInt8Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newInt8Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayFloat32 :: TypedArray Float32 Number where
   whole a = unsafePerformEffect (runEffectFn3 newFloat32Array a null null)
   remainder a x = runEffectFn3 newFloat32Array a (notNull x) null
   part a x y = runEffectFn3 newFloat32Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newFloat32Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newFloat32Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 instance typedArrayFloat64 :: TypedArray Float64 Number where
   whole a = unsafePerformEffect (runEffectFn3 newFloat64Array a null null)
   remainder a x = runEffectFn3 newFloat64Array a (toNullable (Just x)) null
   part a x y = runEffectFn3 newFloat64Array a (notNull x) (notNull y)
   empty n = unsafePerformEffect (runEffectFn3 newFloat64Array n null null)
   fromArray a = unsafePerformEffect (runEffectFn3 newFloat64Array a null null)
-  all = _all
-  any = _any
-  fill = _fill
-  set = _set
-  map = _map
-  traverse = _traverse
-  traverse_ = _traverse_
-  filter = _filter
-  elem = _elem
-  unsafeAt = _unsafeAt
-  foldlM = _foldlM
-  foldl1M = _foldl1M
-  foldrM = _foldrM
-  foldr1M = _foldr1M
-  find = _find
-  findIndex = _findIndex
-  indexOf = _indexOf
-  lastIndexOf = _lastIndexOf
 
 -- | Fill the array with a value
-_fill :: forall a t. ArrayView a -> t -> Range -> Effect Unit
-_fill a x mz = case mz of
+fill :: forall a t. TypedArray a t => ArrayView a -> t -> Range -> Effect Unit
+fill a x mz = case mz of
   Nothing -> runEffectFn4 fillImpl a x null null
   Just (Tuple s mq) -> case mq of
     Nothing -> runEffectFn4 fillImpl a x (notNull s) null
     Just e -> runEffectFn4 fillImpl a x (notNull s) (notNull e)
 
 -- | Stores multiple values into the typed array
-_set :: forall a t. ArrayView a -> Maybe Offset -> Array t -> Effect Unit
-_set a mo x = runEffectFn3 setImpl a (toNullable mo) x
+set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Unit
+set a mo x = runEffectFn3 setImpl a (toNullable mo) x
 
 -- | Maps a new value over the typed array, creating a new buffer and typed array as well.
-_map :: forall a t. (t -> Offset -> t) -> ArrayView a -> ArrayView a
-_map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+map :: forall a t. TypedArray a t => (t -> Offset -> t) -> ArrayView a -> ArrayView a
+map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
 
 -- | Traverses over each value, returning a new one
-_traverse :: forall a t. (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
-_traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+traverse :: forall a t. TypedArray a t => (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
 
 -- | Traverses over each value
-_traverse_ :: forall a t. (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
-_traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+traverse_ :: forall a t. TypedArray a t => (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
+traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
 
 -- | Test a predicate to pass on all values
-_all :: forall a t. (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-_all p a = runFn2 everyImpl a (mkFn2 p)
+all :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
+all p a = runFn2 everyImpl a (mkFn2 p)
 
 -- | Test a predicate to pass on any value
-_any :: forall a t. (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-_any p a = runFn2 someImpl a (mkFn2 p)
+any :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
+any p a = runFn2 someImpl a (mkFn2 p)
 
 -- | Returns a new typed array with all values that pass the predicate
-_filter :: forall a t. (t -> Offset -> Boolean) -> ArrayView a -> ArrayView a
-_filter p a = runFn2 filterImpl a (mkFn2 p)
+filter :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> ArrayView a
+filter p a = runFn2 filterImpl a (mkFn2 p)
 
 -- | Tests if a value is an element of the typed array
-_elem :: forall a t. t -> Maybe Offset -> ArrayView a -> Boolean
-_elem x mo a = runFn3 includesImpl a x (toNullable mo)
+elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Boolean
+elem x mo a = runFn3 includesImpl a x (toNullable mo)
 
 -- | Fetch element at index.
-_unsafeAt :: forall a t. Offset -> ArrayView a -> Effect t
-_unsafeAt o a = runEffectFn2 unsafeAtImpl a o
+unsafeAt :: forall a t. TypedArray a t => Offset -> ArrayView a -> Effect t
+unsafeAt o a = runEffectFn2 unsafeAtImpl a o
 
 -- | Folding from the left
-_foldlM :: forall a t b. (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
-_foldlM f i a = runEffectFn3 reduceImpl a (mkEffectFn3 f) i
+foldlM :: forall a t b. TypedArray a t => (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
+foldlM f i a = runEffectFn3 reduceImpl a (mkEffectFn3 f) i
 
 -- | Assumes the typed array is non-empty
-_foldl1M :: forall a t. (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
-_foldl1M f a = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+foldl1M :: forall a t. TypedArray a t => (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
+foldl1M f a = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
 
 -- | Folding from the right
-_foldrM :: forall a t b. (t -> b -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
-_foldrM f i a = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o)) i
+foldrM :: forall a t b. TypedArray a t => (t -> b -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
+foldrM f i a = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o)) i
 
 -- | Assumes the typed array is non-empty
-_foldr1M :: forall a t. (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
-_foldr1M f a = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+foldr1M :: forall a t. TypedArray a t => (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
+foldr1M f a = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
 
 -- | Returns the first value satisfying the predicate
-_find :: forall a t. (t -> Offset -> Boolean) -> ArrayView a -> Maybe t
-_find f a = toMaybe (runFn2 findImpl a (mkFn2 f))
+find :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe t
+find f a = toMaybe (runFn2 findImpl a (mkFn2 f))
 
 -- | Returns the first index of the value satisfying the predicate
-_findIndex :: forall a t. (t -> Offset -> Boolean) -> ArrayView a -> Maybe Offset
-_findIndex f a = toMaybe (runFn2 findIndexImpl a (mkFn2 f))
+findIndex :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe Offset
+findIndex f a = toMaybe (runFn2 findIndexImpl a (mkFn2 f))
 
 -- | Returns the first index of the element, if it exists, from the left
-_indexOf :: forall a t. t -> Maybe Offset -> ArrayView a -> Maybe Offset
-_indexOf x mo a = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+indexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Maybe Offset
+indexOf x mo a = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
 
 -- | Returns the first index of the element, if it exists, from the right
-_lastIndexOf :: forall a t. t -> Maybe Offset -> ArrayView a -> Maybe Offset
-_lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+lastIndexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Maybe Offset
+lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 
 foldl :: forall a b t. TypedArray a t => (b -> t -> Offset -> b) -> b -> ArrayView a -> b
 foldl f i a = unsafePerformEffect (foldlM (\acc x o -> pure (f acc x o)) i a)
