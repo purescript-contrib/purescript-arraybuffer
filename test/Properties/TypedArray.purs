@@ -21,7 +21,7 @@ import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (quickCheckGen, Result(..), (===), (/==), class Testable, (<?>))
-import Test.QuickCheck.Combinators ((==>))
+import Test.QuickCheck.Combinators ((==>), (|=|))
 import Test.QuickCheck.Gen (Gen)
 import Type.Proxy (Proxy(..))
 
@@ -215,7 +215,7 @@ allImpliesAnyTests count = overAll count allImpliesAny
       let pred x o = x /= zero
           all' = TA.all pred xs <?> "All don't satisfy the predicate"
           any' = TA.any pred xs <?> "None satisfy the predicate"
-      in  all' ==> any'
+      in (TA.length xs === zero) |=| all' ==> any'
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
