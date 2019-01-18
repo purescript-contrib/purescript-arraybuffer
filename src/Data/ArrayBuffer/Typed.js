@@ -141,7 +141,6 @@ exports.reverseImpl = function reverseImpl (a) {
 
 
 exports.setImpl = function setImpl (a, off, b) {
-  console.log(a, b, off);
   a.set(b,off);
 };
 
