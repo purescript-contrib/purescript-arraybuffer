@@ -174,7 +174,7 @@ allAreFilledTests count = overAll count allAreFilled
             Nothing -> zero
             Just y -> y
       TA.fill xs x Nothing
-      b <- TA.all (\y o -> pure (y == x)) xs
+      let b = TA.all (\y o -> y == x) xs
       pure (b <?> "All aren't the filled value")
 
 
@@ -196,9 +196,9 @@ allImpliesAnyTests count = overAll count allImpliesAny
   where
     allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
     allImpliesAny (WithOffset _ xs) =
-      let pred x o = pure (x /= zero)
-          all' = unsafePerformEffect (TA.all pred xs) <?> "All don't satisfy the predicate"
-          any' = unsafePerformEffect (TA.any pred xs) <?> "None satisfy the predicate"
+      let pred x o = x /= zero
+          all' = TA.all pred xs <?> "All don't satisfy the predicate"
+          any' = TA.any pred xs <?> "None satisfy the predicate"
       in  all' ==> any'
 
 
@@ -208,9 +208,9 @@ filterImpliesAllTests count = overAll count filterImpliesAll
   where
     filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
     filterImpliesAll (WithOffset _ xs) =
-      let pred x o = pure (x /= zero)
-          ys = unsafePerformEffect (TA.filter pred xs)
-          all' = unsafePerformEffect (TA.all pred ys)
+      let pred x o = x /= zero
+          ys = TA.filter pred xs
+          all' = TA.all pred ys
       in  all' <?> "Filter doesn't imply all"
 
 
@@ -220,9 +220,9 @@ filterIsTotalTests count = overAll count filterIsTotal
   where
     filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
     filterIsTotal (WithOffset _ xs) =
-      let pred x o = pure (x /= zero)
-          ys = unsafePerformEffect (TA.filter pred xs)
-          zs = unsafePerformEffect (TA.filter (\x o -> not <$> pred x o) ys)
+      let pred x o = x /= zero
+          ys = TA.filter pred xs
+          zs = TA.filter (\x o -> not pred x o) ys
       in  TA.toArray zs === []
 
 
@@ -232,9 +232,9 @@ filterIsIdempotentTests count = overAll count filterIsIdempotent
   where
     filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     filterIsIdempotent (WithOffset _ xs) =
-      let pred x o = pure (x /= zero)
-          ys = unsafePerformEffect (TA.filter pred xs)
-          zs = unsafePerformEffect (TA.filter pred ys)
+      let pred x o = x /= zero
+          ys = TA.filter pred xs
+          zs = TA.filter pred ys
       in  TA.toArray zs === TA.toArray ys
 
 
@@ -261,18 +261,14 @@ anyImpliesFindTests count = overAll count anyImpliesFind
   where
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
     anyImpliesFind (WithOffset _ xs) =
-      let pred x o = pure (x /= zero)
-          p = unsafePerformEffect (TA.any pred xs) <?> "All don't satisfy the predicate"
-          q = unsafePerformEffect do
-            mzs <- TA.find pred xs
-            case mzs of
-              Nothing -> pure (Failed "Doesn't have a value satisfying the predicate")
-              Just z -> do
-                b <- pred z 0
-                pure $
-                  if b
-                    then Success
-                    else Failed "Found value doesn't satisfy the predicate"
+      let pred x o = x /= zero
+          p = TA.any pred xs <?> "All don't satisfy the predicate"
+          q =
+            case TA.find pred xs of
+              Nothing -> Failed "Doesn't have a value satisfying the predicate"
+              Just z -> if pred z 0
+                        then Success
+                        else Failed "Found value doesn't satisfy the predicate"
       in  p ==> q
 
 
@@ -282,13 +278,13 @@ findIndexImpliesAtTests count = overAll count findIndexImpliesAt
   where
     findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
     findIndexImpliesAt (WithOffset _ xs) =
-      let pred x o = pure (x /= zero)
-          mo = unsafePerformEffect (TA.findIndex pred xs)
+      let pred x o = x /= zero
+          mo = TA.findIndex pred xs
       in  case mo of
             Nothing -> Success
             Just o -> case TA.at xs o of
               Nothing -> Failed "No value at found index"
-              Just x -> unsafePerformEffect (pred x o) <?> "Find index implies at"
+              Just x -> pred x o <?> "Find index implies at"
 
 
 
