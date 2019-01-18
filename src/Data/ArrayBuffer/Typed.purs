@@ -6,7 +6,7 @@ module Data.ArrayBuffer.Typed
   , Offset, Length, Range
   , buffer, byteOffset, byteLength, length
   , class TypedArray
-  , whole, remainder, part, empty, fromArray
+  , create, whole, remainder, part, empty, fromArray
   , fill, set, setTyped, copyWithin
   , map, traverse, traverse_, filter
   , sort, reverse
@@ -126,72 +126,48 @@ type Range = Maybe (Tuple Offset (Maybe Offset))
 -- | - `subArray` returns a new typed array with a separate array buffer
 -- | - `toString` prints to a CSV, `toString'` allows you to supply the delimiter
 -- | - `toArray` returns an array of numeric values
+
 class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
-  -- | View mapping the whole `ArrayBuffer`.
-  whole :: ArrayBuffer -> ArrayView a
-  -- | View mapping the rest of an `ArrayBuffer` after an index.
-  remainder :: ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
-  -- | View mapping a region of the `ArrayBuffer`.
-  part :: ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
-  -- | Creates an empty typed array, where each value is assigned 0
-  empty :: Length -> ArrayView a
-  -- | Creates a typed array from an input array of values, to be binary serialized
-  fromArray :: Array t -> ArrayView a
+  create :: forall x. EffectFn3 x (Nullable ByteOffset) (Nullable ByteLength) (ArrayView a)
 
 instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
-  whole a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a null null)
-  remainder a x = runEffectFn3 newUint8ClampedArray a (notNull x) null
-  part a x y = runEffectFn3 newUint8ClampedArray a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newUint8ClampedArray n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newUint8ClampedArray a null null)
+  create = newUint8ClampedArray
 instance typedArrayUint32 :: TypedArray Uint32 UInt where
-  whole a = unsafePerformEffect (runEffectFn3 newUint32Array a null null)
-  remainder a x = runEffectFn3 newUint32Array a (notNull x) null
-  part a x y = runEffectFn3 newUint32Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newUint32Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newUint32Array a null null)
+  create = newUint32Array
 instance typedArrayUint16 :: TypedArray Uint16 UInt where
-  whole a = unsafePerformEffect (runEffectFn3 newUint16Array a null null)
-  remainder a x = runEffectFn3 newUint16Array a (notNull x) null
-  part a x y = runEffectFn3 newUint16Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newUint16Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newUint16Array a null null)
+  create = newUint16Array
 instance typedArrayUint8 :: TypedArray Uint8 UInt where
-  whole a = unsafePerformEffect (runEffectFn3 newUint8Array a null null)
-  remainder a x = runEffectFn3 newUint8Array a (notNull x) null
-  part a x y = runEffectFn3 newUint8Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newUint8Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newUint8Array a null null)
+  create = newUint8Array
 instance typedArrayInt32 :: TypedArray Int32 Int where
-  whole a = unsafePerformEffect (runEffectFn3 newInt32Array a null null)
-  remainder a x = runEffectFn3 newInt32Array a (notNull x) null
-  part a x y = runEffectFn3 newInt32Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newInt32Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newInt32Array a null null)
+  create = newInt32Array
 instance typedArrayInt16 :: TypedArray Int16 Int where
-  whole a = unsafePerformEffect (runEffectFn3 newInt16Array a null null)
-  remainder a x = runEffectFn3 newInt16Array a (notNull x) null
-  part a x y = runEffectFn3 newInt16Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newInt16Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newInt16Array a null null)
+  create = newInt16Array
 instance typedArrayInt8 :: TypedArray Int8 Int where
-  whole a = unsafePerformEffect (runEffectFn3 newInt8Array a null null)
-  remainder a x = runEffectFn3 newInt8Array a (notNull x) null
-  part a x y = runEffectFn3 newInt8Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newInt8Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newInt8Array a null null)
+  create = newInt8Array
 instance typedArrayFloat32 :: TypedArray Float32 Number where
-  whole a = unsafePerformEffect (runEffectFn3 newFloat32Array a null null)
-  remainder a x = runEffectFn3 newFloat32Array a (notNull x) null
-  part a x y = runEffectFn3 newFloat32Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newFloat32Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newFloat32Array a null null)
+  create = newFloat32Array
 instance typedArrayFloat64 :: TypedArray Float64 Number where
-  whole a = unsafePerformEffect (runEffectFn3 newFloat64Array a null null)
-  remainder a x = runEffectFn3 newFloat64Array a (toNullable (Just x)) null
-  part a x y = runEffectFn3 newFloat64Array a (notNull x) (notNull y)
-  empty n = unsafePerformEffect (runEffectFn3 newFloat64Array n null null)
-  fromArray a = unsafePerformEffect (runEffectFn3 newFloat64Array a null null)
+  create = newFloat64Array
+
+-- | View mapping the whole `ArrayBuffer`.
+whole :: forall a t. TypedArray a t => ArrayBuffer -> ArrayView a
+whole a = unsafePerformEffect (runEffectFn3 create a null null)
+
+-- | View mapping the rest of an `ArrayBuffer` after an index.
+remainder :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
+remainder a x = runEffectFn3 create a (toNullable (Just x)) null
+
+-- | View mapping a region of the `ArrayBuffer`.
+part :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
+part a x y = runEffectFn3 create a (notNull x) (notNull y)
+
+-- | Creates an empty typed array, where each value is assigned 0
+empty :: forall a t. TypedArray a t => Length -> ArrayView a
+empty n = unsafePerformEffect (runEffectFn3 create n null null)
+
+-- | Creates a typed array from an input array of values, to be binary serialized
+fromArray :: forall a t. TypedArray a t => Array t -> ArrayView a
+fromArray a = unsafePerformEffect (runEffectFn3 create a null null)
 
 -- | Fill the array with a value
 fill :: forall a t. TypedArray a t => ArrayView a -> t -> Range -> Effect Unit
