@@ -122,8 +122,8 @@ type TestableArrayF a b n t q =
   -> q
 
 
-overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
-overAll count f = do
+overAll' :: forall q n. Testable q => Nat n => Int -> Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll' mn count f = do
   void (Ref.modify (\x -> x + 1) count)
 
   let chk :: forall a b t. Show t => Eq t => Ord t => Semiring t => Nat b => BytesPerValue a b => TypedArray a t => String -> Proxy (ArrayView a) -> Gen t -> Effect Unit
@@ -131,26 +131,24 @@ overAll count f = do
         log $ "      - " <> s
         quickCheckGen $ f <$> genWithOffset arr
         where arr :: Gen (ArrayView a)
-              arr = genTypedArray gen `suchThat` \xs -> TA.length xs > 0
+              arr = genTypedArray gen `suchThat` \xs -> mn <= TA.length xs
 
   chk "Uint8ClampedArray" (Proxy :: Proxy Uint8ClampedArray) genUint8
-
   chk "Uint32Array" (Proxy :: Proxy Uint32Array) genUint32
-
   chk "Uint16Array" (Proxy :: Proxy Uint16Array) genUint16
-
   chk "Uint8Array" (Proxy :: Proxy Uint8Array) genUint8
-
   chk "Int32Array" (Proxy :: Proxy Int32Array) genInt32
-
   chk "Int16Array" (Proxy :: Proxy Int16Array) genInt16
-
   chk "Int8Array" (Proxy :: Proxy Int8Array) genInt8
-
   chk "Float32Array" (Proxy :: Proxy Float32Array) genFloat32
-
   chk "Float64Array" (Proxy :: Proxy Float64Array) genFloat64
 
+
+overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll count f = overAll' 0 count f
+
+overAll1 :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll1 count f = overAll' 1 count f
 
 partBehavesLikeTakeDrop :: Ref Int -> Effect Unit
 partBehavesLikeTakeDrop count = overAll count f
@@ -254,7 +252,7 @@ filterIsIdempotentTests count = overAll count filterIsIdempotent
 
 
 withOffsetHasIndexTests :: Ref Int -> Effect Unit
-withOffsetHasIndexTests count = overAll count withOffsetHasIndex
+withOffsetHasIndexTests count = overAll1 count withOffsetHasIndex
   where
     withOffsetHasIndex :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetHasIndex (WithOffset os xs) =
@@ -262,7 +260,7 @@ withOffsetHasIndexTests count = overAll count withOffsetHasIndex
 
 
 withOffsetElemTests :: Ref Int -> Effect Unit
-withOffsetElemTests count = overAll count withOffsetElem
+withOffsetElemTests count = overAll1 count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) =
