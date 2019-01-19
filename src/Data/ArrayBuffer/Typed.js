@@ -44,7 +44,7 @@ function newArray (f) {
       return new f(a);
     var l = a.byteLength;
     var eb = f.BYTES_PER_ELEMENT;
-    var off = Math.min(l, mb|0);
+    var off = Math.min(l, mb>>>0);
     if (mc === null)
       return new f(a,off);
     var len = Math.min((l - off) / eb, mc);
