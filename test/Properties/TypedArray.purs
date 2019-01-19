@@ -3,16 +3,17 @@ module Test.Properties.TypedArray where
 
 import Prelude
 
+import Control.Monad.Gen (suchThat)
 import Data.Array (drop, take)
 import Data.Array as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithOffset)
-import Data.ArrayBuffer.Types (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float32Array, Float64Array)
+import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array, Int32Array, Int8Array, Uint16Array, Uint8Array, Uint8ClampedArray, Uint32Array)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Data.Typelevel.Num (toInt', class Nat, D0, D1, D5)
+import Data.Typelevel.Num (class Nat, D0, D1, D5, toInt')
 import Data.Vec (head) as Vec
 import Effect (Effect)
 import Effect.Console (log)
@@ -20,7 +21,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Partial.Unsafe (unsafePartial)
-import Test.QuickCheck (quickCheckGen, Result(..), (===), (/==), class Testable, (<?>))
+import Test.QuickCheck (class Testable, Result(..), quickCheckGen, (/==), (<?>), (===))
 import Test.QuickCheck.Combinators ((==>), (|=|))
 import Test.QuickCheck.Gen (Gen)
 import Type.Proxy (Proxy(..))
@@ -28,7 +29,7 @@ import Type.Proxy (Proxy(..))
 
 typedArrayTests :: Ref Int -> Effect Unit
 typedArrayTests count = do
-  log "XXXXXX"
+  log "    - partBehavesLikeTakeDrop"
   partBehavesLikeTakeDrop count
   log "    - byteLength x / bytesPerValue === length x"
   byteLengthDivBytesPerValueTests count
@@ -125,32 +126,30 @@ overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. Testable
 overAll count f = do
   void (Ref.modify (\x -> x + 1) count)
 
-  log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genUint8 :: Gen Uint8ClampedArray))
+  let chk :: forall a b t. Show t => Eq t => Ord t => Semiring t => Nat b => BytesPerValue a b => TypedArray a t => String -> Proxy (ArrayView a) -> Gen t -> Effect Unit
+      chk s _ gen = do
+        log $ "      - " <> s
+        quickCheckGen $ f <$> genWithOffset arr
+        where arr :: Gen (ArrayView a)
+              arr = genTypedArray gen `suchThat` \xs -> TA.length xs > 0
 
-  log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genUint32 :: Gen Uint32Array))
+  chk "Uint8ClampedArray" (Proxy :: Proxy Uint8ClampedArray) genUint8
 
-  log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genUint16 :: Gen Uint16Array))
+  chk "Uint32Array" (Proxy :: Proxy Uint32Array) genUint32
 
-  log "      - Uint8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genUint8 :: Gen Uint8Array))
+  chk "Uint16Array" (Proxy :: Proxy Uint16Array) genUint16
 
-  log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genInt32 :: Gen Int32Array))
+  chk "Uint8Array" (Proxy :: Proxy Uint8Array) genUint8
 
-  log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genInt16 :: Gen Int16Array))
+  chk "Int32Array" (Proxy :: Proxy Int32Array) genInt32
 
-  log "      - Int8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genInt8 :: Gen Int8Array))
+  chk "Int16Array" (Proxy :: Proxy Int16Array) genInt16
 
-  log "      - Float32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genFloat32 :: Gen Float32Array))
+  chk "Int8Array" (Proxy :: Proxy Int8Array) genInt8
 
-  log "      - Float64Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray genFloat64 :: Gen Float64Array))
+  chk "Float32Array" (Proxy :: Proxy Float32Array) genFloat32
+
+  chk "Float64Array" (Proxy :: Proxy Float64Array) genFloat64
 
 
 partBehavesLikeTakeDrop :: Ref Int -> Effect Unit

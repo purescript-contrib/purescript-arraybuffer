@@ -5,9 +5,9 @@ module Data.ArrayBuffer.Typed.Gen where
 import Prelude
 
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
+import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, toInt')
@@ -23,7 +23,7 @@ import Type.Proxy (Proxy(..))
 
 genTypedArray :: forall m a t
                . MonadGen m
-              => TA.TypedArray a t
+              => TypedArray a t
               => m t
               -> m (ArrayView a)
 genTypedArray gen = sized \s -> do
@@ -62,10 +62,9 @@ genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+3
 data WithOffset n a = WithOffset (Vec n TA.Offset) (ArrayView a)
 derive instance genericWithOffset :: Generic (ArrayView a) a' => Generic (WithOffset n a) _
 
-genWithOffset :: forall m n b a
+genWithOffset :: forall m n a
                . MonadGen m
               => Nat n
-              => BytesPerValue a b
               => m (ArrayView a)
               -> m (WithOffset n a)
 genWithOffset gen = do
