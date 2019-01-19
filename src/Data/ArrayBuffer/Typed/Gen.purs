@@ -13,6 +13,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Data.UInt (fromInt) as UInt
+import Data.Float32 (Float32, fromNumber) as F
 import Data.UInt.Gen (genUInt) as UInt
 import Data.Unfoldable (replicateA)
 import Data.Vec (Vec)
@@ -52,10 +53,8 @@ genUint32 = UInt.genUInt bottom top
 genInt32 :: forall m. MonadGen m => m Int
 genInt32 = chooseInt bottom top
 
-foreign import toFloat32 :: Number -> Number
-
-genFloat32 :: forall m. MonadGen m => m Number
-genFloat32 = toFloat32 <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
+genFloat32 :: forall m. MonadGen m => m F.Float32
+genFloat32 = F.fromNumber <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
 
 genFloat64 :: forall m. MonadGen m => m Number
 genFloat64 = chooseFloat (-1.7976931348623157e+308) 1.7976931348623157e+308

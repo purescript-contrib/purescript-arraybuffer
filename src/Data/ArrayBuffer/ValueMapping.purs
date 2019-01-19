@@ -6,6 +6,7 @@ module Data.ArrayBuffer.ValueMapping where
 import Data.ArrayBuffer.Types (kind ArrayViewType, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.Typelevel.Num (D1, D2, D4, D8)
 import Data.UInt (UInt)
+import Data.Float32 (Float32) as F
 
 
 -- | Maps a `TypedArray`'s binary casted value, to the space occupied by that value, in bytes.
@@ -32,5 +33,5 @@ instance binaryValueUint8 :: BinaryValue Uint8 UInt
 instance binaryValueInt32 :: BinaryValue Int32 Int
 instance binaryValueInt16 :: BinaryValue Int16 Int
 instance binaryValueInt8 :: BinaryValue Int8 Int
-instance binaryValueFloat32 :: BinaryValue Float32 Number
+instance binaryValueFloat32 :: BinaryValue Float32 F.Float32
 instance binaryValueFloat64 :: BinaryValue Float64 Number

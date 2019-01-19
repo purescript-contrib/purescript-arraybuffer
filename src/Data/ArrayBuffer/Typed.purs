@@ -27,6 +27,7 @@ import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
 import Data.Tuple (Tuple(..))
 import Data.UInt (UInt)
+import Data.Float32 (Float32) as F
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Effect.Unsafe (unsafePerformEffect)
@@ -143,7 +144,7 @@ instance typedArrayInt16 :: TypedArray Int16 Int where
   create = newInt16Array
 instance typedArrayInt8 :: TypedArray Int8 Int where
   create = newInt8Array
-instance typedArrayFloat32 :: TypedArray Float32 Number where
+instance typedArrayFloat32 :: TypedArray Float32 F.Float32 where
   create = newFloat32Array
 instance typedArrayFloat64 :: TypedArray Float64 Number where
   create = newFloat64Array

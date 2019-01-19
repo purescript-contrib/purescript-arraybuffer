@@ -11,6 +11,7 @@ import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, D1, D2, D4, D8)
 import Data.UInt (UInt)
+import Data.Float32 (Float32) as F
 import Data.Vec (head) as Vec
 import Effect (Effect)
 import Effect.Console (log)
@@ -82,7 +83,7 @@ overAll count f = do
 
   log "      - Float32"
   quickCheckGen $
-    let f' :: TestableViewF Float32 D4 n Number q
+    let f' :: TestableViewF Float32 D4 n F.Float32 q
         f' = f
     in  f' <$> genWithOffsetAndValue (genDataView 20 Nothing) genFloat32
 

@@ -18,6 +18,7 @@ import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (toInt', class Nat)
 import Data.UInt (UInt)
+import Data.Float32 (Float32) as F
 import Effect (Effect)
 import Effect.Uncurried (EffectFn2, EffectFn3, EffectFn4, runEffectFn2, runEffectFn3, runEffectFn4)
 import Type.Proxy (Proxy(..))
@@ -133,7 +134,7 @@ instance dataViewUint32 :: (BytesPerValue Uint32 b, Nat b) => DataView Uint32 UI
   getLE AProxy = getter {functionName: "getUint32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
   setLE AProxy = setter {functionName: "setUint32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
 
-instance dataViewFloat32 :: (BytesPerValue Float32 b, Nat b) => DataView Float32 Number where
+instance dataViewFloat32 :: (BytesPerValue Float32 b, Nat b) => DataView Float32 F.Float32 where
   getBE AProxy = getter {functionName: "getFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
   setBE AProxy = setter {functionName: "setFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: false}
   getLE AProxy = getter {functionName: "getFloat32", bytesPerValue: toInt' (Proxy :: Proxy b), littleEndian: true}
