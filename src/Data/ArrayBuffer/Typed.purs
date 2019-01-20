@@ -9,8 +9,11 @@ module Data.ArrayBuffer.Typed
   , create, whole, remainder, part, empty, fromArray
   , fill, set, setTyped, copyWithin
   , map, traverse, traverse_, filter
+  , mapWithIndex, traverseWithIndex, traverseWithIndex_, filterWithIndex
   , sort, reverse
-  , elem, all, any
+  , elem
+  , all, any
+  , allWithIndex, anyWithIndex
   , unsafeAt, hasIndex, at, (!)
   , foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
   , find, findIndex, indexOf, lastIndexOf
@@ -191,29 +194,75 @@ fill a x mz = case mz of
 set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Boolean
 set = setInternal A.length
 
--- | Maps a new value over the typed array, creating a new buffer and typed array as well.
-map :: forall a t. TypedArray a t => (t -> Offset -> t) -> ArrayView a -> ArrayView a
-map f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+ap1 :: forall a b c. (a -> c) -> (a -> b -> c)
+ap1 f = \x _ -> f x
+
+
+-- | Maps a new value over the typed array, creating a new buffer and
+-- | typed array as well.
+map :: forall a t. TypedArray a t => (t -> t) -> ArrayView a -> ArrayView a
+map = mapWithIndex' <<< ap1
+
+-- | Apply a function to each element in an array, supplying a
+-- | generated zero-based index integer along with the element,
+-- | creating a typed array with the new elements
+mapWithIndex :: forall a t. TypedArray a t => (Offset -> t -> t) -> ArrayView a -> ArrayView a
+mapWithIndex = mapWithIndex' <<< flip
+
+mapWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> t) -> ArrayView a -> ArrayView a
+mapWithIndex' f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
 
 -- | Traverses over each value, returning a new one
-traverse :: forall a t. TypedArray a t => (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
-traverse f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
+traverse :: forall a t. TypedArray a t => (t -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+traverse = traverseWithIndex' <<< ap1
+
+-- | Traverses over each value, returning a new one
+traverseWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+traverseWithIndex = traverseWithIndex' <<< flip
+
+traverseWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Effect t) -> ArrayView a -> Effect (ArrayView a)
+traverseWithIndex' f a = runEffectFn2 mapImpl a (mkEffectFn2 f)
 
 -- | Traverses over each value
-traverse_ :: forall a t. TypedArray a t => (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
-traverse_ f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+traverse_ :: forall a t. TypedArray a t => (t -> Effect Unit) -> ArrayView a -> Effect Unit
+traverse_ = traverseWithIndex_' <<< ap1
+
+-- | Traverses over each value
+traverseWithIndex_ :: forall a t. TypedArray a t => (Offset -> t -> Effect Unit) -> ArrayView a -> Effect Unit
+traverseWithIndex_ = traverseWithIndex_' <<< flip
+
+traverseWithIndex_' :: forall a t. TypedArray a t => (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
+traverseWithIndex_' f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
 
 -- | Test a predicate to pass on all values
-all :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-all p a = runFn2 everyImpl a (mkFn2 p)
+all :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Boolean
+all = every <<< ap1
+
+allWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Boolean
+allWithIndex = every <<< flip
+
+every :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
+every p a = runFn2 everyImpl a (mkFn2 p)
 
 -- | Test a predicate to pass on any value
-any :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-any p a = runFn2 someImpl a (mkFn2 p)
+any :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Boolean
+any = some <<< ap1
+
+anyWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Boolean
+anyWithIndex = some <<< flip
+
+some :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
+some p a = runFn2 someImpl a (mkFn2 p)
 
 -- | Returns a new typed array with all values that pass the predicate
-filter :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> ArrayView a
-filter p a = runFn2 filterImpl a (mkFn2 p)
+filter :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> ArrayView a
+filter = filterWithIndex' <<< ap1
+
+filterWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> ArrayView a
+filterWithIndex = filterWithIndex' <<< flip
+
+filterWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> ArrayView a
+filterWithIndex' p a = runFn2 filterImpl a (mkFn2 p)
 
 -- | Tests if a value is an element of the typed array
 elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Boolean
@@ -240,8 +289,14 @@ foldr1M :: forall a t. TypedArray a t => (t -> t -> Offset -> Effect t) -> Array
 foldr1M f a = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
 
 -- | Returns the first value satisfying the predicate
-find :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe t
-find f a = toMaybe (runFn2 findImpl a (mkFn2 f))
+find :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Maybe t
+find = findWithIndex' <<< ap1
+
+findWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Maybe t
+findWithIndex = findWithIndex' <<< flip
+
+findWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe t
+findWithIndex' f a = toMaybe (runFn2 findImpl a (mkFn2 f))
 
 -- | Returns the first index of the value satisfying the predicate
 findIndex :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe Offset
@@ -255,18 +310,35 @@ indexOf x mo a = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
 lastIndexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Maybe Offset
 lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
 
-foldl :: forall a b t. TypedArray a t => (b -> t -> Offset -> b) -> b -> ArrayView a -> b
-foldl f i a = unsafePerformEffect (foldlM (\acc x o -> pure (f acc x o)) i a)
+foldl :: forall a b t. TypedArray a t => (b -> t -> b) -> b -> ArrayView a -> b
+foldl f = foldlWithIndex' (\a x _ -> f a x)
 
-foldr :: forall a b t. TypedArray a t => (t -> b -> Offset -> b) -> b -> ArrayView a -> b
-foldr f i a = unsafePerformEffect (foldrM (\x acc o -> pure (f x acc o)) i a)
+foldlWithIndex :: forall a b t. TypedArray a t => (Offset -> b -> t -> b) -> b -> ArrayView a -> b
+foldlWithIndex f = foldlWithIndex' (\a x o -> f o a x)
 
-foldl1 :: forall a t. TypedArray a t => (t -> t -> Offset -> t) -> ArrayView a -> t
-foldl1 f a = unsafePerformEffect (foldl1M (\acc x o -> pure (f acc x o)) a)
+foldlWithIndex' :: forall a b t. TypedArray a t => (b -> t -> Offset -> b) -> b -> ArrayView a -> b
+foldlWithIndex' f i = unsafePerformEffect <<< foldlM (\a x o -> pure (f a x o)) i
 
-foldr1 :: forall a t. TypedArray a t => (t -> t -> Offset -> t) -> ArrayView a -> t
-foldr1 f a = unsafePerformEffect (foldr1M (\x acc o -> pure (f x acc o)) a)
+foldr :: forall a b t. TypedArray a t => (t -> b -> b) -> b -> ArrayView a -> b
+foldr f = foldrWithIndex' (\a x _ -> f a x)
 
+foldrWithIndex :: forall a b t. TypedArray a t => (Offset -> t -> b -> b) -> b -> ArrayView a -> b
+foldrWithIndex f = foldrWithIndex' (\a x o -> f o a x)
+
+foldrWithIndex' :: forall a b t. TypedArray a t => (t -> b -> Offset -> b) -> b -> ArrayView a -> b
+foldrWithIndex' f i = unsafePerformEffect <<< foldrM (\x a o -> pure (f x a o)) i
+
+foldl1 :: forall a t. TypedArray a t => (t -> t -> t) -> ArrayView a -> t
+foldl1 f = foldl1WithIndex (\_ a x -> f a x)
+
+foldl1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> t
+foldl1WithIndex f = unsafePerformEffect <<< foldl1M (\acc x o -> pure (f o acc x))
+
+foldr1 :: forall a t. TypedArray a t => (t -> t -> t) -> ArrayView a -> t
+foldr1 f = foldr1WithIndex (\_ a x -> f a x)
+
+foldr1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> t
+foldr1WithIndex f = unsafePerformEffect <<< foldr1M (\x a o -> pure (f o x a))
 
 foreign import copyWithinImpl :: forall a. EffectFn4 (ArrayView a) Offset Offset (Nullable Offset) Unit
 

@@ -187,7 +187,7 @@ allAreFilledTests count = overAll count allAreFilled
             Nothing -> zero
             Just y -> y
       TA.fill xs x Nothing
-      let b = TA.all (\y o -> y == x) xs
+      let b = TA.all (\y -> y == x) xs
       pure (b <?> "All aren't the filled value")
 
 
@@ -209,7 +209,7 @@ allImpliesAnyTests count = overAll count allImpliesAny
   where
     allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
     allImpliesAny (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           all' = TA.all pred xs <?> "All don't satisfy the predicate"
           any' = TA.any pred xs <?> "None satisfy the predicate"
       in (TA.length xs === zero) |=| all' ==> any'
@@ -221,7 +221,7 @@ filterImpliesAllTests count = overAll count filterImpliesAll
   where
     filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
     filterImpliesAll (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           ys = TA.filter pred xs
           all' = TA.all pred ys
       in  all' <?> "Filter doesn't imply all"
@@ -233,9 +233,9 @@ filterIsTotalTests count = overAll count filterIsTotal
   where
     filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
     filterIsTotal (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           ys = TA.filter pred xs
-          zs = TA.filter (\x o -> not pred x o) ys
+          zs = TA.filter (\x -> not pred x) ys
       in  TA.toArray zs === []
 
 
@@ -245,7 +245,7 @@ filterIsIdempotentTests count = overAll count filterIsIdempotent
   where
     filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     filterIsIdempotent (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           ys = TA.filter pred xs
           zs = TA.filter pred ys
       in  TA.toArray zs === TA.toArray ys
@@ -274,12 +274,12 @@ anyImpliesFindTests count = overAll count anyImpliesFind
   where
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
     anyImpliesFind (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           p = TA.any pred xs <?> "All don't satisfy the predicate"
           q =
             case TA.find pred xs of
               Nothing -> Failed "Doesn't have a value satisfying the predicate"
-              Just z -> if pred z 0
+              Just z -> if pred z
                         then Success
                         else Failed "Found value doesn't satisfy the predicate"
       in  p ==> q
@@ -330,7 +330,7 @@ foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
   where
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldrConsIsToArray (WithOffset _ xs) =
-      TA.foldr (\x acc _ -> Array.cons x acc) [] xs === TA.toArray xs
+      TA.foldr (\x acc -> Array.cons x acc) [] xs === TA.toArray xs
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -338,7 +338,7 @@ foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
   where
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldlSnocIsToArray (WithOffset _ xs) =
-      TA.foldl (\acc x _ -> Array.snoc acc x) [] xs === TA.toArray xs
+      TA.foldl (\acc x -> Array.snoc acc x) [] xs === TA.toArray xs
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
@@ -346,7 +346,7 @@ mapIdentityIsIdentityTests count = overAll count mapIdentityIsIdentity
   where
     mapIdentityIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     mapIdentityIsIdentity (WithOffset _ xs) =
-      TA.toArray (TA.map (\x _ -> x) xs) === TA.toArray xs
+      TA.toArray (TA.map identity xs) === TA.toArray xs
 
 
 traverseSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -356,7 +356,7 @@ traverseSnocIsToArrayTests count = overAll count traverseSnocIsToArray
     traverseSnocIsToArray (WithOffset _ xs) =
       let ys = unsafePerformEffect do
             ref <- Ref.new []
-            TA.traverse_ (\x _ -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
+            TA.traverse_ (\x -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
             Ref.read ref
       in  TA.toArray xs === ys
 
