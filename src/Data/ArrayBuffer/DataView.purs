@@ -32,13 +32,13 @@ foreign import remainderImpl :: EffectFn2 ArrayBuffer ByteOffset DataView
 
 -- | View mapping the rest of an `ArrayBuffer` after an index.
 remainder :: ArrayBuffer -> ByteOffset -> Effect DataView
-remainder = runEffectFn2 remainderImpl
+remainder a o = runEffectFn2 remainderImpl a o
 
 foreign import partImpl :: EffectFn3 ArrayBuffer ByteOffset ByteLength DataView
 
 -- | View mapping a region of the `ArrayBuffer`.
 part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect DataView
-part = runEffectFn3 partImpl
+part a o l = runEffectFn3 partImpl a o l
 
 -- | `ArrayBuffer` being mapped by the view.
 foreign import buffer :: DataView -> ArrayBuffer
@@ -74,14 +74,14 @@ getter :: forall t
           , littleEndian :: Boolean
           }
        -> DataView -> ByteOffset -> Effect (Maybe t)
-getter data' =
+getter data' d o =
   runEffectFn3 getterImpl
     { just: Just
     , nothing: Nothing
     , functionName: data'.functionName
     , littleEndian: data'.littleEndian
     , bytesPerValue: data'.bytesPerValue
-    }
+    } d o
 
 foreign import setterImpl :: forall t
                            . EffectFn4 { functionName :: String
@@ -94,7 +94,7 @@ setter :: forall t
           , bytesPerValue :: ByteLength
           , littleEndian :: Boolean
           } -> DataView -> t -> ByteOffset -> Effect Boolean
-setter = runEffectFn4 setterImpl
+setter d t o = runEffectFn4 setterImpl d t o
 
 
 instance dataViewInt8 :: (BytesPerValue Int8 b, Nat b) => DataView Int8 Int where
