@@ -17,9 +17,9 @@ propertiesTests = do
     c <- Ref.read count
     log $ "  - Verified " <> show c <> " properties, generating " <> show (c * 9 * 100) <> " test cases."
 
-  -- do
-  --   count <- Ref.new 0
-  --   log "  - DataView Tests:"
-  --   dataViewTests count
-  --   c <- Ref.read count
-  --   log $ "  - Verified " <> show c <> " properties, generating " <> show (c * 16 * 100) <> " test cases."
+  do
+    count <- Ref.new 0
+    log "  - DataView Tests:"
+    dataViewTests count
+    c <- Ref.read count
+    log $ "  - Verified " <> show c <> " properties, generating " <> show (c * 16 * 100) <> " test cases."
