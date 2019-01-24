@@ -270,7 +270,7 @@ elem x mo a = runFn3 includesImpl a x (toNullable mo)
 
 -- | Fetch element at index.
 unsafeAt :: forall a t. TypedArray a t => Partial => ArrayView a -> Offset -> t
-unsafeAt = runFn2 unsafeAtImpl
+unsafeAt a o = runFn2 unsafeAtImpl a o
 
 -- | Folding from the left
 foldlM :: forall a t b. TypedArray a t => (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
@@ -350,7 +350,7 @@ foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
 -- | Reverses a typed array in-place.
 reverse :: forall a. ArrayView a -> Effect Unit
-reverse = runEffectFn1 reverseImpl
+reverse a = runEffectFn1 reverseImpl a
 
 foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) Offset b Unit
 
@@ -380,7 +380,7 @@ foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
 -- | Sorts the values in-place
 sort :: forall a. ArrayView a -> Effect Unit
-sort = runEffectFn1 sortImpl
+sort a = runEffectFn1 sortImpl a
 
 
 foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
@@ -404,7 +404,7 @@ foreign import joinImpl :: forall a. Fn2 (ArrayView a) String String
 
 -- | Prints array to a delimiter-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join) for details.
 toString' :: forall a. ArrayView a -> String -> String
-toString' = runFn2 joinImpl
+toString' a s = runFn2 joinImpl a s
 
 
 foreign import unsafeAtImpl :: forall a b. Fn2 (ArrayView a) Offset b
@@ -413,7 +413,7 @@ foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
 
 -- | Determine if a certain index is valid.
 hasIndex :: forall a. ArrayView a -> Offset -> Boolean
-hasIndex = runFn2 hasIndexImpl
+hasIndex a o = runFn2 hasIndexImpl a o
 
 -- | Fetch element at index.
 at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
