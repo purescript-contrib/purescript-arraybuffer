@@ -1,6 +1,6 @@
 module Data.ArrayBuffer.DataView.Gen where
 
-import Prelude
+import Prelude ((<$>), bind, ($), (<=), (-), pure)
 
 import Control.Monad.Gen (suchThat)
 import Control.Monad.Gen.Class (class MonadGen, chooseInt)

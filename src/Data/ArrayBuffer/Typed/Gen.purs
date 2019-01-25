@@ -2,7 +2,7 @@
 
 module Data.ArrayBuffer.Typed.Gen where
 
-import Prelude
+import Prelude ((<$>), bind, (/), (-), negate, ($), bottom, pure, top)
 
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Data.ArrayBuffer.Typed (class TypedArray)
@@ -30,7 +30,7 @@ genTypedArray :: forall m a t
 genTypedArray gen = sized \s -> do
   n <- chooseInt 0 s
   a <- replicateA n gen
-  pure $ TA.fromArray a
+  pure (TA.fromArray a)
 
 genUint8 :: forall m. MonadGen m => m UInt
 genUint8 = UInt.fromInt <$> chooseInt 0 255
