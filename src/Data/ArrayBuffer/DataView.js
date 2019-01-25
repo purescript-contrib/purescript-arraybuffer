@@ -33,7 +33,7 @@ exports.getterImpl = function getterImpl (data, v, o) {
         : data.nothing;
 };
 
-exports.setterImpl = function setterImpl (data,v,n,o) {
+exports.setterImpl = function setterImpl (data, v, o, n) {
     if (((o + data.bytesPerValue) >>> 0) <= v.byteLength) {
         v[data.functionName].call(v,o,n,data.littleEndian);
         return true;

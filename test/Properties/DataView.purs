@@ -6,7 +6,7 @@ import Prelude
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue(..))
 import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genUint16, genUint32, genUint8)
-import Data.ArrayBuffer.Types (Uint32, Uint16, Uint8, Int32, Int16, Int8, Float32, Float64)
+import Data.ArrayBuffer.Types (Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, D1, D2, D4, D8)
@@ -24,9 +24,9 @@ import Test.QuickCheck (class Testable, quickCheckGen, Result, (===))
 dataViewTests :: Ref Int -> Effect Unit
 dataViewTests count = do
   log "    - setBE x o => getBE o === Just x"
-  placingAValueIsThereTestsBE count
+  placingAValueIsThereTests DV.BE count
   log "    - setLE x o => getLE o === Just x"
-  placingAValueIsThereTestsLE count
+  placingAValueIsThereTests DV.LE count
 
 
 type TestableViewF a b n t q =
@@ -93,25 +93,14 @@ overAll count f = do
     in  f' <$> genWithOffsetAndValue genDataView genFloat64
 
 
-placingAValueIsThereTestsBE :: Ref Int -> Effect Unit
-placingAValueIsThereTestsBE count = overAll count placingAValueIsThere
+placingAValueIsThereTests :: DV.Endian -> Ref Int -> Effect Unit
+placingAValueIsThereTests endian count = overAll count placingAValueIsThere
   where
     placingAValueIsThere :: forall a b t. TestableViewF a b D1 t Result
     placingAValueIsThere (WithOffsetAndValue os t xs) =
       let o = Vec.head os
+          prx = DV.AProxy :: DV.AProxy a
       in  unsafePerformEffect do
-        _ <- DV.setBE (DV.AProxy :: DV.AProxy a) xs t o
-        my <- DV.getBE (DV.AProxy :: DV.AProxy a) xs o
-        pure (my === Just t)
-
-
-placingAValueIsThereTestsLE :: Ref Int -> Effect Unit
-placingAValueIsThereTestsLE count = overAll count placingAValueIsThere
-  where
-    placingAValueIsThere :: forall a b t. TestableViewF a b D1 t Result
-    placingAValueIsThere (WithOffsetAndValue os t xs) =
-      let o = Vec.head os
-      in  unsafePerformEffect do
-        _ <- DV.setLE (DV.AProxy :: DV.AProxy a) xs t o
-        my <- DV.getLE (DV.AProxy :: DV.AProxy a) xs o
+        _ <- DV.set endian prx xs o t
+        my <- DV.get endian prx xs o
         pure (my === Just t)
