@@ -3,29 +3,34 @@ module Test.Properties.TypedArray where
 
 import Prelude
 
+import Control.Monad.Gen (suchThat)
+import Data.Array (drop, take)
 import Data.Array as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithOffset)
-import Data.ArrayBuffer.Types (ArrayView, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float32Array, Float64Array)
+import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array, Int32Array, Int8Array, Uint16Array, Uint8Array, Uint8ClampedArray, Uint32Array)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Data.Typelevel.Num (toInt', class Nat, D0, D1, D5)
+import Data.Typelevel.Num (class Nat, D0, D1, D5, toInt')
 import Data.Vec (head) as Vec
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
-import Test.QuickCheck (quickCheckGen, Result(..), (===), (/==), class Testable, (<?>))
-import Test.QuickCheck.Combinators ((==>))
+import Partial.Unsafe (unsafePartial)
+import Test.QuickCheck (class Testable, Result(..), quickCheckGen, (/==), (<?>), (===))
+import Test.QuickCheck.Combinators ((==>), (|=|))
 import Test.QuickCheck.Gen (Gen)
 import Type.Proxy (Proxy(..))
 
 
 typedArrayTests :: Ref Int -> Effect Unit
 typedArrayTests count = do
+  log "    - partBehavesLikeTakeDrop"
+  partBehavesLikeTakeDrop count
   log "    - byteLength x / bytesPerValue === length x"
   byteLengthDivBytesPerValueTests count
   log "    - fromArray (toArray x) === x"
@@ -117,37 +122,45 @@ type TestableArrayF a b n t q =
   -> q
 
 
-overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
-overAll count f = do
+overAll' :: forall q n. Testable q => Nat n => Int -> Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll' mn count f = do
   void (Ref.modify (\x -> x + 1) count)
 
-  log "      - Uint8ClampedArray"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint8 :: Gen Uint8ClampedArray))
+  let chk :: forall a b t. Show t => Eq t => Ord t => Semiring t => Nat b => BytesPerValue a b => TypedArray a t => String -> Proxy (ArrayView a) -> Gen t -> Effect Unit
+      chk s _ gen = do
+        log $ "      - " <> s
+        quickCheckGen $ f <$> genWithOffset arr
+        where arr :: Gen (ArrayView a)
+              arr = genTypedArray gen `suchThat` \xs -> mn <= TA.length xs
 
-  log "      - Uint32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint32 :: Gen Uint32Array))
+  chk "Uint8ClampedArray" (Proxy :: Proxy Uint8ClampedArray) genUint8
+  chk "Uint32Array" (Proxy :: Proxy Uint32Array) genUint32
+  chk "Uint16Array" (Proxy :: Proxy Uint16Array) genUint16
+  chk "Uint8Array" (Proxy :: Proxy Uint8Array) genUint8
+  chk "Int32Array" (Proxy :: Proxy Int32Array) genInt32
+  chk "Int16Array" (Proxy :: Proxy Int16Array) genInt16
+  chk "Int8Array" (Proxy :: Proxy Int8Array) genInt8
+  chk "Float32Array" (Proxy :: Proxy Float32Array) genFloat32
+  chk "Float64Array" (Proxy :: Proxy Float64Array) genFloat64
 
-  log "      - Uint16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint16 :: Gen Uint16Array))
 
-  log "      - Uint8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genUint8 :: Gen Uint8Array))
+overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll count f = overAll' 0 count f
 
-  log "      - Int32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt32 :: Gen Int32Array))
+overAll1 :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
+overAll1 count f = overAll' 1 count f
 
-  log "      - Int16Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt16 :: Gen Int16Array))
-
-  log "      - Int8Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genInt8 :: Gen Int8Array))
-
-  log "      - Float32Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat32 :: Gen Float32Array))
-
-  log "      - Float64Array"
-  quickCheckGen (f <$> genWithOffset (genTypedArray 10 Nothing genFloat64 :: Gen Float64Array))
-
+partBehavesLikeTakeDrop :: Ref Int -> Effect Unit
+partBehavesLikeTakeDrop count = overAll count f
+  where
+    f :: forall a b t. TestableArrayF a b D0 t Result
+    f (WithOffset _ a) =
+      let n = 2
+          na = TA.toArray a
+          ba = TA.buffer a
+          pa :: ArrayView a
+          pa = TA.part ba n n
+      in  take n (drop n na) === TA.toArray pa
 
 byteLengthDivBytesPerValueTests :: Ref Int -> Effect Unit
 byteLengthDivBytesPerValueTests count = overAll count byteLengthDivBytesPerValueEqLength
@@ -174,7 +187,7 @@ allAreFilledTests count = overAll count allAreFilled
             Nothing -> zero
             Just y -> y
       TA.fill xs x Nothing
-      let b = TA.all (\y o -> y == x) xs
+      let b = TA.all (\y -> y == x) xs
       pure (b <?> "All aren't the filled value")
 
 
@@ -183,11 +196,11 @@ setSingletonIsEqTests count = overAll count setSingletonIsEq
   where
     setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
     setSingletonIsEq (WithOffset os xs) = unsafePerformEffect do
-      let x = case TA.at xs 0 of
-            Nothing -> zero
-            Just y -> y
-      TA.set xs (Just (Vec.head os)) [x]
-      pure (TA.at xs (Vec.head os) === Just x)
+      case TA.at xs 0 of
+            Nothing -> pure Success
+            Just x -> do
+              _ <- TA.set xs (Just (Vec.head os)) [x]
+              pure (TA.at xs (Vec.head os) === Just x)
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -196,10 +209,10 @@ allImpliesAnyTests count = overAll count allImpliesAny
   where
     allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
     allImpliesAny (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           all' = TA.all pred xs <?> "All don't satisfy the predicate"
           any' = TA.any pred xs <?> "None satisfy the predicate"
-      in  all' ==> any'
+      in (TA.length xs === zero) |=| all' ==> any'
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -208,7 +221,7 @@ filterImpliesAllTests count = overAll count filterImpliesAll
   where
     filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
     filterImpliesAll (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           ys = TA.filter pred xs
           all' = TA.all pred ys
       in  all' <?> "Filter doesn't imply all"
@@ -220,9 +233,9 @@ filterIsTotalTests count = overAll count filterIsTotal
   where
     filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
     filterIsTotal (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           ys = TA.filter pred xs
-          zs = TA.filter (\x o -> not pred x o) ys
+          zs = TA.filter (\x -> not pred x) ys
       in  TA.toArray zs === []
 
 
@@ -232,14 +245,14 @@ filterIsIdempotentTests count = overAll count filterIsIdempotent
   where
     filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     filterIsIdempotent (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           ys = TA.filter pred xs
           zs = TA.filter pred ys
       in  TA.toArray zs === TA.toArray ys
 
 
 withOffsetHasIndexTests :: Ref Int -> Effect Unit
-withOffsetHasIndexTests count = overAll count withOffsetHasIndex
+withOffsetHasIndexTests count = overAll1 count withOffsetHasIndex
   where
     withOffsetHasIndex :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetHasIndex (WithOffset os xs) =
@@ -247,11 +260,11 @@ withOffsetHasIndexTests count = overAll count withOffsetHasIndex
 
 
 withOffsetElemTests :: Ref Int -> Effect Unit
-withOffsetElemTests count = overAll count withOffsetElem
+withOffsetElemTests count = overAll1 count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) =
-      Array.all (\o -> TA.elem (unsafePerformEffect (TA.unsafeAt o xs)) Nothing xs) os
+      Array.all (\o -> TA.elem (unsafePartial (TA.unsafeAt xs o)) Nothing xs) os
         <?> "All doesn't have an elem of itself"
 
 
@@ -261,12 +274,12 @@ anyImpliesFindTests count = overAll count anyImpliesFind
   where
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
     anyImpliesFind (WithOffset _ xs) =
-      let pred x o = x /= zero
+      let pred x = x /= zero
           p = TA.any pred xs <?> "All don't satisfy the predicate"
           q =
             case TA.find pred xs of
               Nothing -> Failed "Doesn't have a value satisfying the predicate"
-              Just z -> if pred z 0
+              Just z -> if pred z
                         then Success
                         else Failed "Found value doesn't satisfy the predicate"
       in  p ==> q
@@ -317,7 +330,7 @@ foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
   where
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldrConsIsToArray (WithOffset _ xs) =
-      TA.foldr (\x acc _ -> Array.cons x acc) [] xs === TA.toArray xs
+      TA.foldr (\x acc -> Array.cons x acc) [] xs === TA.toArray xs
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -325,7 +338,7 @@ foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
   where
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldlSnocIsToArray (WithOffset _ xs) =
-      TA.foldl (\acc x _ -> Array.snoc acc x) [] xs === TA.toArray xs
+      TA.foldl (\acc x -> Array.snoc acc x) [] xs === TA.toArray xs
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
@@ -333,7 +346,7 @@ mapIdentityIsIdentityTests count = overAll count mapIdentityIsIdentity
   where
     mapIdentityIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     mapIdentityIsIdentity (WithOffset _ xs) =
-      TA.toArray (TA.map (\x _ -> x) xs) === TA.toArray xs
+      TA.toArray (TA.map identity xs) === TA.toArray xs
 
 
 traverseSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -343,7 +356,7 @@ traverseSnocIsToArrayTests count = overAll count traverseSnocIsToArray
     traverseSnocIsToArray (WithOffset _ xs) =
       let ys = unsafePerformEffect do
             ref <- Ref.new []
-            TA.traverse_ (\x _ -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
+            TA.traverse_ (\x -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
             Ref.read ref
       in  TA.toArray xs === ys
 
@@ -412,7 +425,7 @@ setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIden
       let ys = TA.toArray xs
           zsSub = TA.subArray xs Nothing
           zs = unsafePerformEffect do
-            TA.setTyped xs Nothing zsSub
+            _ <- TA.setTyped xs Nothing zsSub
             pure (TA.toArray xs)
       in  zs === ys
 
@@ -626,6 +639,6 @@ copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
           xs' = TA.fromArray (TA.toArray xs) :: ArrayView a
           _ = unsafePerformEffect do
             let ys = TA.slice xs' (Just (Tuple o Nothing))
-            TA.setTyped xs' Nothing ys
+            _ <- TA.setTyped xs' Nothing ys
             TA.copyWithin xs 0 o Nothing
       in  TA.toArray xs === TA.toArray xs'

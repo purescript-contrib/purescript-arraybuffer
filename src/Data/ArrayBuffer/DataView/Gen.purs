@@ -1,9 +1,13 @@
 module Data.ArrayBuffer.DataView.Gen where
 
+import Prelude
+
+import Control.Monad.Gen (suchThat)
 import Control.Monad.Gen.Class (class MonadGen, chooseInt)
+import Control.Monad.Rec.Class (class MonadRec)
 import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
 import Data.ArrayBuffer.DataView (whole, byteLength, class DataView)
-import Data.ArrayBuffer.Types (DataView, ByteLength, ByteOffset, kind ArrayViewType)
+import Data.ArrayBuffer.Types (DataView, ByteOffset, kind ArrayViewType)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(Just))
 import Data.Typelevel.Num (class Nat, toInt')
@@ -11,16 +15,13 @@ import Data.Unfoldable (replicateA)
 import Data.Vec (Vec)
 import Data.Vec (fromArray) as Vec
 import Partial.Unsafe (unsafePartial)
-import Prelude ((<$>), bind, pure, (-), ($))
 import Type.Proxy (Proxy(..))
 
 
 genDataView :: forall m
              . MonadGen m
-            => ByteLength -- ^ Min length
-            -> Maybe ByteLength -- ^ Max length
-            -> m DataView
-genDataView a b = whole <$> genArrayBuffer a b
+            => m DataView
+genDataView = whole <$> genArrayBuffer
 
 
 
@@ -30,6 +31,7 @@ data WithOffsetAndValue n (a :: ArrayViewType) t =
 
 genWithOffsetAndValue :: forall m n a b t
                       . MonadGen m
+                      => MonadRec m
                       => Nat n
                       => BytesPerValue a b
                       => DataView a t
@@ -40,7 +42,7 @@ genWithOffsetAndValue :: forall m n a b t
 genWithOffsetAndValue gen genT = do
   let n = toInt' (Proxy :: Proxy n)
       b = toInt' (Proxy :: Proxy b)
-  xs <- gen
+  xs <- gen `suchThat` \xs -> b <= byteLength xs
   let l = byteLength xs
   mos <- replicateA n (chooseInt 0 (l - b))
   let os = unsafePartial $ case Vec.fromArray mos of

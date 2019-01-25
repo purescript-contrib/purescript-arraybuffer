@@ -27,7 +27,6 @@
     "purescript-debug": "^4.0.0",
     "purescript-quickcheck": "^5.0.0",
     "purescript-partial": "^2.0.0",
-    "purescript-unicode": "^4.0.1",
     "purescript-quickcheck-combinators": "^0.1.0"
   }
 }

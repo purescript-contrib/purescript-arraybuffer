@@ -39,12 +39,17 @@ exports.lengthImpl = function lemgthImpl (v) {
 
 
 function newArray (f) {
-    return function newArray_ (a,mb,mc) {
-        return mc === null ? ( mb === null ? new f(a)
-                                           : new f(a,mb)
-                             )
-                           : new f(a,mb,mc);
-    };
+  return function newArray_ (a,mb,mc) {
+    if (mb === null)
+      return new f(a);
+    var l = a.byteLength;
+    var eb = f.BYTES_PER_ELEMENT;
+    var off = Math.min(l, mb>>>0);
+    if (mc === null)
+      return new f(a,off);
+    var len = Math.min((l - off) / eb, mc);
+    return new f(a,off,len);
+  };
 }
 
 exports.newUint8ClampedArray = newArray(Uint8ClampedArray);
@@ -136,11 +141,7 @@ exports.reverseImpl = function reverseImpl (a) {
 
 
 exports.setImpl = function setImpl (a, off, b) {
-    if (off === null) {
-        a.set(b);
-    } else {
-        a.set(b,off);
-    }
+  a.set(b,off);
 };
 
 
