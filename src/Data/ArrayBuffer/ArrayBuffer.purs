@@ -12,10 +12,16 @@ import Data.Function.Uncurried (Fn3, runFn3)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, notNull, null)
 import Data.Tuple (Tuple(..))
+import Effect (Effect)
+import Effect.Uncurried (EffectFn1, runEffectFn1)
+
+
+foreign import emptyImpl :: EffectFn1 ByteLength ArrayBuffer
 
 
 -- | Create an `ArrayBuffer` with the given capacity.
-foreign import empty :: ByteLength -> ArrayBuffer
+empty :: ByteLength -> Effect ArrayBuffer
+empty l = runEffectFn1 emptyImpl l
 
 -- | Represents the length of an `ArrayBuffer` in bytes.
 foreign import byteLength :: ArrayBuffer -> ByteLength

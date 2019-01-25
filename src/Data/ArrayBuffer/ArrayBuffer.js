@@ -2,7 +2,7 @@
 
 // module Data.ArrayBuffer.ArrayBuffer
 
-exports.empty = function empty (s) {
+exports.emptyImpl = function empty (s) {
     return new ArrayBuffer(s);
 };
 
