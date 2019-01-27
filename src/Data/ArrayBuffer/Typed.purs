@@ -367,13 +367,13 @@ setTyped = setInternal length
 
 
 -- | Copy the entire contents of the typed array into a new buffer.
-foreign import sliceImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
+foreign import sliceImpl :: forall a. EffectFn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
 
 -- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
-slice :: forall a. ArrayView a -> Range -> ArrayView a
+slice :: forall a. ArrayView a -> Range -> Effect (ArrayView a)
 slice a mz = case mz of
-  Nothing -> runFn3 sliceImpl a null null
-  Just (Tuple s me) -> runFn3 sliceImpl a (notNull s) (toNullable me)
+  Nothing -> runEffectFn3 sliceImpl a null null
+  Just (Tuple s me) -> runEffectFn3 sliceImpl a (notNull s) (toNullable me)
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
