@@ -2,23 +2,23 @@
 
 module Data.ArrayBuffer.Typed.Gen where
 
-import Prelude ((<$>), bind, (/), (-), negate, ($), bottom, pure, top)
-
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
+import Data.Float32 (Float32, fromNumber) as F
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Data.UInt (fromInt) as UInt
-import Data.Float32 (Float32, fromNumber) as F
 import Data.UInt.Gen (genUInt) as UInt
 import Data.Unfoldable (replicateA)
 import Data.Vec (Vec)
 import Data.Vec (fromArray) as Vec
+import Effect.Unsafe (unsafePerformEffect)
 import Partial.Unsafe (unsafePartial)
+import Prelude ((<$>), bind, (/), (-), negate, ($), bottom, pure, top)
 import Type.Proxy (Proxy(..))
 
 
@@ -30,7 +30,7 @@ genTypedArray :: forall m a t
 genTypedArray gen = sized \s -> do
   n <- chooseInt 0 s
   a <- replicateA n gen
-  pure (TA.fromArray a)
+  pure (unsafePerformEffect $ TA.fromArray a)
 
 genUint8 :: forall m. MonadGen m => m UInt
 genUint8 = UInt.fromInt <$> chooseInt 0 255

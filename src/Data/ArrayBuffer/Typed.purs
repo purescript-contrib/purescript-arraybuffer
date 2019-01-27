@@ -21,22 +21,21 @@ module Data.ArrayBuffer.Typed
   , toString, toString', toArray
   ) where
 
-import Prelude (Unit, (>=), (&&), (<<<), (<=), pure, (-), flip, (*), (*>))
-
 import Data.Array (length) as A
 import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
+import Data.Float32 (Float32) as F
 import Data.Function.Uncurried (Fn2, Fn3, mkFn2, runFn2, runFn3)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
 import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
-import Data.Float32 (Float32) as F
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Effect.Unsafe (unsafePerformEffect)
 import Partial.Unsafe (unsafePartial)
+import Prelude (Unit, (>=), (&&), (<<<), (<=), pure, (-), flip, (*), (*>))
 import Type.Proxy (Proxy(..))
 
 
@@ -60,15 +59,15 @@ length = lengthImpl
 
 -- object creator implementations for each typed array
 
-foreign import newUint8ClampedArray :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8ClampedArray
-foreign import newUint32Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint32Array
-foreign import newUint16Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint16Array
-foreign import newUint8Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8Array
-foreign import newInt32Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Int32Array
-foreign import newInt16Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Int16Array
-foreign import newInt8Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Int8Array
-foreign import newFloat32Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Float32Array
-foreign import newFloat64Array :: forall a. Fn3 a (Nullable ByteOffset) (Nullable ByteLength) Float64Array
+foreign import newUint8ClampedArray :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8ClampedArray
+foreign import newUint32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint32Array
+foreign import newUint16Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint16Array
+foreign import newUint8Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Uint8Array
+foreign import newInt32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int32Array
+foreign import newInt16Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int16Array
+foreign import newInt8Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Int8Array
+foreign import newFloat32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Float32Array
+foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Float64Array
 
 
 -- ----
@@ -135,7 +134,7 @@ type Range = Maybe (Tuple Offset (Maybe Offset))
 -- | - `toString` prints to a CSV, `toString'` allows you to supply the delimiter
 -- | - `toArray` returns an array of numeric values
 class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
-  create :: forall x. Fn3 x (Nullable ByteOffset) (Nullable ByteLength) (ArrayView a)
+  create :: forall x. EffectFn3 x (Nullable ByteOffset) (Nullable ByteLength) (ArrayView a)
 
 instance typedArrayUint8Clamped :: TypedArray Uint8Clamped UInt where
   create = newUint8ClampedArray
@@ -157,32 +156,32 @@ instance typedArrayFloat64 :: TypedArray Float64 Number where
   create = newFloat64Array
 
 -- | View mapping the whole `ArrayBuffer`.
-whole :: forall a t. TypedArray a t => ArrayBuffer -> ArrayView a
-whole a = runFn3 create a null null
+whole :: forall a t. TypedArray a t => ArrayBuffer -> Effect (ArrayView a)
+whole a = runEffectFn3 create a null null
 
 -- | View mapping the rest of an `ArrayBuffer` after an index.
-remainder :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffer -> Offset -> ArrayView a
+remainder :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffer -> Offset -> Effect (ArrayView a)
 remainder a x = remainder' a o
   where o = x * toInt' (Proxy :: Proxy b)
 
-remainder' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> ArrayView a
-remainder' a x = runFn3 create a (notNull x) null
+remainder' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
+remainder' a x = runEffectFn3 create a (notNull x) null
 
 -- | View mapping a region of the `ArrayBuffer`.
-part :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffer -> Offset -> Length -> ArrayView a
+part :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffer -> Offset -> Length -> Effect (ArrayView a)
 part a x y = part' a o y
   where o = x * toInt' (Proxy :: Proxy b)
 
-part' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> ArrayView a
-part' a x y = runFn3 create a (notNull x) (notNull y)
+part' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
+part' a x y = runEffectFn3 create a (notNull x) (notNull y)
 
 -- | Creates an empty typed array, where each value is assigned 0
-empty :: forall a t. TypedArray a t => Length -> ArrayView a
-empty n = runFn3 create n null null
+empty :: forall a t. TypedArray a t => Length -> Effect (ArrayView a)
+empty n = runEffectFn3 create n null null
 
 -- | Creates a typed array from an input array of values, to be binary serialized
-fromArray :: forall a t. TypedArray a t => Array t -> ArrayView a
-fromArray a = runFn3 create a null null
+fromArray :: forall a t. TypedArray a t => Array t -> Effect (ArrayView a)
+fromArray a = runEffectFn3 create a null null
 
 -- | Fill the array with a value
 fill :: forall a t. TypedArray a t => ArrayView a -> t -> Range -> Effect Unit
@@ -424,8 +423,8 @@ at a n = if a `hasIndex` n
 infixl 3 at as !
 
 
-foreign import toArrayImpl :: forall a b. ArrayView a -> Array b
+foreign import toArrayImpl :: forall a b. EffectFn1 (ArrayView a) (Array b)
 
 -- | Turn typed array into an array.
-toArray :: forall a t. TypedArray a t => ArrayView a -> Array t
-toArray = toArrayImpl
+toArray :: forall a t. TypedArray a t => ArrayView a -> Effect (Array t)
+toArray a = runEffectFn1 toArrayImpl a

@@ -4,7 +4,6 @@ module Test.Properties.TypedArray where
 import Prelude
 
 import Control.Monad.Gen (suchThat)
-import Data.Array (drop, take)
 import Data.Array as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
@@ -92,9 +91,7 @@ typedArrayTests count = do
   log "    - let z' = subArray 0 (length x) x; q = toArray x; mutate z'; pure q /= toArray x"
   modifyingSubArrayMutatesOriginalAllTests count
   log "    - let z' = subArray o x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSubArrayPartTests count
-  log "    - let z' = subArray 0 o x; q = toArray z'; mutate x; pure q == toArray z'"
-  modifyingOriginalDoesntMutateSubArrayPart2Tests count
+  modifyingOriginalMutatesSubArrayPartTests count
   log "    - let z' = slice x; q = toArray z'; mutate x; pure q == toArray z'"
   modifyingOriginalDoesntMutateSliceTests count
   log "    - let z' = slice o x; q = toArray z'; mutate x; pure q == toArray z'"
@@ -119,7 +116,7 @@ type TestableArrayF a b n t q =
   => BytesPerValue a b
   => Nat b
   => WithOffset n a
-  -> q
+  -> Effect q
 
 
 overAll' :: forall q n. Testable q => Nat n => Int -> Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
@@ -129,7 +126,7 @@ overAll' mn count f = do
   let chk :: forall a b t. Show t => Eq t => Ord t => Semiring t => Nat b => BytesPerValue a b => TypedArray a t => String -> Proxy (ArrayView a) -> Gen t -> Effect Unit
       chk s _ gen = do
         log $ "      - " <> s
-        quickCheckGen $ f <$> genWithOffset arr
+        quickCheckGen $ unsafePerformEffect <<< f <$> genWithOffset arr
         where arr :: Gen (ArrayView a)
               arr = genTypedArray gen `suchThat` \xs -> mn <= TA.length xs
 
@@ -154,13 +151,12 @@ partBehavesLikeTakeDrop :: Ref Int -> Effect Unit
 partBehavesLikeTakeDrop count = overAll count f
   where
     f :: forall a b t. TestableArrayF a b D0 t Result
-    f (WithOffset _ a) =
+    f (WithOffset _ xs) = do
       let n = 2
-          na = TA.toArray a
-          ba = TA.buffer a
-          pa :: ArrayView a
-          pa = TA.part ba n n
-      in  take n (drop n na) === TA.toArray pa
+      axs <- TA.toArray xs
+      pxs <- TA.part (TA.buffer xs) n n :: Effect (ArrayView a)
+      aps <- TA.toArray pxs
+      pure $ Array.take n (Array.drop n axs) === aps
 
 byteLengthDivBytesPerValueTests :: Ref Int -> Effect Unit
 byteLengthDivBytesPerValueTests count = overAll count byteLengthDivBytesPerValueEqLength
@@ -168,21 +164,24 @@ byteLengthDivBytesPerValueTests count = overAll count byteLengthDivBytesPerValue
     byteLengthDivBytesPerValueEqLength :: forall a b t. TestableArrayF a b D0 t Result
     byteLengthDivBytesPerValueEqLength (WithOffset _ a) =
       let b = toInt' (Proxy :: Proxy b)
-      in  TA.length a === (TA.byteLength a `div` b)
+      in  pure $ TA.length a === (TA.byteLength a `div` b)
 
 fromArrayToArrayIsoTests :: Ref Int -> Effect Unit
 fromArrayToArrayIsoTests count = overAll count fromArrayToArrayIso
   where
     fromArrayToArrayIso :: forall a b t. TestableArrayF a b D0 t Result
-    fromArrayToArrayIso (WithOffset _ x) =
-      TA.toArray (TA.fromArray (TA.toArray x) :: ArrayView a) === TA.toArray x
+    fromArrayToArrayIso (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      xs' <- TA.fromArray axs :: Effect (ArrayView a)
+      axs' <- TA.toArray xs'
+      pure $ axs' === axs
 
 
 allAreFilledTests :: Ref Int -> Effect Unit
 allAreFilledTests count = overAll count allAreFilled
   where
     allAreFilled :: forall a b t. TestableArrayF a b D0 t Result
-    allAreFilled (WithOffset _ xs) = unsafePerformEffect do
+    allAreFilled (WithOffset _ xs) = do
       let x = case TA.at xs 0 of
             Nothing -> zero
             Just y -> y
@@ -195,7 +194,7 @@ setSingletonIsEqTests :: Ref Int -> Effect Unit
 setSingletonIsEqTests count = overAll count setSingletonIsEq
   where
     setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
-    setSingletonIsEq (WithOffset os xs) = unsafePerformEffect do
+    setSingletonIsEq (WithOffset os xs) = do
       case TA.at xs 0 of
             Nothing -> pure Success
             Just x -> do
@@ -212,7 +211,7 @@ allImpliesAnyTests count = overAll count allImpliesAny
       let pred x = x /= zero
           all' = TA.all pred xs <?> "All don't satisfy the predicate"
           any' = TA.any pred xs <?> "None satisfy the predicate"
-      in (TA.length xs === zero) |=| all' ==> any'
+      in pure $ (TA.length xs === zero) |=| all' ==> any'
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -224,7 +223,7 @@ filterImpliesAllTests count = overAll count filterImpliesAll
       let pred x = x /= zero
           ys = TA.filter pred xs
           all' = TA.all pred ys
-      in  all' <?> "Filter doesn't imply all"
+      in pure $ all' <?> "Filter doesn't imply all"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -232,11 +231,12 @@ filterIsTotalTests :: Ref Int -> Effect Unit
 filterIsTotalTests count = overAll count filterIsTotal
   where
     filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
-    filterIsTotal (WithOffset _ xs) =
+    filterIsTotal (WithOffset _ xs) = do
       let pred x = x /= zero
           ys = TA.filter pred xs
           zs = TA.filter (\x -> not pred x) ys
-      in  TA.toArray zs === []
+      azs <- TA.toArray zs
+      pure $ azs === []
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -244,26 +244,28 @@ filterIsIdempotentTests :: Ref Int -> Effect Unit
 filterIsIdempotentTests count = overAll count filterIsIdempotent
   where
     filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
-    filterIsIdempotent (WithOffset _ xs) =
+    filterIsIdempotent (WithOffset _ xs) = do
       let pred x = x /= zero
           ys = TA.filter pred xs
           zs = TA.filter pred ys
-      in  TA.toArray zs === TA.toArray ys
+      azs <- TA.toArray zs
+      ays <- TA.toArray ys
+      pure $ azs === ays
 
 
 withOffsetHasIndexTests :: Ref Int -> Effect Unit
 withOffsetHasIndexTests count = overAll1 count withOffsetHasIndex
   where
     withOffsetHasIndex :: forall a b t. TestableArrayF a b D5 t Result
-    withOffsetHasIndex (WithOffset os xs) =
-      Array.all (\o -> TA.hasIndex xs o) os <?> "All doesn't have index of itself"
+    withOffsetHasIndex (WithOffset os xs) = pure $
+      Array.all (TA.hasIndex xs) os <?> "All doesn't have index of itself"
 
 
 withOffsetElemTests :: Ref Int -> Effect Unit
 withOffsetElemTests count = overAll1 count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
-    withOffsetElem (WithOffset os xs) =
+    withOffsetElem (WithOffset os xs) = pure $
       Array.all (\o -> TA.elem (unsafePartial (TA.unsafeAt xs o)) Nothing xs) os
         <?> "All doesn't have an elem of itself"
 
@@ -282,7 +284,7 @@ anyImpliesFindTests count = overAll count anyImpliesFind
               Just z -> if pred z
                         then Success
                         else Failed "Found value doesn't satisfy the predicate"
-      in  p ==> q
+      in  pure $ p ==> q
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -293,7 +295,7 @@ findIndexImpliesAtTests count = overAll count findIndexImpliesAt
     findIndexImpliesAt (WithOffset _ xs) =
       let pred x o = x /= zero
           mo = TA.findIndex pred xs
-      in  case mo of
+      in pure case mo of
             Nothing -> Success
             Just o -> case TA.at xs o of
               Nothing -> Failed "No value at found index"
@@ -305,7 +307,7 @@ indexOfImpliesAtTests :: Ref Int -> Effect Unit
 indexOfImpliesAtTests count = overAll count indexOfImpliesAt
   where
     indexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
-    indexOfImpliesAt (WithOffset _ xs) =
+    indexOfImpliesAt (WithOffset _ xs) = pure
       case TA.at xs 0 of
         Nothing -> Success
         Just y -> case TA.indexOf y Nothing xs of
@@ -317,7 +319,7 @@ lastIndexOfImpliesAtTests :: Ref Int -> Effect Unit
 lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
   where
     lastIndexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
-    lastIndexOfImpliesAt (WithOffset _ xs) =
+    lastIndexOfImpliesAt (WithOffset _ xs) = pure
       case TA.at xs 0 of
         Nothing -> Success
         Just y -> case TA.lastIndexOf y Nothing xs of
@@ -329,84 +331,87 @@ foldrConsIsToArrayTests :: Ref Int -> Effect Unit
 foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
   where
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
-    foldrConsIsToArray (WithOffset _ xs) =
-      TA.foldr (\x acc -> Array.cons x acc) [] xs === TA.toArray xs
+    foldrConsIsToArray (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      pure $ TA.foldr (\x acc -> Array.cons x acc) [] xs === axs
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
 foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
   where
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
-    foldlSnocIsToArray (WithOffset _ xs) =
-      TA.foldl (\acc x -> Array.snoc acc x) [] xs === TA.toArray xs
+    foldlSnocIsToArray (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      pure $ TA.foldl (\acc x -> Array.snoc acc x) [] xs === axs
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
 mapIdentityIsIdentityTests count = overAll count mapIdentityIsIdentity
   where
     mapIdentityIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
-    mapIdentityIsIdentity (WithOffset _ xs) =
-      TA.toArray (TA.map identity xs) === TA.toArray xs
+    mapIdentityIsIdentity (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      mxs <- TA.toArray (TA.map identity xs)
+      pure $ axs === mxs
 
 
 traverseSnocIsToArrayTests :: Ref Int -> Effect Unit
 traverseSnocIsToArrayTests count = overAll count traverseSnocIsToArray
   where
     traverseSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
-    traverseSnocIsToArray (WithOffset _ xs) =
-      let ys = unsafePerformEffect do
-            ref <- Ref.new []
-            TA.traverse_ (\x -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
-            Ref.read ref
-      in  TA.toArray xs === ys
+    traverseSnocIsToArray (WithOffset _ xs) = do
+      ref <- Ref.new []
+      TA.traverse_ (\x -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
+      ys <- Ref.read ref
+      axs <- TA.toArray xs
+      pure $ axs === ys
 
 
 doubleReverseIsIdentityTests :: Ref Int -> Effect Unit
 doubleReverseIsIdentityTests count = overAll count doubleReverseIsIdentity
   where
     doubleReverseIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
-    doubleReverseIsIdentity (WithOffset _ xs) =
-      let ys = TA.toArray xs
-          _ = unsafePerformEffect do
-            TA.reverse xs
-            TA.reverse xs
-      in  TA.toArray xs === ys
+    doubleReverseIsIdentity (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      TA.reverse xs
+      TA.reverse xs
+      axs' <- TA.toArray xs
+      pure $ axs === axs'
 
 
 reverseIsArrayReverseTests :: Ref Int -> Effect Unit
 reverseIsArrayReverseTests count = overAll count reverseIsArrayReverse
   where
     reverseIsArrayReverse :: forall a b t. TestableArrayF a b D0 t Result
-    reverseIsArrayReverse (WithOffset _ xs) =
-      let ys = Array.reverse (TA.toArray xs)
-          _ = unsafePerformEffect do
-            TA.reverse xs
-      in  TA.toArray xs === ys
+    reverseIsArrayReverse (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      TA.reverse xs
+      rxs <- TA.toArray xs
+      pure $ Array.reverse axs === rxs
 
 
 sortIsIdempotentTests :: Ref Int -> Effect Unit
 sortIsIdempotentTests count = overAll count sortIsIdempotent
   where
     sortIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
-    sortIsIdempotent (WithOffset _ xs) =
-      let ys = unsafePerformEffect do
-            TA.sort xs
-            pure (TA.toArray xs)
-          zs = unsafePerformEffect do
-            TA.sort xs
-            pure (TA.toArray xs)
-      in  zs === ys
+    sortIsIdempotent (WithOffset _ xs) = do
+      TA.sort xs
+      ys <- TA.toArray xs
+      TA.sort xs
+      zs <- TA.toArray xs
+      pure $ zs === ys
 
 
 sortIsArraySortTests :: Ref Int -> Effect Unit
 sortIsArraySortTests count = overAll count sortIsArraySort
   where
     sortIsArraySort :: forall a b t. TestableArrayF a b D0 t Result
-    sortIsArraySort (WithOffset _ xs) =
-      let ys = Array.sort (TA.toArray xs)
-          _ = unsafePerformEffect do
-            TA.sort xs
-      in  TA.toArray xs === ys
+    sortIsArraySort (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      let ys = Array.sort axs
+      TA.sort xs
+      sxs <- TA.toArray xs
+      pure $ sxs === ys
 
 
 toStringIsJoinWithCommaTests :: Ref Int -> Effect Unit
@@ -414,231 +419,218 @@ toStringIsJoinWithCommaTests count = overAll count toStringIsJoinWithComma
   where
     toStringIsJoinWithComma :: forall a b t. TestableArrayF a b D0 t Result
     toStringIsJoinWithComma (WithOffset _ xs) =
-      TA.toString' xs "," === TA.toString xs
+      pure $ TA.toString' xs "," === TA.toString xs
 
 
 setTypedOfSubArrayIsIdentityTests :: Ref Int -> Effect Unit
 setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIdentity
   where
     setTypedOfSubArrayIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
-    setTypedOfSubArrayIsIdentity (WithOffset _ xs) =
-      let ys = TA.toArray xs
-          zsSub = TA.subArray xs Nothing
-          zs = unsafePerformEffect do
-            _ <- TA.setTyped xs Nothing zsSub
-            pure (TA.toArray xs)
-      in  zs === ys
+    setTypedOfSubArrayIsIdentity (WithOffset _ xs) = do
+      ys <- TA.toArray xs
+      let zsSub = TA.subArray xs Nothing
+      _ <- TA.setTyped xs Nothing zsSub
+      zs <- TA.toArray xs
+      pure $ zs === ys
 
 
 modifyingOriginalMutatesSubArrayTests :: Ref Int -> Effect Unit
 modifyingOriginalMutatesSubArrayTests count = overAll count modifyingOriginalMutatesSubArray
   where
     modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingOriginalMutatesSubArray (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingOriginalMutatesSubArray (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.subArray xs Nothing
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs /== ys
+        zs <- TA.toArray zsSub
+        TA.fill xs zero Nothing
+        ys <-  TA.toArray zsSub
+        pure $ zs /== ys
 
 
 modifyingSubArrayMutatesOriginalTests :: Ref Int -> Effect Unit
 modifyingSubArrayMutatesOriginalTests count = overAll count modifyingOriginalMutatesSubArray
   where
     modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingOriginalMutatesSubArray (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingOriginalMutatesSubArray (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.subArray xs Nothing
-            zs = TA.toArray xs
-            ys = unsafePerformEffect do
-              TA.fill zsSub zero Nothing
-              pure (TA.toArray xs)
-        in  zs /== ys
+        zs <- TA.toArray xs
+        TA.fill zsSub zero Nothing
+        ys <- TA.toArray xs
+        pure $ zs /== ys
 
 
 modifyingOriginalMutatesSubArrayZeroTests :: Ref Int -> Effect Unit
 modifyingOriginalMutatesSubArrayZeroTests count = overAll count modifyingOriginalMutatesSubArrayZero
   where
     modifyingOriginalMutatesSubArrayZero :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingOriginalMutatesSubArrayZero (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingOriginalMutatesSubArrayZero (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.subArray xs (Just (Tuple 0 Nothing))
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs /== ys
+        zs <- TA.toArray zsSub
+        TA.fill xs zero Nothing
+        ys <- TA.toArray zsSub
+        pure $ zs /== ys
 
 
 modifyingSubArrayMutatesOriginalZeroTests :: Ref Int -> Effect Unit
 modifyingSubArrayMutatesOriginalZeroTests count = overAll count modifyingSubArrayMutatesOriginalZero
   where
     modifyingSubArrayMutatesOriginalZero :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingSubArrayMutatesOriginalZero (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingSubArrayMutatesOriginalZero (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.subArray xs (Just (Tuple 0 Nothing))
-            zs = TA.toArray xs
-            ys = unsafePerformEffect do
-              TA.fill zsSub zero Nothing
-              pure (TA.toArray xs)
-        in  zs /== ys
+        zs <- TA.toArray xs
+        TA.fill zsSub zero Nothing
+        ys <- TA.toArray xs
+        pure $ zs /== ys
 
 
 modifyingOriginalMutatesSubArrayAllTests :: Ref Int -> Effect Unit
 modifyingOriginalMutatesSubArrayAllTests count = overAll count modifyingOriginalMutatesSubArrayAll
   where
     modifyingOriginalMutatesSubArrayAll :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingOriginalMutatesSubArrayAll (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingOriginalMutatesSubArrayAll (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.subArray xs (Just (Tuple 0 (Just (TA.length xs))))
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs /== ys
+        zs <- TA.toArray zsSub
+        TA.fill xs zero Nothing
+        ys <- TA.toArray zsSub
+        pure $ zs /== ys
 
 
 modifyingSubArrayMutatesOriginalAllTests :: Ref Int -> Effect Unit
 modifyingSubArrayMutatesOriginalAllTests count = overAll count modifyingSubArrayMutatesOriginalAll
   where
     modifyingSubArrayMutatesOriginalAll :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingSubArrayMutatesOriginalAll (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingSubArrayMutatesOriginalAll (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.subArray xs (Just (Tuple 0 (Just (TA.length xs))))
-            zs = TA.toArray xs
-            ys = unsafePerformEffect do
-              TA.fill zsSub zero Nothing
-              pure (TA.toArray xs)
-        in  zs /== ys
+        zs <- TA.toArray xs
+        TA.fill zsSub zero Nothing
+        ys <- TA.toArray xs
+        pure $ zs /== ys
 
 
-modifyingOriginalDoesntMutateSubArrayPartTests :: Ref Int -> Effect Unit
-modifyingOriginalDoesntMutateSubArrayPartTests count = overAll count modifyingOriginalMutatesSubArrayPart
+modifyingOriginalMutatesSubArrayPartTests :: Ref Int -> Effect Unit
+modifyingOriginalMutatesSubArrayPartTests count = overAll count modifyingOriginalMutatesSubArrayPart
   where
     modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
-    modifyingOriginalMutatesSubArrayPart (WithOffset os xs)
-      | Vec.head os == 0 = Success
-      | Array.all (eq zero) (TA.toArray (TA.subArray xs Nothing)) = Success
-      | TA.at xs (Vec.head os) == Just zero = Success
-      | otherwise =
-        let o = Vec.head os
-            zsSub = TA.subArray xs (Just (Tuple o Nothing))
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs === ys
-
-
-modifyingOriginalDoesntMutateSubArrayPart2Tests :: Ref Int -> Effect Unit
-modifyingOriginalDoesntMutateSubArrayPart2Tests count = overAll count modifyingOriginalMutatesSubArrayPart2
-  where
-    modifyingOriginalMutatesSubArrayPart2 :: forall a b t. TestableArrayF a b D1 t Result
-    modifyingOriginalMutatesSubArrayPart2 (WithOffset os xs)
-      | Vec.head os == 0 = Success
-      | Array.all (eq zero) (TA.toArray (TA.subArray xs Nothing)) = Success
-      | TA.at xs (Vec.head os) == Just zero = Success
-      | otherwise =
-        let o = Vec.head os
-            zsSub = TA.subArray xs (Just (Tuple 0 (Just o)))
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs === ys
+    modifyingOriginalMutatesSubArrayPart (WithOffset os xs) = do
+      let o = Vec.head os
+          zsSub = TA.subArray xs (Just (Tuple o Nothing))
+      zs <- TA.toArray zsSub
+      if o == 0 || Array.all (eq zero) zs
+        then pure Success
+        else do
+        TA.fill xs zero Nothing
+        ys <- TA.toArray zsSub
+        pure $ zs /== ys
 
 
 modifyingOriginalDoesntMutateSliceTests :: Ref Int -> Effect Unit
 modifyingOriginalDoesntMutateSliceTests count = overAll count modifyingOriginalDoesntMutateSlice
   where
     modifyingOriginalDoesntMutateSlice :: forall a b t. TestableArrayF a b D0 t Result
-    modifyingOriginalDoesntMutateSlice (WithOffset _ xs)
-      | Array.all (eq zero) (TA.toArray xs) = Success
-      | otherwise =
+    modifyingOriginalDoesntMutateSlice (WithOffset _ xs) = do
+      axs <- TA.toArray xs
+      if Array.all (eq zero) axs
+        then pure Success
+        else do
         let zsSub = TA.slice xs Nothing
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs === ys
+        zs <- TA.toArray zsSub
+        TA.fill xs zero Nothing
+        ys <- TA.toArray zsSub
+        pure $ zs === ys
 
 
 modifyingOriginalDoesntMutateSlicePartTests :: Ref Int -> Effect Unit
 modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOriginalDoesntMutateSlicePart
   where
     modifyingOriginalDoesntMutateSlicePart :: forall a b t. TestableArrayF a b D1 t Result
-    modifyingOriginalDoesntMutateSlicePart (WithOffset os xs)
-      | Array.all (eq zero) (TA.toArray (TA.slice xs (Just (Tuple (Vec.head os) Nothing)))) = Success
-      | TA.at xs (Vec.head os) == Just zero = Success
-      | otherwise =
+    modifyingOriginalDoesntMutateSlicePart (WithOffset os xs) = do
+      axs <- TA.toArray (TA.slice xs (Just (Tuple (Vec.head os) Nothing)))
+      if Array.all (eq zero) axs || TA.at xs (Vec.head os) == Just zero
+        then pure Success
+        else do
         let o = Vec.head os
             zsSub = TA.slice xs (Just (Tuple o Nothing))
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs === ys
+        zs <- TA.toArray zsSub
+        TA.fill xs zero Nothing
+        ys <- TA.toArray zsSub
+        pure $ zs === ys
 
 
 modifyingOriginalDoesntMutateSlicePart2Tests :: Ref Int -> Effect Unit
 modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOriginalDoesntMutateSlicePart2
   where
     modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
-    modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs)
-      | Array.all (eq zero) (TA.toArray (TA.slice xs (Just (Tuple (Vec.head os) Nothing)))) = Success
-      | TA.at xs (Vec.head os) == Just zero = Success
-      | otherwise =
+    modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs) = do
+      axs <- TA.toArray (TA.slice xs (Just (Tuple (Vec.head os) Nothing)))
+      if Array.all (eq zero) axs || TA.at xs (Vec.head os) == Just zero
+         then pure Success
+        else do
         let o = Vec.head os
             zsSub = TA.slice xs (Just (Tuple 0 (Just o)))
-            zs = TA.toArray zsSub
-            ys = unsafePerformEffect do
-              TA.fill xs zero Nothing
-              pure (TA.toArray zsSub)
-        in  zs === ys
+        zs <- TA.toArray zsSub
+        TA.fill xs zero Nothing
+        ys <- TA.toArray zsSub
+        pure $ zs === ys
 
 
 copyWithinSelfIsIdentityTests :: Ref Int -> Effect Unit
 copyWithinSelfIsIdentityTests count = overAll count copyWithinSelfIsIdentity
   where
     copyWithinSelfIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
-    copyWithinSelfIsIdentity (WithOffset _ xs) =
-      let ys = TA.toArray xs
-          zs = unsafePerformEffect do
-            TA.copyWithin xs 0 0 (Just (TA.length xs))
-            pure (TA.toArray xs)
-      in  zs === ys
+    copyWithinSelfIsIdentity (WithOffset _ xs) = do
+      ys <- TA.toArray xs
+      TA.copyWithin xs 0 0 (Just (TA.length xs))
+      zs <- TA.toArray xs
+      pure $ zs === ys
 
 
 copyWithinIsSliceTests :: Ref Int -> Effect Unit
 copyWithinIsSliceTests count = overAll count copyWithinIsSlice
   where
     copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
-    copyWithinIsSlice (WithOffset os xs) =
+    copyWithinIsSlice (WithOffset os xs) = do
       let o = Vec.head os
-          ys = TA.toArray (TA.slice xs (Just (Tuple o Nothing)))
-          zs = unsafePerformEffect do
-            TA.copyWithin xs 0 o Nothing
-            pure $ Array.drop (Array.length ys) $ TA.toArray xs
-      in  TA.toArray xs === ys <> zs
+      ys <- TA.toArray (TA.slice xs (Just (Tuple o Nothing)))
+      TA.copyWithin xs 0 o Nothing
+      axs <- TA.toArray xs
+      zs <- pure $ Array.drop (Array.length ys) axs
+      pure $ axs === ys <> zs
 
 
 copyWithinViaSetTypedTests :: Ref Int -> Effect Unit
 copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
   where
     copyWithinViaSetTyped :: forall a b t. TestableArrayF a b D1 t Result
-    copyWithinViaSetTyped (WithOffset os xs) =
+    copyWithinViaSetTyped (WithOffset os xs) = do
       let o = Vec.head os
-          xs' = TA.fromArray (TA.toArray xs) :: ArrayView a
-          _ = unsafePerformEffect do
-            let ys = TA.slice xs' (Just (Tuple o Nothing))
-            _ <- TA.setTyped xs' Nothing ys
-            TA.copyWithin xs 0 o Nothing
-      in  TA.toArray xs === TA.toArray xs'
+      txs <- TA.toArray xs
+      xs' <- TA.fromArray txs :: Effect (ArrayView a)
+      let ys = TA.slice xs' (Just (Tuple o Nothing))
+      _ <- TA.setTyped xs' Nothing ys
+      TA.copyWithin xs 0 o Nothing
+      axs <- TA.toArray xs
+      axs' <- TA.toArray xs'
+      pure $ axs === axs'
