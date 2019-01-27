@@ -121,7 +121,7 @@ type TestableArrayF a b n t q =
 
 overAll' :: forall q n. Testable q => Nat n => Int -> Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
 overAll' mn count f = do
-  void (Ref.modify (\x -> x + 1) count)
+  void (Ref.modify (_ + 1) count)
 
   let chk :: forall a b t. Show t => Eq t => Ord t => Semiring t => Nat b => BytesPerValue a b => TypedArray a t => String -> Proxy (ArrayView a) -> Gen t -> Effect Unit
       chk s _ gen = do
@@ -186,7 +186,7 @@ allAreFilledTests count = overAll count allAreFilled
             Nothing -> zero
             Just y -> y
       TA.fill xs x Nothing
-      let b = TA.all (\y -> y == x) xs
+      let b = TA.all (_ == x) xs
       pure (b <?> "All aren't the filled value")
 
 
@@ -234,7 +234,7 @@ filterIsTotalTests count = overAll count filterIsTotal
     filterIsTotal (WithOffset _ xs) = do
       let pred x = x /= zero
           ys = TA.filter pred xs
-          zs = TA.filter (\x -> not pred x) ys
+          zs = TA.filter (not pred) ys
       azs <- TA.toArray zs
       pure $ azs === []
 
@@ -333,7 +333,7 @@ foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldrConsIsToArray (WithOffset _ xs) = do
       axs <- TA.toArray xs
-      pure $ TA.foldr (\x acc -> Array.cons x acc) [] xs === axs
+      pure $ TA.foldr Array.cons [] xs === axs
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -342,7 +342,7 @@ foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldlSnocIsToArray (WithOffset _ xs) = do
       axs <- TA.toArray xs
-      pure $ TA.foldl (\acc x -> Array.snoc acc x) [] xs === axs
+      pure $ TA.foldl Array.snoc [] xs === axs
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
@@ -567,8 +567,7 @@ modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOrigi
   where
     modifyingOriginalDoesntMutateSlicePart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart (WithOffset os xs) = do
-      sl <- TA.slice xs (Just (Tuple (Vec.head os) Nothing))
-      axs <- TA.toArray sl
+      axs <- TA.toArray =<< TA.slice xs (Just (Tuple (Vec.head os) Nothing))
       let o = Vec.head os
       if Array.all (eq zero) axs || TA.at xs o == Just zero
         then pure Success
@@ -585,8 +584,7 @@ modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOrig
   where
     modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs) = do
-      sl <- TA.slice xs (Just (Tuple (Vec.head os) Nothing))
-      axs <- TA.toArray sl
+      axs <- TA.toArray =<< TA.slice xs (Just (Tuple (Vec.head os) Nothing))
       let o = Vec.head os
       if Array.all (eq zero) axs || TA.at xs o == Just zero
         then pure Success
@@ -615,8 +613,7 @@ copyWithinIsSliceTests count = overAll count copyWithinIsSlice
     copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
     copyWithinIsSlice (WithOffset os xs) = do
       let o = Vec.head os
-      sl <- TA.slice xs (Just (Tuple o Nothing))
-      ys <- TA.toArray sl
+      ys <- TA.toArray =<< TA.slice xs (Just (Tuple o Nothing))
       TA.copyWithin xs 0 o Nothing
       axs <- TA.toArray xs
       zs <- pure $ Array.drop (Array.length ys) axs
