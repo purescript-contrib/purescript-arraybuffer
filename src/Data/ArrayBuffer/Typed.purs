@@ -376,12 +376,6 @@ sort a = runEffectFn1 sortImpl a
 foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
--- |
--- | **Note**: there is really peculiar behavior with `subArray` - if the first offset argument is omitted, or
--- | is `0`, and likewise if the second argument is the length of the array, then the "sub-array" is actually a
--- | mutable replica of the original array - the sub-array reference reflects mutations to the original array.
--- | However, when the sub-array is is actually a smaller contiguous portion of the array, then it behaves
--- | purely, because JavaScript interally calls `Data.ArrayBuffer.ArrayBuffer.slice`.
 subArray :: forall a. Offset -> Offset -> ArrayView a -> ArrayView a
 subArray s e a = runFn3 subArrayImpl a s e
 
