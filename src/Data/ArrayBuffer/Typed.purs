@@ -3,7 +3,7 @@
 
 module Data.ArrayBuffer.Typed
   ( polyFill
-  , Offset, Length, Range
+  , Offset, Length
   , buffer, byteOffset, byteLength, length
   , class TypedArray
   , create, whole, remainder, part, empty, fromArray
@@ -28,7 +28,6 @@ import Data.Float32 (Float32) as F
 import Data.Function.Uncurried (Fn2, Fn3, mkFn2, runFn2, runFn3)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
-import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Effect (Effect)
@@ -75,7 +74,7 @@ foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (N
 foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 foreign import someImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 
-foreign import fillImpl :: forall a b. EffectFn4 (ArrayView a) b (Nullable Offset) (Nullable Offset) Unit
+foreign import fillImpl :: forall a b. EffectFn4 (ArrayView a) b Offset Offset Unit
 
 foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset b) (ArrayView a)
 foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Unit) Unit
@@ -95,10 +94,6 @@ foreign import lastIndexOfImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offs
 type Offset = Int
 -- | Value-oriented array length
 type Length = Int
-
--- | Represents a range of indices, where if omitted, it represents the whole span.
--- | If only the second argument is omitted, then it represents the remainder of the span after the first index.
-type Range = Maybe (Tuple Offset (Maybe Offset))
 
 
 -- TODO use purescript-quotient
@@ -184,10 +179,8 @@ fromArray :: forall a t. TypedArray a t => Array t -> Effect (ArrayView a)
 fromArray a = runEffectFn3 create a null null
 
 -- | Fill the array with a value
-fill :: forall a t. TypedArray a t => ArrayView a -> t -> Range -> Effect Unit
-fill a x mz = case mz of
-  Nothing -> runEffectFn4 fillImpl a x null null
-  Just (Tuple s me) -> runEffectFn4 fillImpl a x (notNull s) (toNullable me)
+fill :: forall a t. TypedArray a t => t -> Offset -> Offset -> ArrayView a -> Effect Unit
+fill x s e a = runEffectFn4 fillImpl a x s e
 
 -- | Stores multiple values into the typed array
 set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Boolean
@@ -367,13 +360,11 @@ setTyped = setInternal length
 
 
 -- | Copy the entire contents of the typed array into a new buffer.
-foreign import sliceImpl :: forall a. EffectFn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
+foreign import sliceImpl :: forall a. EffectFn3 (ArrayView a) Offset Offset (ArrayView a)
 
 -- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
-slice :: forall a. ArrayView a -> Range -> Effect (ArrayView a)
-slice a mz = case mz of
-  Nothing -> runEffectFn3 sliceImpl a null null
-  Just (Tuple s me) -> runEffectFn3 sliceImpl a (notNull s) (toNullable me)
+slice :: forall a. Offset -> Offset -> ArrayView a -> Effect (ArrayView a)
+slice s e a = runEffectFn3 sliceImpl a s e
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
@@ -382,7 +373,7 @@ sort :: forall a. ArrayView a -> Effect Unit
 sort a = runEffectFn1 sortImpl a
 
 
-foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nullable Offset) (ArrayView a)
+foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
 -- |
@@ -391,10 +382,8 @@ foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) (Nullable Offset) (Nu
 -- | mutable replica of the original array - the sub-array reference reflects mutations to the original array.
 -- | However, when the sub-array is is actually a smaller contiguous portion of the array, then it behaves
 -- | purely, because JavaScript interally calls `Data.ArrayBuffer.ArrayBuffer.slice`.
-subArray :: forall a. ArrayView a -> Range -> ArrayView a
-subArray a mz = case mz of
-  Nothing -> runFn3 subArrayImpl a null null
-  Just (Tuple s me) -> runFn3 subArrayImpl a (notNull s) (toNullable me)
+subArray :: forall a. Offset -> Offset -> ArrayView a -> ArrayView a
+subArray s e a = runFn3 subArrayImpl a s e
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
 foreign import toString :: forall a. ArrayView a -> String

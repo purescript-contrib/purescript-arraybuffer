@@ -10,10 +10,9 @@ import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithOffset)
 import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array, Int32Array, Int8Array, Uint16Array, Uint8Array, Uint8ClampedArray, Uint32Array)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
-import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..))
-import Data.Typelevel.Num (class Nat, D0, D1, D5, toInt')
-import Data.Vec (head) as Vec
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Typelevel.Num (class Nat, D0, D1, D2, D5, d0, d1, toInt')
+import Data.Vec (head, index) as Vec
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
@@ -28,8 +27,12 @@ import Type.Proxy (Proxy(..))
 
 typedArrayTests :: Ref Int -> Effect Unit
 typedArrayTests count = do
+  log "    - subarrayBehavesLikeArraySlice"
+  subarrayBehavesLikeArraySliceTests count
+  log "    - sliceBehavesLikeArraySlice"
+  sliceBehavesLikeArraySliceTests count
   log "    - partBehavesLikeTakeDrop"
-  partBehavesLikeTakeDrop count
+  partBehavesLikeTakeDropTests count
   log "    - byteLength x / bytesPerValue === length x"
   byteLengthDivBytesPerValueTests count
   log "    - fromArray (toArray x) === x"
@@ -147,8 +150,32 @@ overAll count f = overAll' 0 count f
 overAll1 :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
 overAll1 count f = overAll' 1 count f
 
-partBehavesLikeTakeDrop :: Ref Int -> Effect Unit
-partBehavesLikeTakeDrop count = overAll count f
+subarrayBehavesLikeArraySliceTests :: Ref Int -> Effect Unit
+subarrayBehavesLikeArraySliceTests count = overAll count f
+  where
+    f :: forall a b t. TestableArrayF a b D2 t Result
+    f (WithOffset os xs) = do
+      let s = os `Vec.index` d0
+          e = os `Vec.index` d1
+      axs <- TA.toArray xs
+      let sxs = TA.subArray s e xs
+      a <- TA.toArray sxs
+      pure $ Array.slice s e axs === a
+
+sliceBehavesLikeArraySliceTests :: Ref Int -> Effect Unit
+sliceBehavesLikeArraySliceTests count = overAll count f
+  where
+    f :: forall a b t. TestableArrayF a b D2 t Result
+    f (WithOffset os xs) = do
+      let s = os `Vec.index` d0
+          e = os `Vec.index` d1
+      axs <- TA.toArray xs
+      sxs <- TA.slice s e xs
+      a <- TA.toArray sxs
+      pure $ Array.slice s e axs === a
+
+partBehavesLikeTakeDropTests :: Ref Int -> Effect Unit
+partBehavesLikeTakeDropTests count = overAll count f
   where
     f :: forall a b t. TestableArrayF a b D0 t Result
     f (WithOffset _ xs) = do
@@ -183,10 +210,9 @@ allAreFilledTests count = overAll count allAreFilled
     allAreFilled :: forall a b t. TestableArrayF a b D0 t Result
     allAreFilled (WithOffset _ xs) = do
       e <- TA.at xs 0
-      let x = case e of
-            Nothing -> zero
-            Just y -> y
-      TA.fill xs x Nothing
+      let x = fromMaybe zero e
+          l = TA.length xs
+      TA.fill x 0 l xs
       let b = TA.all (_ == x) xs
       pure (b <?> "All aren't the filled value")
 
@@ -440,7 +466,8 @@ setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIden
     setTypedOfSubArrayIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
     setTypedOfSubArrayIsIdentity (WithOffset _ xs) = do
       ys <- TA.toArray xs
-      let zsSub = TA.subArray xs Nothing
+      let l = TA.length xs
+          zsSub = TA.subArray 0 l xs
       _ <- TA.setTyped xs Nothing zsSub
       zs <- TA.toArray xs
       pure $ zs === ys
@@ -455,9 +482,10 @@ modifyingOriginalMutatesSubArrayTests count = overAll count modifyingOriginalMut
       if Array.all (eq zero) axs
         then pure Success
         else do
-        let zsSub = TA.subArray xs Nothing
+        let l = TA.length xs
+            zsSub = TA.subArray 0 l xs
         zs <- TA.toArray zsSub
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <-  TA.toArray zsSub
         pure $ zs /== ys
 
@@ -471,9 +499,10 @@ modifyingSubArrayMutatesOriginalTests count = overAll count modifyingOriginalMut
       if Array.all (eq zero) axs
         then pure Success
         else do
-        let zsSub = TA.subArray xs Nothing
+        let l = TA.length xs
+            zsSub = TA.subArray 0 l xs
         zs <- TA.toArray xs
-        TA.fill zsSub zero Nothing
+        TA.fill zero 0 l zsSub
         ys <- TA.toArray xs
         pure $ zs /== ys
 
@@ -487,9 +516,10 @@ modifyingOriginalMutatesSubArrayZeroTests count = overAll count modifyingOrigina
       if Array.all (eq zero) axs
         then pure Success
         else do
-        let zsSub = TA.subArray xs (Just (Tuple 0 Nothing))
+        let l = TA.length xs
+            zsSub = TA.subArray 0 l xs
         zs <- TA.toArray zsSub
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <- TA.toArray zsSub
         pure $ zs /== ys
 
@@ -503,9 +533,10 @@ modifyingSubArrayMutatesOriginalZeroTests count = overAll count modifyingSubArra
       if Array.all (eq zero) axs
         then pure Success
         else do
-        let zsSub = TA.subArray xs (Just (Tuple 0 Nothing))
+        let l = TA.length xs
+            zsSub = TA.subArray 0 l xs
         zs <- TA.toArray xs
-        TA.fill zsSub zero Nothing
+        TA.fill zero 0 l zsSub
         ys <- TA.toArray xs
         pure $ zs /== ys
 
@@ -519,9 +550,10 @@ modifyingOriginalMutatesSubArrayAllTests count = overAll count modifyingOriginal
       if Array.all (eq zero) axs
         then pure Success
         else do
-        let zsSub = TA.subArray xs (Just (Tuple 0 (Just (TA.length xs))))
+        let l = TA.length xs
+            zsSub = TA.subArray 0 l xs
         zs <- TA.toArray zsSub
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <- TA.toArray zsSub
         pure $ zs /== ys
 
@@ -535,9 +567,10 @@ modifyingSubArrayMutatesOriginalAllTests count = overAll count modifyingSubArray
       if Array.all (eq zero) axs
         then pure Success
         else do
-        let zsSub = TA.subArray xs (Just (Tuple 0 (Just (TA.length xs))))
+        let l = TA.length xs
+            zsSub = TA.subArray 0 l xs
         zs <- TA.toArray xs
-        TA.fill zsSub zero Nothing
+        TA.fill zero 0 l zsSub
         ys <- TA.toArray xs
         pure $ zs /== ys
 
@@ -548,12 +581,13 @@ modifyingOriginalMutatesSubArrayPartTests count = overAll count modifyingOrigina
     modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalMutatesSubArrayPart (WithOffset os xs) = do
       let o = Vec.head os
-          zsSub = TA.subArray xs (Just (Tuple o Nothing))
+          l = TA.length xs
+          zsSub = TA.subArray 0 l xs
       zs <- TA.toArray zsSub
       if o == 0 || Array.all (eq zero) zs
         then pure Success
         else do
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <- TA.toArray zsSub
         pure $ zs /== ys
 
@@ -567,9 +601,10 @@ modifyingOriginalDoesntMutateSliceTests count = overAll count modifyingOriginalD
       if Array.all (eq zero) axs
         then pure Success
         else do
-        zsSub <- TA.slice xs Nothing
+        let l = TA.length xs
+        zsSub <- TA.slice 0 l xs
         zs <- TA.toArray zsSub
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <- TA.toArray zsSub
         pure $ zs === ys
 
@@ -579,15 +614,16 @@ modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOrigi
   where
     modifyingOriginalDoesntMutateSlicePart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart (WithOffset os xs) = do
-      axs <- TA.toArray =<< TA.slice xs (Just (Tuple (Vec.head os) Nothing))
+      let l = TA.length xs
+      axs <- TA.toArray =<< TA.slice 0 l xs
       let o = Vec.head os
       e <- TA.at xs o
       if Array.all (eq zero) axs || e == Just zero
         then pure Success
         else do
-        zsSub <- TA.slice xs (Just (Tuple o Nothing))
+        zsSub <- TA.slice o l xs
         zs <- TA.toArray zsSub
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <- TA.toArray zsSub
         pure $ zs === ys
 
@@ -597,15 +633,16 @@ modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOrig
   where
     modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs) = do
-      axs <- TA.toArray =<< TA.slice xs (Just (Tuple (Vec.head os) Nothing))
       let o = Vec.head os
+          l = TA.length xs
+      axs <- TA.toArray =<< TA.slice o l xs
       e <- TA.at xs o
       if Array.all (eq zero) axs || e == Just zero
         then pure Success
         else do
-        zsSub <- TA.slice xs (Just (Tuple 0 (Just o)))
+        zsSub <- TA.slice o l xs
         zs <- TA.toArray zsSub
-        TA.fill xs zero Nothing
+        TA.fill zero 0 l xs
         ys <- TA.toArray zsSub
         pure $ zs === ys
 
@@ -627,7 +664,8 @@ copyWithinIsSliceTests count = overAll count copyWithinIsSlice
     copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
     copyWithinIsSlice (WithOffset os xs) = do
       let o = Vec.head os
-      ys <- TA.toArray =<< TA.slice xs (Just (Tuple o Nothing))
+          l = TA.length xs
+      ys <- TA.toArray =<< TA.slice o l xs
       TA.copyWithin xs 0 o Nothing
       axs <- TA.toArray xs
       zs <- pure $ Array.drop (Array.length ys) axs
@@ -642,7 +680,8 @@ copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
       let o = Vec.head os
       txs <- TA.toArray xs
       xs' <- TA.fromArray txs :: Effect (ArrayView a)
-      ys <- TA.slice xs' (Just (Tuple o Nothing))
+      let l = TA.length xs'
+      ys <- TA.slice o l xs'
       _ <- TA.setTyped xs' Nothing ys
       TA.copyWithin xs 0 o Nothing
       axs <- TA.toArray xs

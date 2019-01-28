@@ -145,18 +145,17 @@ exports.setImpl = function setImpl (a, off, b) {
 };
 
 
-exports.sliceImpl = function sliceImpl (a,ms,me) {
-    return me === null ? (ms === null ? a.slice() : a.slice(ms)) : a.slice(ms,me);
+exports.sliceImpl = function sliceImpl (a, s, e) {
+  return a.slice(s,e);
 };
-
 
 exports.sortImpl = function sortImpl (a) {
     a.sort();
 };
 
 
-exports.subArrayImpl = function subArrayImpl (a,ms,me) {
-    return me === null ? (ms === null ? a.subarray() : a.subarray(ms)) : a.subarray(ms,me);
+exports.subArrayImpl = function subArrayImpl (a, s, e) {
+    return a.subarray(s, e);
 };
 
 
