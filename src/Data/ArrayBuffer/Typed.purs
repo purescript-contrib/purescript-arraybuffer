@@ -35,7 +35,7 @@ import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Effect.Unsafe (unsafePerformEffect)
 import Partial.Unsafe (unsafePartial)
-import Prelude (Unit, (>=), (&&), (<<<), (<=), pure, (-), flip, (*), (*>))
+import Prelude (Unit, flip, pure, (&&), (*), (*>), (-), (<$>), (<<<), (<=), (>=))
 import Type.Proxy (Proxy(..))
 
 
@@ -268,8 +268,8 @@ elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Boolea
 elem x mo a = runFn3 includesImpl a x (toNullable mo)
 
 -- | Fetch element at index.
-unsafeAt :: forall a t. TypedArray a t => Partial => ArrayView a -> Offset -> t
-unsafeAt a o = runFn2 unsafeAtImpl a o
+unsafeAt :: forall a t. TypedArray a t => Partial => ArrayView a -> Offset -> Effect t
+unsafeAt a o = runEffectFn2 unsafeAtImpl a o
 
 -- | Folding from the left
 foldlM :: forall a t b. TypedArray a t => (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
@@ -406,7 +406,7 @@ toString' :: forall a. ArrayView a -> String -> String
 toString' a s = runFn2 joinImpl a s
 
 
-foreign import unsafeAtImpl :: forall a b. Fn2 (ArrayView a) Offset b
+foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
 
 foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
 
@@ -415,10 +415,10 @@ hasIndex :: forall a. ArrayView a -> Offset -> Boolean
 hasIndex a o = runFn2 hasIndexImpl a o
 
 -- | Fetch element at index.
-at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Maybe t
+at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Effect (Maybe t)
 at a n = if a `hasIndex` n
-         then Just (unsafePartial (unsafeAt a n))
-         else Nothing
+         then Just <$> unsafePartial (unsafeAt a n)
+         else pure Nothing
 
 infixl 3 at as !
 

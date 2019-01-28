@@ -182,7 +182,8 @@ allAreFilledTests count = overAll count allAreFilled
   where
     allAreFilled :: forall a b t. TestableArrayF a b D0 t Result
     allAreFilled (WithOffset _ xs) = do
-      let x = case TA.at xs 0 of
+      e <- TA.at xs 0
+      let x = case e of
             Nothing -> zero
             Just y -> y
       TA.fill xs x Nothing
@@ -195,11 +196,14 @@ setSingletonIsEqTests count = overAll count setSingletonIsEq
   where
     setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
     setSingletonIsEq (WithOffset os xs) = do
-      case TA.at xs 0 of
+      e <- TA.at xs 0
+      case e of
             Nothing -> pure Success
             Just x -> do
-              _ <- TA.set xs (Just (Vec.head os)) [x]
-              pure (TA.at xs (Vec.head os) === Just x)
+              let o = Vec.head os
+              _ <- TA.set xs (Just o) [x]
+              e' <- TA.at xs o
+              pure $ e' === Just x
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -266,7 +270,7 @@ withOffsetElemTests count = overAll1 count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) = pure $
-      Array.all (\o -> TA.elem (unsafePartial (TA.unsafeAt xs o)) Nothing xs) os
+      Array.all (\o -> TA.elem (unsafePartial $ unsafePerformEffect $ TA.unsafeAt xs o) Nothing xs) os
         <?> "All doesn't have an elem of itself"
 
 
@@ -292,14 +296,16 @@ findIndexImpliesAtTests :: Ref Int -> Effect Unit
 findIndexImpliesAtTests count = overAll count findIndexImpliesAt
   where
     findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
-    findIndexImpliesAt (WithOffset _ xs) =
-      let pred x o = x /= zero
+    findIndexImpliesAt (WithOffset _ xs) = do
+      let pred x _ = x /= zero
           mo = TA.findIndex pred xs
-      in pure case mo of
-            Nothing -> Success
-            Just o -> case TA.at xs o of
-              Nothing -> Failed "No value at found index"
-              Just x -> pred x o <?> "Find index implies at"
+      case mo of
+        Nothing -> pure Success
+        Just o -> do
+          e <- TA.at xs o
+          case e of
+            Nothing -> pure $ Failed "No value at found index"
+            Just x -> pure $ pred x o <?> "Find index implies at"
 
 
 
@@ -307,24 +313,30 @@ indexOfImpliesAtTests :: Ref Int -> Effect Unit
 indexOfImpliesAtTests count = overAll count indexOfImpliesAt
   where
     indexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
-    indexOfImpliesAt (WithOffset _ xs) = pure
-      case TA.at xs 0 of
-        Nothing -> Success
+    indexOfImpliesAt (WithOffset _ xs) = do
+      e <- TA.at xs 0
+      case e of
+        Nothing -> pure Success
         Just y -> case TA.indexOf y Nothing xs of
-          Nothing -> Failed "no index of"
-          Just o -> TA.at xs o === Just y
+          Nothing -> pure $ Failed "no index of"
+          Just o -> do
+            e' <- TA.at xs o
+            pure $ e' === Just y
 
 
 lastIndexOfImpliesAtTests :: Ref Int -> Effect Unit
 lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
   where
     lastIndexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
-    lastIndexOfImpliesAt (WithOffset _ xs) = pure
-      case TA.at xs 0 of
-        Nothing -> Success
+    lastIndexOfImpliesAt (WithOffset _ xs) = do
+      e <- TA.at xs 0
+      case e of
+        Nothing -> pure Success
         Just y -> case TA.lastIndexOf y Nothing xs of
-          Nothing -> Failed "no lastIndex of"
-          Just o -> TA.at xs o === Just y
+          Nothing -> pure $ Failed "no lastIndex of"
+          Just o -> do
+            e' <- TA.at xs o
+            pure $ e' === Just y
 
 
 foldrConsIsToArrayTests :: Ref Int -> Effect Unit
@@ -569,7 +581,8 @@ modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOrigi
     modifyingOriginalDoesntMutateSlicePart (WithOffset os xs) = do
       axs <- TA.toArray =<< TA.slice xs (Just (Tuple (Vec.head os) Nothing))
       let o = Vec.head os
-      if Array.all (eq zero) axs || TA.at xs o == Just zero
+      e <- TA.at xs o
+      if Array.all (eq zero) axs || e == Just zero
         then pure Success
         else do
         zsSub <- TA.slice xs (Just (Tuple o Nothing))
@@ -586,7 +599,8 @@ modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOrig
     modifyingOriginalDoesntMutateSlicePart2 (WithOffset os xs) = do
       axs <- TA.toArray =<< TA.slice xs (Just (Tuple (Vec.head os) Nothing))
       let o = Vec.head os
-      if Array.all (eq zero) axs || TA.at xs o == Just zero
+      e <- TA.at xs o
+      if Array.all (eq zero) axs || e == Just zero
         then pure Success
         else do
         zsSub <- TA.slice xs (Just (Tuple 0 (Just o)))
