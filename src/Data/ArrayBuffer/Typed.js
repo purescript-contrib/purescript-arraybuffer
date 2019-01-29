@@ -73,8 +73,8 @@ exports.someImpl = function someImpl (a,p) {
 };
 
 
-exports.fillImpl = function fillImpl (a,x,ms,me) {
-    return me === null ? (ms === null ? a.fill(x) : a.fill(x,ms)) : a.fill(x,ms,me);
+exports.fillImpl = function fillImpl (a,x,s,e) {
+    return a.fill(x,s,e);
 };
 
 
