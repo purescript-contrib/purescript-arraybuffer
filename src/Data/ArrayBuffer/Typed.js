@@ -108,12 +108,12 @@ exports.reduceRight1Impl = function reduceRight1Impl (a,f) {
 };
 
 exports.findImpl = function findImpl (a,f) {
-    var x = a.find(f);
-    return (x === undefined) ? null : x;
+    return a.find(f);
 };
+
 exports.findIndexImpl = function findIndexImpl (a,f) {
-    var x = a.findIndex(f);
-    return (x === -1) ? null : x;
+    var r = a.findIndex(f);
+    return r === -1 ? null : r;
 };
 exports.indexOfImpl = function indexOfImpl (a,x,mo) {
     var r = mo === null ? a.indexOf(x) : a.indexOf(x,mo);
