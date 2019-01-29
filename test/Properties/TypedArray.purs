@@ -77,7 +77,7 @@ typedArrayTests count = do
   sortIsIdempotentTests count
   log "    - toArray (sort x) == Array.sort (toArray x)"
   sortIsArraySortTests count
-  log "    - toString' \",\" x == toString x"
+  log "    - join \",\" x == toString x"
   toStringIsJoinWithCommaTests count
   log "    - setTyped x (subArray x) == x"
   setTypedOfSubArrayIsIdentityTests count
@@ -467,7 +467,7 @@ toStringIsJoinWithCommaTests count = overAll count toStringIsJoinWithComma
   where
     toStringIsJoinWithComma :: forall a b t. TestableArrayF a b D0 t Result
     toStringIsJoinWithComma (WithOffset _ xs) = do
-      s1 <- TA.toString' xs ","
+      s1 <- TA.join "," xs
       s2 <- TA.toString xs
       pure $ s1 === s2
 

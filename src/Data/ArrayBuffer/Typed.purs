@@ -18,7 +18,7 @@ module Data.ArrayBuffer.Typed
   , foldlM, foldl1M, foldl, foldl1, foldrM, foldr1M, foldr, foldr1
   , find, findIndex, indexOf, lastIndexOf
   , slice, subArray
-  , toString, toString', toArray
+  , toString, join, toArray
   ) where
 
 import Data.Array (length) as A
@@ -126,7 +126,7 @@ type Length = Int
 -- | - `indexOf` and `lastIndexOf` are searching functions via equality
 -- | - `slice` returns a new typed array on the same array buffer content as the input
 -- | - `subArray` returns a new typed array with a separate array buffer
--- | - `toString` prints to a CSV, `toString'` allows you to supply the delimiter
+-- | - `toString` prints to a CSV, `join` allows you to supply the delimiter
 -- | - `toArray` returns an array of numeric values
 class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   create :: forall x. EffectFn3 x (Nullable ByteOffset) (Nullable ByteLength) (ArrayView a)
@@ -388,17 +388,18 @@ toString a = runEffectFn1 toStringImpl a
 foreign import joinImpl :: forall a. EffectFn2 (ArrayView a) String String
 
 -- | Prints array to a delimiter-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join) for details.
-toString' :: forall a. ArrayView a -> String -> Effect String
-toString' a s = runEffectFn2 joinImpl a s
+join :: forall a. String -> ArrayView a -> Effect String
+join s a = runEffectFn2 joinImpl a s
 
-
-foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
 
 foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
 
 -- | Determine if a certain index is valid.
 hasIndex :: forall a. ArrayView a -> Offset -> Boolean
 hasIndex a o = runFn2 hasIndexImpl a o
+
+
+foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
 
 -- | Fetch element at index.
 at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Effect (Maybe t)
