@@ -379,14 +379,17 @@ foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayV
 subArray :: forall a. Offset -> Offset -> ArrayView a -> ArrayView a
 subArray s e a = runFn3 subArrayImpl a s e
 
--- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
-foreign import toString :: forall a. ArrayView a -> String
+foreign import toStringImpl :: forall a. EffectFn1 (ArrayView a) String
 
-foreign import joinImpl :: forall a. Fn2 (ArrayView a) String String
+-- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
+toString :: forall a. ArrayView a -> Effect String
+toString a = runEffectFn1 toStringImpl a
+
+foreign import joinImpl :: forall a. EffectFn2 (ArrayView a) String String
 
 -- | Prints array to a delimiter-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join) for details.
-toString' :: forall a. ArrayView a -> String -> String
-toString' a s = runFn2 joinImpl a s
+toString' :: forall a. ArrayView a -> String -> Effect String
+toString' a s = runEffectFn2 joinImpl a s
 
 
 foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b

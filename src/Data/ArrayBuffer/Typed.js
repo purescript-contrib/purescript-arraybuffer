@@ -159,7 +159,7 @@ exports.subArrayImpl = function subArrayImpl (a, s, e) {
 };
 
 
-exports.toString = function toString (a) {
+exports.toStringImpl = function toStringImpl (a) {
     return a.toString();
 };
 
