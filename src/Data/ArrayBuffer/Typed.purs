@@ -1,5 +1,33 @@
 -- | This module represents the functional bindings to JavaScript's `TypedArray` and other
 -- | objects. See [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) for details.
+-- |
+-- | #### Creation
+-- |
+-- | - `whole`, `remainder`, and `part` are functions for building a typed array accessible interface
+-- |   on top of an existing `ArrayBuffer`
+-- | - `empty` and `fromArray` are functions for creating pure typed arrays
+-- |
+-- | #### Modification
+-- |
+-- | - `fill`, `set`, and `setTyped` are functions for assigning values from external sources
+-- | - `map` and `traverse` allow you to create a new array from the existing values in another
+-- | - `copyWithin` allows you to set values to the array that exist in other parts of the array
+-- | - `filter` creates a new array without the values that don't pass a predicate
+-- | - `reverse` modifies an existing array in-place, with all values reversed
+-- | - `sort` modifies an existing array in-place, with all values sorted
+-- |
+-- | #### Access
+-- |
+-- | - `elem`, `all`, and `any` are functions for testing the contents of an array
+-- | - `unsafeAt`, `hasIndex`, and `at` are used to get values from an array, with an offset
+-- | - `foldr`, `foldrM`, `foldr1`, `foldr1M`, `foldl`, `foldlM`, `foldl1`, `foldl1M` all can reduce an array
+-- | - `find` and `findIndex` are searching functions via a predicate
+-- | - `indexOf` and `lastIndexOf` are searching functions via equality
+-- | - `slice` returns a new typed array on the same array buffer content as the input
+-- | - `subArray` returns a new typed array with a separate array buffer
+-- | - `toString` prints to a CSV, `join` allows you to supply the delimiter
+-- | - `toArray` returns an array of numeric values
+
 
 module Data.ArrayBuffer.Typed
   ( polyFill
@@ -96,38 +124,6 @@ type Offset = Int
 type Length = Int
 
 
--- TODO use purescript-quotient
--- | Typeclass that associates a measured user-level type with a typed array.
--- |
--- | #### Creation
--- |
--- | - `whole`, `remainder`, and `part` are methods for building a typed array accessible interface
--- |   on top of an existing `ArrayBuffer` - Note, `part` and `remainder` may behave unintuitively -
--- |   when the operation is isomorphic to `whole`, the new TypedArray uses the same buffer as the input,
--- |   but not when the portion is a sub-array of the original buffer, a new one is made with
--- |   `Data.ArrayBuffer.ArrayBuffer.slice`.
--- | - `empty` and `fromArray` are methods for creating pure typed arrays
--- |
--- | #### Modification
--- |
--- | - `fill`, `set`, and `setTyped` are methods for assigning values from external sources
--- | - `map` and `traverse` allow you to create a new array from the existing values in another
--- | - `copyWithin` allows you to set values to the array that exist in other parts of the array
--- | - `filter` creates a new array without the values that don't pass a predicate
--- | - `reverse` modifies an existing array in-place, with all values reversed
--- | - `sort` modifies an existing array in-place, with all values sorted
--- |
--- | #### Access
--- |
--- | - `elem`, `all`, and `any` are functions for testing the contents of an array
--- | - `unsafeAt`, `hasIndex`, and `at` are used to get values from an array, with an offset
--- | - `foldr`, `foldrM`, `foldr1`, `foldr1M`, `foldl`, `foldlM`, `foldl1`, `foldl1M` all can reduce an array
--- | - `find` and `findIndex` are searching functions via a predicate
--- | - `indexOf` and `lastIndexOf` are searching functions via equality
--- | - `slice` returns a new typed array on the same array buffer content as the input
--- | - `subArray` returns a new typed array with a separate array buffer
--- | - `toString` prints to a CSV, `join` allows you to supply the delimiter
--- | - `toArray` returns an array of numeric values
 class BinaryValue a t <= TypedArray (a :: ArrayViewType) (t :: Type) | a -> t where
   create :: forall x. EffectFn3 x (Nullable ByteOffset) (Nullable ByteLength) (ArrayView a)
 
