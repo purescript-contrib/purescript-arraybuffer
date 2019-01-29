@@ -84,10 +84,10 @@ foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c 
 foreign import reduce1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
 foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
 foreign import reduceRight1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
-foreign import findImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable b)
-foreign import findIndexImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable Offset)
-foreign import indexOfImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
-foreign import lastIndexOfImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
+foreign import findImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable b)
+foreign import findIndexImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable Offset)
+foreign import indexOfImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
+foreign import lastIndexOfImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
 
 
 -- | Value-oriented array offset
@@ -281,26 +281,26 @@ foldr1M :: forall a t. TypedArray a t => (t -> t -> Offset -> Effect t) -> Array
 foldr1M f a = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
 
 -- | Returns the first value satisfying the predicate
-find :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Maybe t
+find :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect (Maybe t)
 find = findWithIndex' <<< ap1
 
-findWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Maybe t
+findWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Effect (Maybe t)
 findWithIndex = findWithIndex' <<< flip
 
-findWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe t
-findWithIndex' f a = toMaybe (runFn2 findImpl a (mkFn2 f))
+findWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect (Maybe t)
+findWithIndex' f a = toMaybe <$> runEffectFn2 findImpl a (mkFn2 f)
 
 -- | Returns the first index of the value satisfying the predicate
-findIndex :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Maybe Offset
-findIndex f a = toMaybe (runFn2 findIndexImpl a (mkFn2 f))
+findIndex :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect (Maybe Offset)
+findIndex f a = toMaybe <$> runEffectFn2 findIndexImpl a (mkFn2 f)
 
 -- | Returns the first index of the element, if it exists, from the left
-indexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Maybe Offset
-indexOf x mo a = toMaybe (runFn3 indexOfImpl a x (toNullable mo))
+indexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect (Maybe Offset)
+indexOf x mo a = toMaybe <$> runEffectFn3 indexOfImpl a x (toNullable mo)
 
 -- | Returns the first index of the element, if it exists, from the right
-lastIndexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Maybe Offset
-lastIndexOf x mo a = toMaybe (runFn3 lastIndexOfImpl a x (toNullable mo))
+lastIndexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect (Maybe Offset)
+lastIndexOf x mo a = toMaybe <$> runEffectFn3 lastIndexOfImpl a x (toNullable mo)
 
 foldl :: forall a b t. TypedArray a t => (b -> t -> b) -> b -> ArrayView a -> b
 foldl f = foldlWithIndex' (\a x _ -> f a x)

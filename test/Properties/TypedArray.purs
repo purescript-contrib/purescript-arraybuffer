@@ -305,16 +305,16 @@ anyImpliesFindTests :: Ref Int -> Effect Unit
 anyImpliesFindTests count = overAll count anyImpliesFind
   where
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
-    anyImpliesFind (WithOffset _ xs) =
+    anyImpliesFind (WithOffset _ xs) = do
       let pred x = x /= zero
           p = TA.any pred xs <?> "All don't satisfy the predicate"
-          q =
-            case TA.find pred xs of
+      idx <- TA.find pred xs
+      let q = case idx of
               Nothing -> Failed "Doesn't have a value satisfying the predicate"
               Just z -> if pred z
                         then Success
                         else Failed "Found value doesn't satisfy the predicate"
-      in  pure $ p ==> q
+      pure $ p ==> q
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -324,7 +324,7 @@ findIndexImpliesAtTests count = overAll count findIndexImpliesAt
     findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
     findIndexImpliesAt (WithOffset _ xs) = do
       let pred x _ = x /= zero
-          mo = TA.findIndex pred xs
+      mo <- TA.findIndex pred xs
       case mo of
         Nothing -> pure Success
         Just o -> do
@@ -338,16 +338,18 @@ findIndexImpliesAtTests count = overAll count findIndexImpliesAt
 indexOfImpliesAtTests :: Ref Int -> Effect Unit
 indexOfImpliesAtTests count = overAll count indexOfImpliesAt
   where
-    indexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
+    indexOfImpliesAt :: forall a b t. TestableArrayF a b D1 t Result
     indexOfImpliesAt (WithOffset _ xs) = do
       e <- TA.at xs 0
       case e of
         Nothing -> pure Success
-        Just y -> case TA.indexOf y Nothing xs of
-          Nothing -> pure $ Failed "no index of"
-          Just o -> do
-            e' <- TA.at xs o
-            pure $ e' === Just y
+        Just y -> do
+          idx <- TA.indexOf y Nothing xs
+          case idx of
+            Nothing -> pure $ Failed "no index of"
+            Just o -> do
+              e' <- TA.at xs o
+              pure $ e' === Just y
 
 
 lastIndexOfImpliesAtTests :: Ref Int -> Effect Unit
@@ -358,11 +360,13 @@ lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
       e <- TA.at xs 0
       case e of
         Nothing -> pure Success
-        Just y -> case TA.lastIndexOf y Nothing xs of
-          Nothing -> pure $ Failed "no lastIndex of"
-          Just o -> do
-            e' <- TA.at xs o
-            pure $ e' === Just y
+        Just y -> do
+          idx <- TA.lastIndexOf y Nothing xs
+          case idx of
+            Nothing -> pure $ Failed "no lastIndex of"
+            Just o -> do
+              e' <- TA.at xs o
+              pure $ e' === Just y
 
 
 foldrConsIsToArrayTests :: Ref Int -> Effect Unit
