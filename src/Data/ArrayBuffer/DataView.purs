@@ -48,17 +48,17 @@ module Data.ArrayBuffer.DataView
        , whole
        ) where
 
-import Prelude (class Eq, (==), (<>))
-
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, ByteOffset, DataView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, Uint8Clamped, kind ArrayViewType)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
-import Data.Maybe (Maybe(..))
+import Data.Float32 (Float32) as F
+import Data.Maybe (Maybe)
+import Data.Nullable (Nullable, toMaybe)
+import Data.Symbol (SProxy(..), class IsSymbol, reflectSymbol)
 import Data.Typelevel.Num (toInt', class Nat)
 import Data.UInt (UInt)
-import Data.Float32 (Float32) as F
-import Data.Symbol (SProxy (..), class IsSymbol, reflectSymbol)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn2, EffectFn3, EffectFn4, runEffectFn2, runEffectFn3, runEffectFn4)
+import Prelude (class Eq, (<$>), (<>), (==))
 import Type.Proxy (Proxy(..))
 
 
@@ -122,12 +122,10 @@ instance showArrayViewTypeViewFloat32 :: ShowArrayViewType Float32 "Float32"
 instance showArrayViewTypeViewFloat64 :: ShowArrayViewType Float64 "Float64"
 
 foreign import getterImpl :: forall t
-                           . EffectFn3 { just :: t -> Maybe t
-                                       , nothing :: Maybe t
-                                       , functionName :: String
+                           . EffectFn3 { functionName :: String
                                        , littleEndian :: Boolean
                                        , bytesPerValue :: ByteLength
-                                       } DataView ByteOffset (Maybe t)
+                                       } DataView ByteOffset (Nullable t)
 
 getter :: forall t.
           { functionName :: String
@@ -135,11 +133,9 @@ getter :: forall t.
           , littleEndian :: Boolean
           }
        -> DataView -> ByteOffset -> Effect (Maybe t)
-getter data' d o =
+getter data' d o = toMaybe <$>
   runEffectFn3 getterImpl
-    { just: Just
-    , nothing: Nothing
-    , functionName: data'.functionName
+    { functionName: data'.functionName
     , littleEndian: data'.littleEndian
     , bytesPerValue: data'.bytesPerValue
     } d o

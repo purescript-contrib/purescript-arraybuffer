@@ -29,8 +29,8 @@ exports.byteLength = function byteLength (v) {
 
 exports.getterImpl = function getterImpl (data, v, o) {
     return ((o + data.bytesPerValue) >>> 0) <= v.byteLength
-        ? data.just (v[data.functionName].call(v,o,data.littleEndian))
-        : data.nothing;
+        ? v[data.functionName].call(v,o,data.littleEndian)
+        : null;
 };
 
 exports.setterImpl = function setterImpl (data, v, o, n) {
