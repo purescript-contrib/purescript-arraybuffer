@@ -302,35 +302,35 @@ indexOf x mo a = toMaybe <$> runEffectFn3 indexOfImpl a x (toNullable mo)
 lastIndexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect (Maybe Offset)
 lastIndexOf x mo a = toMaybe <$> runEffectFn3 lastIndexOfImpl a x (toNullable mo)
 
-foldl :: forall a b t. TypedArray a t => (b -> t -> b) -> b -> ArrayView a -> b
+foldl :: forall a b t. TypedArray a t => (b -> t -> b) -> b -> ArrayView a -> Effect b
 foldl f = foldlWithIndex' (\a x _ -> f a x)
 
-foldlWithIndex :: forall a b t. TypedArray a t => (Offset -> b -> t -> b) -> b -> ArrayView a -> b
+foldlWithIndex :: forall a b t. TypedArray a t => (Offset -> b -> t -> b) -> b -> ArrayView a -> Effect b
 foldlWithIndex f = foldlWithIndex' (\a x o -> f o a x)
 
-foldlWithIndex' :: forall a b t. TypedArray a t => (b -> t -> Offset -> b) -> b -> ArrayView a -> b
-foldlWithIndex' f i = unsafePerformEffect <<< foldlM (\a x o -> pure (f a x o)) i
+foldlWithIndex' :: forall a b t. TypedArray a t => (b -> t -> Offset -> b) -> b -> ArrayView a -> Effect b
+foldlWithIndex' f i = foldlM (\a x o -> pure (f a x o)) i
 
-foldr :: forall a b t. TypedArray a t => (t -> b -> b) -> b -> ArrayView a -> b
+foldr :: forall a b t. TypedArray a t => (t -> b -> b) -> b -> ArrayView a -> Effect b
 foldr f = foldrWithIndex' (\a x _ -> f a x)
 
-foldrWithIndex :: forall a b t. TypedArray a t => (Offset -> t -> b -> b) -> b -> ArrayView a -> b
+foldrWithIndex :: forall a b t. TypedArray a t => (Offset -> t -> b -> b) -> b -> ArrayView a -> Effect b
 foldrWithIndex f = foldrWithIndex' (\a x o -> f o a x)
 
-foldrWithIndex' :: forall a b t. TypedArray a t => (t -> b -> Offset -> b) -> b -> ArrayView a -> b
-foldrWithIndex' f i = unsafePerformEffect <<< foldrM (\x a o -> pure (f x a o)) i
+foldrWithIndex' :: forall a b t. TypedArray a t => (t -> b -> Offset -> b) -> b -> ArrayView a -> Effect b
+foldrWithIndex' f i = foldrM (\x a o -> pure (f x a o)) i
 
-foldl1 :: forall a t. TypedArray a t => (t -> t -> t) -> ArrayView a -> t
+foldl1 :: forall a t. TypedArray a t => (t -> t -> t) -> ArrayView a -> Effect t
 foldl1 f = foldl1WithIndex (\_ a x -> f a x)
 
-foldl1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> t
-foldl1WithIndex f = unsafePerformEffect <<< foldl1M (\acc x o -> pure (f o acc x))
+foldl1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> Effect t
+foldl1WithIndex f = foldl1M (\acc x o -> pure (f o acc x))
 
-foldr1 :: forall a t. TypedArray a t => (t -> t -> t) -> ArrayView a -> t
+foldr1 :: forall a t. TypedArray a t => (t -> t -> t) -> ArrayView a -> Effect t
 foldr1 f = foldr1WithIndex (\_ a x -> f a x)
 
-foldr1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> t
-foldr1WithIndex f = unsafePerformEffect <<< foldr1M (\x a o -> pure (f o x a))
+foldr1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> Effect t
+foldr1WithIndex f = foldr1M (\x a o -> pure (f o x a))
 
 foreign import copyWithinImpl :: forall a. EffectFn4 (ArrayView a) Offset Offset (Nullable Offset) Unit
 

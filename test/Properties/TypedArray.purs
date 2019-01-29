@@ -375,7 +375,8 @@ foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
     foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldrConsIsToArray (WithOffset _ xs) = do
       axs <- TA.toArray xs
-      pure $ TA.foldr Array.cons [] xs === axs
+      rxs <- TA.foldr Array.cons [] xs
+      pure $ rxs === axs
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
@@ -384,7 +385,8 @@ foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
     foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
     foldlSnocIsToArray (WithOffset _ xs) = do
       axs <- TA.toArray xs
-      pure $ TA.foldl Array.snoc [] xs === axs
+      rxs <- TA.foldl Array.snoc [] xs
+      pure $ rxs === axs
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
