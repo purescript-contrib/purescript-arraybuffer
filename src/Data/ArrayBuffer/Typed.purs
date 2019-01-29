@@ -403,9 +403,7 @@ foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
 
 -- | Fetch element at index.
 at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Effect (Maybe t)
-at a n = if a `hasIndex` n
-         then Just <$> unsafePartial (unsafeAt a n)
-         else pure Nothing
+at a n = toMaybe <$> runEffectFn2 unsafeAtImpl a n
 
 infixl 3 at as !
 
