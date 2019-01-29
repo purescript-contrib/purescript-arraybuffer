@@ -10,7 +10,8 @@ import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed.Gen (WithOffset(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithOffset)
 import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array, Int32Array, Int8Array, Uint16Array, Uint8Array, Uint8ClampedArray, Uint32Array)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust)
+import Data.Traversable (traverse)
 import Data.Typelevel.Num (class Nat, D0, D1, D2, D5, d0, d1, toInt')
 import Data.Vec (head, index) as Vec
 import Effect (Effect)
@@ -18,7 +19,6 @@ import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
-import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (class Testable, Result(..), quickCheckGen, (/==), (<?>), (===))
 import Test.QuickCheck.Combinators ((==>), (|=|))
 import Test.QuickCheck.Gen (Gen)
@@ -298,12 +298,9 @@ withOffsetElemTests count = overAll1 count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
     withOffsetElem (WithOffset os xs) = do
-      let valid :: TA.Offset -> Boolean
-          valid o = unsafePerformEffect do
-            e <- unsafePartial $ TA.unsafeAt xs o
-            b <- TA.elem e Nothing xs
-            pure b
-      pure $ Array.all valid os <?> "All doesn't have an elem of itself"
+      let fetch o = TA.at xs o
+      exs <- traverse fetch os
+      pure $ Array.all isJust exs <?> "All doesn't have an elem of itself"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
