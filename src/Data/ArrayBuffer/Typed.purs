@@ -71,15 +71,15 @@ foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (N
 
 -- ----
 
-foreign import everyImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
-foreign import someImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
+foreign import everyImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
+foreign import someImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 
 foreign import fillImpl :: forall a b. EffectFn4 (ArrayView a) b Offset Offset Unit
 
 foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset b) (ArrayView a)
 foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Unit) Unit
-foreign import filterImpl :: forall a b. Fn2 (ArrayView a) (Fn2 b Offset Boolean) (ArrayView a)
-foreign import includesImpl :: forall a b. Fn3 (ArrayView a) b (Nullable Offset) Boolean
+foreign import filterImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (ArrayView a)
+foreign import includesImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) Boolean
 foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
 foreign import reduce1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
 foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
@@ -227,38 +227,38 @@ traverseWithIndex_' :: forall a t. TypedArray a t => (t -> Offset -> Effect Unit
 traverseWithIndex_' f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
 
 -- | Test a predicate to pass on all values
-all :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Boolean
+all :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect Boolean
 all = every <<< ap1
 
-allWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Boolean
+allWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Effect Boolean
 allWithIndex = every <<< flip
 
-every :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-every p a = runFn2 everyImpl a (mkFn2 p)
+every :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect Boolean
+every p a = runEffectFn2 everyImpl a (mkFn2 p)
 
 -- | Test a predicate to pass on any value
-any :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Boolean
+any :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect Boolean
 any = some <<< ap1
 
-anyWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Boolean
+anyWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Effect Boolean
 anyWithIndex = some <<< flip
 
-some :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Boolean
-some p a = runFn2 someImpl a (mkFn2 p)
+some :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect Boolean
+some p a = runEffectFn2 someImpl a (mkFn2 p)
 
 -- | Returns a new typed array with all values that pass the predicate
-filter :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> ArrayView a
+filter :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect (ArrayView a)
 filter = filterWithIndex' <<< ap1
 
-filterWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> ArrayView a
+filterWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Effect (ArrayView a)
 filterWithIndex = filterWithIndex' <<< flip
 
-filterWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> ArrayView a
-filterWithIndex' p a = runFn2 filterImpl a (mkFn2 p)
+filterWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect (ArrayView a)
+filterWithIndex' p a = runEffectFn2 filterImpl a (mkFn2 p)
 
 -- | Tests if a value is an element of the typed array
-elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Boolean
-elem x mo a = runFn3 includesImpl a x (toNullable mo)
+elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect Boolean
+elem x mo a = runEffectFn3 includesImpl a x (toNullable mo)
 
 -- | Fetch element at index.
 unsafeAt :: forall a t. TypedArray a t => Partial => ArrayView a -> Offset -> Effect t

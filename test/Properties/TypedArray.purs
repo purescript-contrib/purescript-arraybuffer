@@ -213,7 +213,7 @@ allAreFilledTests count = overAll count allAreFilled
       let x = fromMaybe zero e
           l = TA.length xs
       TA.fill x 0 l xs
-      let b = TA.all (_ == x) xs
+      b <- TA.all (_ == x) xs
       pure (b <?> "All aren't the filled value")
 
 
@@ -237,11 +237,13 @@ allImpliesAnyTests :: Ref Int -> Effect Unit
 allImpliesAnyTests count = overAll count allImpliesAny
   where
     allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
-    allImpliesAny (WithOffset _ xs) =
+    allImpliesAny (WithOffset _ xs) = do
       let pred x = x /= zero
-          all' = TA.all pred xs <?> "All don't satisfy the predicate"
-          any' = TA.any pred xs <?> "None satisfy the predicate"
-      in pure $ (TA.length xs === zero) |=| all' ==> any'
+      all'' <- TA.all pred xs
+      let all' = all'' <?> "All don't satisfy the predicate"
+      any'' <- TA.any pred xs
+      let any' = any'' <?> "None satisfy the predicate"
+      pure $ (TA.length xs === zero) |=| all' ==> any'
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -249,11 +251,11 @@ filterImpliesAllTests :: Ref Int -> Effect Unit
 filterImpliesAllTests count = overAll count filterImpliesAll
   where
     filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
-    filterImpliesAll (WithOffset _ xs) =
+    filterImpliesAll (WithOffset _ xs) = do
       let pred x = x /= zero
-          ys = TA.filter pred xs
-          all' = TA.all pred ys
-      in pure $ all' <?> "Filter doesn't imply all"
+      ys <- TA.filter pred xs
+      all' <- TA.all pred ys
+      pure $ all' <?> "Filter doesn't imply all"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -263,8 +265,8 @@ filterIsTotalTests count = overAll count filterIsTotal
     filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
     filterIsTotal (WithOffset _ xs) = do
       let pred x = x /= zero
-          ys = TA.filter pred xs
-          zs = TA.filter (not pred) ys
+      ys <- TA.filter pred xs
+      zs <- TA.filter (not pred) ys
       azs <- TA.toArray zs
       pure $ azs === []
 
@@ -276,8 +278,8 @@ filterIsIdempotentTests count = overAll count filterIsIdempotent
     filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
     filterIsIdempotent (WithOffset _ xs) = do
       let pred x = x /= zero
-          ys = TA.filter pred xs
-          zs = TA.filter pred ys
+      ys <- TA.filter pred xs
+      zs <- TA.filter pred ys
       azs <- TA.toArray zs
       ays <- TA.toArray ys
       pure $ azs === ays
@@ -295,9 +297,13 @@ withOffsetElemTests :: Ref Int -> Effect Unit
 withOffsetElemTests count = overAll1 count withOffsetElem
   where
     withOffsetElem :: forall a b t. TestableArrayF a b D5 t Result
-    withOffsetElem (WithOffset os xs) = pure $
-      Array.all (\o -> TA.elem (unsafePartial $ unsafePerformEffect $ TA.unsafeAt xs o) Nothing xs) os
-        <?> "All doesn't have an elem of itself"
+    withOffsetElem (WithOffset os xs) = do
+      let valid :: TA.Offset -> Boolean
+          valid o = unsafePerformEffect do
+            e <- unsafePartial $ TA.unsafeAt xs o
+            b <- TA.elem e Nothing xs
+            pure b
+      pure $ Array.all valid os <?> "All doesn't have an elem of itself"
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -307,7 +313,8 @@ anyImpliesFindTests count = overAll count anyImpliesFind
     anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
     anyImpliesFind (WithOffset _ xs) = do
       let pred x = x /= zero
-          p = TA.any pred xs <?> "All don't satisfy the predicate"
+      a <- TA.any pred xs
+      let p = a <?> "All don't satisfy the predicate"
       idx <- TA.find pred xs
       let q = case idx of
               Nothing -> Failed "Doesn't have a value satisfying the predicate"
