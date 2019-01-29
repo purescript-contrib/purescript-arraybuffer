@@ -74,7 +74,7 @@ foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (N
 foreign import everyImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 foreign import someImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 
-foreign import fillImpl :: forall a b. EffectFn4 (ArrayView a) b Offset Offset Unit
+foreign import fillImpl :: forall a b. EffectFn4 b Offset Offset (ArrayView a) Unit
 
 foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset b) (ArrayView a)
 foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Unit) Unit
@@ -180,7 +180,7 @@ fromArray a = runEffectFn3 create a null null
 
 -- | Fill the array with a value
 fill :: forall a t. TypedArray a t => t -> Offset -> Offset -> ArrayView a -> Effect Unit
-fill x s e a = runEffectFn4 fillImpl a x s e
+fill x s e a = runEffectFn4 fillImpl x s e a
 
 -- | Stores multiple values into the typed array
 set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Boolean

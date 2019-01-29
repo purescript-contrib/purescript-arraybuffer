@@ -73,7 +73,7 @@ exports.someImpl = function someImpl (a,p) {
 };
 
 
-exports.fillImpl = function fillImpl (a,x,s,e) {
+exports.fillImpl = function fillImpl (x, s, e, a) {
     return a.fill(x,s,e);
 };
 
