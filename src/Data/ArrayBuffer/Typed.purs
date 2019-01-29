@@ -54,14 +54,13 @@ import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteO
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 import Data.Float32 (Float32) as F
 import Data.Function.Uncurried (Fn2, Fn3, mkFn2, runFn2, runFn3)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe, fromMaybe)
 import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Effect.Unsafe (unsafePerformEffect)
-import Partial.Unsafe (unsafePartial)
 import Prelude (Unit, flip, pure, (&&), (*), (*>), (-), (<$>), (<<<), (<=), (>=))
 import Type.Proxy (Proxy(..))
 
@@ -80,6 +79,7 @@ foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
 foreign import lengthImpl :: forall a. ArrayView a -> Length
 
+-- | Represents the number of elements in this typed array.
 length :: forall a. ArrayView a -> Length
 length = lengthImpl
 
