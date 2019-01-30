@@ -95,9 +95,6 @@ foreign import newFloat32Array :: forall a. EffectFn3 a (Nullable ByteOffset) (N
 foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (Nullable ByteLength) Float64Array
 
 
--- ----
-
-
 -- | Value-oriented array offset.
 type Offset = Int
 -- | Value-oriented array length.
@@ -209,7 +206,8 @@ foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b O
 all :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect Boolean
 all = every <<< ap1
 
--- | Test a predicate (that receives also an index) to pass on all values.
+-- | Test a predicate to pass on all values. The predicate function
+-- | receives the offset and the element.
 allWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Effect Boolean
 allWithIndex = every <<< flip
 
@@ -233,6 +231,9 @@ foreign import someImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boo
 filter :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect (ArrayView a)
 filter = filterWithIndex' <<< ap1
 
+-- | Returns a new typed array with all values that pass the
+-- | predicate. The predicate function receives the offset and the
+-- | element.
 filterWithIndex :: forall a t. TypedArray a t => (Offset -> t -> Boolean) -> ArrayView a -> Effect (ArrayView a)
 filterWithIndex = filterWithIndex' <<< flip
 
