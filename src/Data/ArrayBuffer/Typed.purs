@@ -77,12 +77,10 @@ foreign import byteOffset :: forall a. ArrayView a -> ByteOffset
 -- | Represents the length of this typed array, in bytes.
 foreign import byteLength :: forall a. ArrayView a -> ByteLength
 
-foreign import lengthImpl :: forall a. ArrayView a -> Length
-
 -- | Represents the number of elements in this typed array.
 length :: forall a. ArrayView a -> Length
 length = lengthImpl
-
+foreign import lengthImpl :: forall a. ArrayView a -> Length
 
 -- object creator implementations for each typed array
 
@@ -98,24 +96,6 @@ foreign import newFloat64Array :: forall a. EffectFn3 a (Nullable ByteOffset) (N
 
 
 -- ----
-
-foreign import everyImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
-foreign import someImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
-
-foreign import fillImpl :: forall a b. EffectFn4 b Offset Offset (ArrayView a) Unit
-
-foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset b) (ArrayView a)
-foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Unit) Unit
-foreign import filterImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (ArrayView a)
-foreign import includesImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) Boolean
-foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
-foreign import reduce1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
-foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
-foreign import reduceRight1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
-foreign import findImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable b)
-foreign import findIndexImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable Offset)
-foreign import indexOfImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
-foreign import lastIndexOfImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
 
 
 -- | Value-oriented array offset.
@@ -177,6 +157,7 @@ fromArray a = runEffectFn3 create a null null
 -- | Fill the array with a value.
 fill :: forall a t. TypedArray a t => t -> Offset -> Offset -> ArrayView a -> Effect Unit
 fill x s e a = runEffectFn4 fillImpl x s e a
+foreign import fillImpl :: forall a b. EffectFn4 b Offset Offset (ArrayView a) Unit
 
 -- | Stores multiple values into the typed array.
 set :: forall a t. TypedArray a t => ArrayView a -> Maybe Offset -> Array t -> Effect Boolean
@@ -199,6 +180,7 @@ mapWithIndex = mapWithIndex' <<< flip
 
 mapWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> t) -> ArrayView a -> ArrayView a
 mapWithIndex' f a = unsafePerformEffect (runEffectFn2 mapImpl a (mkEffectFn2 (\x o -> pure (f x o))))
+foreign import mapImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset b) (ArrayView a)
 
 -- | Traverses over each value, returning a new one.
 traverse :: forall a t. TypedArray a t => (t -> Effect t) -> ArrayView a -> Effect (ArrayView a)
@@ -221,6 +203,7 @@ traverseWithIndex_ = traverseWithIndex_' <<< flip
 
 traverseWithIndex_' :: forall a t. TypedArray a t => (t -> Offset -> Effect Unit) -> ArrayView a -> Effect Unit
 traverseWithIndex_' f a = runEffectFn2 forEachImpl a (mkEffectFn2 f)
+foreign import forEachImpl :: forall a b. EffectFn2 (ArrayView a) (EffectFn2 b Offset Unit) Unit
 
 -- | Test a predicate to pass on all values.
 all :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect Boolean
@@ -232,6 +215,7 @@ allWithIndex = every <<< flip
 
 every :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect Boolean
 every p a = runEffectFn2 everyImpl a (mkFn2 p)
+foreign import everyImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 
 -- | Test a predicate to pass on any value.
 any :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect Boolean
@@ -243,6 +227,7 @@ anyWithIndex = some <<< flip
 
 some :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect Boolean
 some p a = runEffectFn2 someImpl a (mkFn2 p)
+foreign import someImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) Boolean
 
 -- | Returns a new typed array with all values that pass the predicate.
 filter :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect (ArrayView a)
@@ -253,10 +238,12 @@ filterWithIndex = filterWithIndex' <<< flip
 
 filterWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect (ArrayView a)
 filterWithIndex' p a = runEffectFn2 filterImpl a (mkFn2 p)
+foreign import filterImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (ArrayView a)
 
 -- | Tests if a value is an element of the typed array.
 elem :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect Boolean
 elem x mo a = runEffectFn3 includesImpl a x (toNullable mo)
+foreign import includesImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) Boolean
 
 -- | Fetch element at index.
 unsafeAt :: forall a t. TypedArray a t => Partial => ArrayView a -> Offset -> Effect t
@@ -265,18 +252,22 @@ unsafeAt a o = runEffectFn2 unsafeAtImpl a o
 -- | Folding from the left.
 foldlM :: forall a t b. TypedArray a t => (b -> t -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
 foldlM f i a = runEffectFn3 reduceImpl a (mkEffectFn3 f) i
+foreign import reduceImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
 
 -- | Folding from the left. Assumes the typed array is non-empty.
 foldl1M :: forall a t. TypedArray a t => (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
 foldl1M f a = runEffectFn2 reduce1Impl a (mkEffectFn3 f)
+foreign import reduce1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
 
 -- | Folding from the right.
 foldrM :: forall a t b. TypedArray a t => (t -> b -> Offset -> Effect b) -> b -> ArrayView a -> Effect b
 foldrM f i a = runEffectFn3 reduceRightImpl a (mkEffectFn3 (\acc x o -> f x acc o)) i
+foreign import reduceRightImpl :: forall a b c. EffectFn3 (ArrayView a) (EffectFn3 c b Offset c) c c
 
 -- | Folding from the right. Assumes the typed array is non-empty.
 foldr1M :: forall a t. TypedArray a t => (t -> t -> Offset -> Effect t) -> ArrayView a -> Effect t
 foldr1M f a = runEffectFn2 reduceRight1Impl a (mkEffectFn3 (\acc x o -> f x acc o))
+foreign import reduceRight1Impl :: forall a b. EffectFn2 (ArrayView a) (EffectFn3 b b Offset b) b
 
 -- | Returns the first value satisfying the predicate.
 find :: forall a t. TypedArray a t => (t -> Boolean) -> ArrayView a -> Effect (Maybe t)
@@ -287,19 +278,22 @@ findWithIndex = findWithIndex' <<< flip
 
 findWithIndex' :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect (Maybe t)
 findWithIndex' f a = toMaybe <$> runEffectFn2 findImpl a (mkFn2 f)
+foreign import findImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable b)
 
 -- | Returns the first index of the value satisfying the predicate.
 findIndex :: forall a t. TypedArray a t => (t -> Offset -> Boolean) -> ArrayView a -> Effect (Maybe Offset)
 findIndex f a = toMaybe <$> runEffectFn2 findIndexImpl a (mkFn2 f)
+foreign import findIndexImpl :: forall a b. EffectFn2 (ArrayView a) (Fn2 b Offset Boolean) (Nullable Offset)
 
 -- | Returns the first index of the element, if it exists, from the left.
 indexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect (Maybe Offset)
 indexOf x mo a = toMaybe <$> runEffectFn3 indexOfImpl a x (toNullable mo)
+foreign import indexOfImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
 
 -- | Returns the first index of the element, if it exists, from the right.
 lastIndexOf :: forall a t. TypedArray a t => t -> Maybe Offset -> ArrayView a -> Effect (Maybe Offset)
 lastIndexOf x mo a = toMaybe <$> runEffectFn3 lastIndexOfImpl a x (toNullable mo)
-
+foreign import lastIndexOfImpl :: forall a b. EffectFn3 (ArrayView a) b (Nullable Offset) (Nullable Offset)
 
 foldl :: forall a b t. TypedArray a t => (b -> t -> b) -> b -> ArrayView a -> Effect b
 foldl f = foldlWithIndex' (\a x _ -> f a x)
@@ -331,19 +325,16 @@ foldr1 f = foldr1WithIndex (\_ a x -> f a x)
 foldr1WithIndex :: forall a t. TypedArray a t => (Offset -> t -> t -> t) -> ArrayView a -> Effect t
 foldr1WithIndex f = foldr1M (\x a o -> pure (f o x a))
 
-foreign import copyWithinImpl :: forall a. EffectFn4 (ArrayView a) Offset Offset (Nullable Offset) Unit
-
 -- | Internally copy values - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin) for details.
 copyWithin :: forall a. ArrayView a -> Offset -> Offset -> Maybe Offset -> Effect Unit
 copyWithin a t s me = runEffectFn4 copyWithinImpl a t s (toNullable me)
-
-foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
+foreign import copyWithinImpl :: forall a. EffectFn4 (ArrayView a) Offset Offset (Nullable Offset) Unit
 
 -- | Reverses a typed array in-place.
 reverse :: forall a. ArrayView a -> Effect Unit
 reverse a = runEffectFn1 reverseImpl a
+foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
-foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) Offset b Unit
 
 setInternal :: forall a b. (b -> Length) -> ArrayView a -> Maybe Offset -> b -> Effect Boolean
 setInternal lenfn a mo b =
@@ -351,64 +342,52 @@ setInternal lenfn a mo b =
   in if o >= 0 && lenfn b <= length a - o
      then runEffectFn3 setImpl a o b *> pure true
      else pure false
+foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) Offset b Unit
+
 
 
 -- | Stores multiple values in the typed array, reading input values from the second typed array.
 setTyped :: forall a. ArrayView a -> Maybe Offset -> ArrayView a -> Effect Boolean
 setTyped = setInternal length
 
-
--- | Copy the entire contents of the typed array into a new buffer.
-foreign import sliceImpl :: forall a. EffectFn3 (ArrayView a) Offset Offset (ArrayView a)
-
 -- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
 slice :: forall a. Offset -> Offset -> ArrayView a -> Effect (ArrayView a)
 slice s e a = runEffectFn3 sliceImpl a s e
-
-foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
+foreign import sliceImpl :: forall a. EffectFn3 (ArrayView a) Offset Offset (ArrayView a)
 
 -- | Sorts the values in-place.
 sort :: forall a. ArrayView a -> Effect Unit
 sort a = runEffectFn1 sortImpl a
-
-
-foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
+foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
 -- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
 subArray :: forall a. Offset -> Offset -> ArrayView a -> ArrayView a
 subArray s e a = runFn3 subArrayImpl a s e
-
-foreign import toStringImpl :: forall a. EffectFn1 (ArrayView a) String
+foreign import subArrayImpl :: forall a. Fn3 (ArrayView a) Offset Offset (ArrayView a)
 
 -- | Prints array to a comma-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString) for details.
 toString :: forall a. ArrayView a -> Effect String
 toString a = runEffectFn1 toStringImpl a
-
-foreign import joinImpl :: forall a. EffectFn2 (ArrayView a) String String
+foreign import toStringImpl :: forall a. EffectFn1 (ArrayView a) String
 
 -- | Prints array to a delimiter-separated string - see [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join) for details.
 join :: forall a. String -> ArrayView a -> Effect String
 join s a = runEffectFn2 joinImpl a s
-
-
-foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
+foreign import joinImpl :: forall a. EffectFn2 (ArrayView a) String String
 
 -- | Determine if a certain index is valid.
 hasIndex :: forall a. ArrayView a -> Offset -> Boolean
 hasIndex a o = runFn2 hasIndexImpl a o
-
-
-foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
+foreign import hasIndexImpl :: forall a. Fn2 (ArrayView a) Offset Boolean
 
 -- | Fetch element at index.
 at :: forall a t. TypedArray a t => ArrayView a -> Offset -> Effect (Maybe t)
 at a n = toMaybe <$> runEffectFn2 unsafeAtImpl a n
+foreign import unsafeAtImpl :: forall a b. EffectFn2 (ArrayView a) Offset b
 
 infixl 3 at as !
-
-
-foreign import toArrayImpl :: forall a b. EffectFn1 (ArrayView a) (Array b)
 
 -- | Turn typed array into an array.
 toArray :: forall a t. TypedArray a t => ArrayView a -> Effect (Array t)
 toArray a = runEffectFn1 toArrayImpl a
+foreign import toArrayImpl :: forall a b. EffectFn1 (ArrayView a) (Array b)

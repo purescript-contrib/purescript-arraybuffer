@@ -12,19 +12,15 @@ import Data.Function.Uncurried (Fn3, runFn3)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, runEffectFn1)
 
-
-foreign import emptyImpl :: EffectFn1 ByteLength ArrayBuffer
-
-
 -- | Create an `ArrayBuffer` with the given capacity.
 empty :: ByteLength -> Effect ArrayBuffer
 empty l = runEffectFn1 emptyImpl l
+foreign import emptyImpl :: EffectFn1 ByteLength ArrayBuffer
 
 -- | Represents the length of an `ArrayBuffer` in bytes.
 foreign import byteLength :: ArrayBuffer -> ByteLength
 
-foreign import sliceImpl :: Fn3 ArrayBuffer ByteOffset ByteOffset ArrayBuffer
-
 -- | Returns a new `ArrayBuffer` whose contents are a copy of this ArrayBuffer's bytes from begin, inclusive, up to end, exclusive.
 slice :: ByteOffset -> ByteOffset -> ArrayBuffer -> ArrayBuffer
 slice s e a = runFn3 sliceImpl a s e
+foreign import sliceImpl :: Fn3 ArrayBuffer ByteOffset ByteOffset ArrayBuffer

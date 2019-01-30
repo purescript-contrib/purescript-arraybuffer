@@ -66,17 +66,16 @@ import Type.Proxy (Proxy(..))
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
 
-foreign import remainderImpl :: EffectFn2 ArrayBuffer ByteOffset DataView
 
 -- | View mapping the rest of an `ArrayBuffer` after an index.
 remainder :: ArrayBuffer -> ByteOffset -> Effect DataView
 remainder a o = runEffectFn2 remainderImpl a o
-
-foreign import partImpl :: EffectFn3 ArrayBuffer ByteOffset ByteLength DataView
+foreign import remainderImpl :: EffectFn2 ArrayBuffer ByteOffset DataView
 
 -- | View mapping a region of the `ArrayBuffer`.
 part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect DataView
 part a o l = runEffectFn3 partImpl a o l
+foreign import partImpl :: EffectFn3 ArrayBuffer ByteOffset ByteLength DataView
 
 -- | `ArrayBuffer` being mapped by the view.
 foreign import buffer :: DataView -> ArrayBuffer
@@ -121,12 +120,6 @@ instance showArrayViewTypeViewInt8 :: ShowArrayViewType Int8 "Int8"
 instance showArrayViewTypeViewFloat32 :: ShowArrayViewType Float32 "Float32"
 instance showArrayViewTypeViewFloat64 :: ShowArrayViewType Float64 "Float64"
 
-foreign import getterImpl :: forall t
-                           . EffectFn3 { functionName :: String
-                                       , littleEndian :: Boolean
-                                       , bytesPerValue :: ByteLength
-                                       } DataView ByteOffset (Nullable t)
-
 getter :: forall t.
           { functionName :: String
           , bytesPerValue :: ByteLength
@@ -139,6 +132,12 @@ getter data' d o = toMaybe <$>
     , littleEndian: data'.littleEndian
     , bytesPerValue: data'.bytesPerValue
     } d o
+foreign import getterImpl :: forall t
+                           . EffectFn3 { functionName :: String
+                                       , littleEndian :: Boolean
+                                       , bytesPerValue :: ByteLength
+                                       } DataView ByteOffset (Nullable t)
+
 
 
 get :: forall a name t b
@@ -175,18 +174,18 @@ getLE :: forall a name t b
       => AProxy a -> DataView -> ByteOffset -> Effect (Maybe t)
 getLE = get LE
 
-foreign import setterImpl :: forall t
-                           . EffectFn4 { functionName :: String
-                                       , littleEndian :: Boolean
-                                       , bytesPerValue :: ByteLength
-                                       } DataView ByteOffset t Boolean
-
 setter :: forall t.
           { functionName :: String
           , bytesPerValue :: ByteLength
           , littleEndian :: Boolean
           } -> DataView -> ByteOffset -> t -> Effect Boolean
 setter d o t = runEffectFn4 setterImpl d o t
+foreign import setterImpl :: forall t
+                           . EffectFn4 { functionName :: String
+                                       , littleEndian :: Boolean
+                                       , bytesPerValue :: ByteLength
+                                       } DataView ByteOffset t Boolean
+
 
 set :: forall a name t b
      . DataView a t
