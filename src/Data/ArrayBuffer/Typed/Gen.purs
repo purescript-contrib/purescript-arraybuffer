@@ -58,19 +58,19 @@ genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+3
   where div = 4.0
 
 -- | For generating some set of offsets residing inside the generated array
-data WithOffset n a = WithOffset (Vec n TA.Offset) (ArrayView a)
-derive instance genericWithOffset :: Generic (ArrayView a) a' => Generic (WithOffset n a) _
+data WithIndices n a = WithIndices (Vec n TA.Index) (ArrayView a)
+derive instance genericWithIndices :: Generic (ArrayView a) a' => Generic (WithIndices n a) _
 
-genWithOffset :: forall m n a
+genWithIndices :: forall m n a
                . MonadGen m
               => Nat n
               => m (ArrayView a)
-              -> m (WithOffset n a)
-genWithOffset gen = do
+              -> m (WithIndices n a)
+genWithIndices gen = do
   let n = toInt' (Proxy :: Proxy n)
   xs <- gen
   let l = TA.length xs
   mos <- replicateA n (chooseInt 0 (l - 1))
   let os = unsafePartial $ case Vec.fromArray mos of
         Just q -> q
-  pure (WithOffset os xs)
+  pure (WithIndices os xs)
