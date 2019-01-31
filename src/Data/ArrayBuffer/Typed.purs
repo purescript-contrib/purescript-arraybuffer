@@ -30,8 +30,7 @@
 
 
 module Data.ArrayBuffer.Typed
-  ( polyFill
-  , Index, Length
+  ( Index, Length
   , buffer, byteOffset, byteLength, length
   , class TypedArray
   , create, whole, remainder, part, empty, fromArray
@@ -64,9 +63,6 @@ import Effect.Unsafe (unsafePerformEffect)
 import Prelude (Unit, flip, pure, ($), (&&), (*), (*>), (-), (<$>), (<<<), (<=), (>=))
 import Type.Proxy (Proxy(..))
 
-
--- | Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
-foreign import polyFill :: Effect Unit
 
 -- | `ArrayBuffer` being mapped by the typed array.
 foreign import buffer :: forall a. ArrayView a -> ArrayBuffer
