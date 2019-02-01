@@ -3,43 +3,41 @@
 // module Data.ArrayBuffer.DataView
 
 
-exports.whole = function(b) {
-  return new DataView(b);
-}
+exports.whole = function whole (b) {
+    return new DataView(b);
+};
 
-exports.sliceImpl = function(just, nothing, s, l, b) {
-  return ((s + l)>>>0) <= b.byteLength ? just(new DataView(b, s, l)) : nothing;
-}
+exports.remainderImpl = function remainderImpl (b,i) {
+    return new DataView(b,i);
+};
 
-exports.buffer = function(v) {
-  return v.buffer;
-}
+exports.partImpl = function partImpl (b,i,j) {
+    return new DataView(b,i,j);
+};
 
-exports.byteOffset = function(v) {
-  return v.byteOffset;
-}
+exports.buffer = function buffer (v) {
+    return v.buffer;
+};
 
-exports.byteLength = function(v) {
-  return v.byteLength;
-}
+exports.byteOffset = function byteOffset (v) {
+    return v.byteOffset;
+};
 
-exports.getterImpl = function(just, nothing, s, l, e, v, o) {
-  return function() {
-    return ((o + l)>>>0) <= v.byteLength? just(v[s].call(v,o,e)) : nothing;
-  };
-}
+exports.byteLength = function byteLength (v) {
+    return v.byteLength;
+};
 
-exports.setter = function(s) {
-  return function(e) {
-    return function(v) {
-      var f = v[s];
-      return function(n) {
-        return function(o) {
-            return function() {
-            f.call(v,o,n,e);
-          };
-        };
-      };
-    };
-  };
-}
+exports.getterImpl = function getterImpl (data, v, o) {
+    return ((o + data.bytesPerValue) >>> 0) <= v.byteLength
+        ? v[data.functionName].call(v,o,data.littleEndian)
+        : null;
+};
+
+exports.setterImpl = function setterImpl (data, v, o, n) {
+    if (((o + data.bytesPerValue) >>> 0) <= v.byteLength) {
+        v[data.functionName].call(v,o,n,data.littleEndian);
+        return true;
+    } else {
+        return false;
+    }
+};
