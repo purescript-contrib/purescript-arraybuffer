@@ -6,7 +6,7 @@ import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
-import Data.Float32 (Float32, fromNumber) as F
+import Data.Float32 (Float32, fromNumber') as F
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, toInt')
@@ -51,7 +51,7 @@ genInt32 :: forall m. MonadGen m => m Int
 genInt32 = chooseInt bottom top
 
 genFloat32 :: forall m. MonadGen m => m F.Float32
-genFloat32 = F.fromNumber <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
+genFloat32 = F.fromNumber' <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
 
 genFloat64 :: forall m. MonadGen m => m Number
 genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+308/div)

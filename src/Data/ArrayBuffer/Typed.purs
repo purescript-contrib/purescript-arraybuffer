@@ -32,6 +32,7 @@
 module Data.ArrayBuffer.Typed
   ( Index, Length
   , buffer, byteOffset, byteLength, length
+  , compare, eq
   , class TypedArray
   , create, whole, remainder, part, empty, fromArray
   , fill, set, setTyped, copyWithin
@@ -60,7 +61,8 @@ import Data.UInt (UInt)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Effect.Unsafe (unsafePerformEffect)
-import Prelude (Unit, flip, pure, ($), (&&), (*), (*>), (-), (<$>), (<<<), (<=), (>=))
+import Prelude (class Eq, class Ord, Ordering, Unit, flip, pure, ($), (&&), (*), (*>), (-), (<$>), (<*>), (<<<), (<=), (>=))
+import Prelude as Prelude
 import Type.Proxy (Proxy(..))
 
 
@@ -390,3 +392,11 @@ infixl 3 at as !
 toArray :: forall a t. TypedArray a t => ArrayView a -> Effect (Array t)
 toArray a = runEffectFn1 toArrayImpl a
 foreign import toArrayImpl :: forall a b. EffectFn1 (ArrayView a) (Array b)
+
+-- | Compare 2 typed arrays.
+compare :: forall a t. TypedArray a t => Ord t => ArrayView a -> ArrayView a -> Effect Ordering
+compare a b = Prelude.compare <$> toArray a <*> toArray b
+
+-- | Equality test for typed arrays.
+eq :: forall a t. TypedArray a t => Eq t => ArrayView a -> ArrayView a -> Effect Boolean
+eq a b = Prelude.eq <$> toArray a <*> toArray b

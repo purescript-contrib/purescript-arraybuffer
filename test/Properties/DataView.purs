@@ -47,7 +47,7 @@ type TestableViewF a name b n t q =
 
 overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a name b t. TestableViewF a name b n t q) -> Effect Unit
 overAll count f = do
-  void (Ref.modify (\x -> x + 1) count)
+  void (Ref.modify (_ + 1) count)
   log "      - Uint32"
   quickCheckGen $
     let f' :: TestableViewF Uint32 "Uint32" D4 n UInt q

@@ -20,12 +20,13 @@
     "purescript-typelevel": "^4.0.0",
     "purescript-uint": "^5.1.0",
     "purescript-sized-vectors": "^3.1.0",
-    "purescript-float32": "^0.0.1"
+    "purescript-partial": "^2.0.0",
+    "purescript-float32": "~0.1.1"
   },
   "devDependencies": {
     "purescript-debug": "^4.0.0",
     "purescript-quickcheck": "^5.0.0",
-    "purescript-partial": "^2.0.0",
-    "purescript-quickcheck-combinators": "^0.1.0"
+    "purescript-quickcheck-combinators": "~0.1.0",
+    "purescript-quickcheck-laws": "^4.0.0"
   }
 }
