@@ -7,7 +7,7 @@ import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue(..))
 import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genUint16, genUint32, genUint8)
 import Data.ArrayBuffer.Types (Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class ShowArrayViewType, class BinaryValue)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, D1, D2, D4, D8)
 import Data.UInt (UInt)
@@ -37,10 +37,10 @@ type TestableViewF a name b n t q =
   => Ord t
   => Semiring t
   => BytesPerValue a b
-  => DV.ShowArrayViewType a name
+  => BinaryValue a t
+  => ShowArrayViewType a name
   => IsSymbol name
   => Nat b
-  => DV.DataView a t
   => WithOffsetAndValue n a t
   -> q
 
