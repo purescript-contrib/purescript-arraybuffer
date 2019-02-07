@@ -6,9 +6,9 @@ import Control.Monad.Gen (suchThat)
 import Control.Monad.Gen.Class (class MonadGen, chooseInt)
 import Control.Monad.Rec.Class (class MonadRec)
 import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
-import Data.ArrayBuffer.DataView (whole, byteLength, class DataView)
+import Data.ArrayBuffer.DataView (whole, byteLength)
 import Data.ArrayBuffer.Types (DataView, ByteOffset, kind ArrayViewType)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
 import Data.Maybe (Maybe(Just))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.Unfoldable (replicateA)
@@ -34,7 +34,7 @@ genWithOffsetAndValue :: forall m n a b t
                       => MonadRec m
                       => Nat n
                       => BytesPerValue a b
-                      => DataView a t
+                      => BinaryValue a t
                       => Nat b
                       => m DataView -- ^ Assumes generated length is at least the minimum length of one value
                       -> m t

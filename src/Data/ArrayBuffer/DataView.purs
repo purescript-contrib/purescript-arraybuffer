@@ -7,8 +7,6 @@ module Data.ArrayBuffer.DataView
        , buffer
        , byteLength
        , byteOffset
-       , class DataView
-       , class ShowArrayViewType
        , get
        , getBE
        , getFloat32be
@@ -48,8 +46,8 @@ module Data.ArrayBuffer.DataView
        , whole
        ) where
 
-import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, ByteOffset, DataView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, Uint8Clamped, kind ArrayViewType)
-import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
+import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, ByteOffset, DataView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, kind ArrayViewType)
+import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue, class ShowArrayViewType)
 import Data.Float32 (Float32) as F
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
@@ -96,29 +94,6 @@ instance eqEndian :: Eq Endian where
   eq BE BE = true
   eq _ _ = false
 
-class BinaryValue a t <= DataView (a :: ArrayViewType) t | a -> t
-
-instance dataViewUint8Clamped :: DataView Uint8Clamped UInt
-instance dataViewUint32 :: DataView Uint32 UInt
-instance dataViewUint16 :: DataView Uint16 UInt
-instance dataViewUint8 :: DataView Uint8 UInt
-instance dataViewInt32 :: DataView Int32 Int
-instance dataViewInt16 :: DataView Int16 Int
-instance dataViewInt8 :: DataView Int8 Int
-instance dataViewFloat32 :: DataView Float32 F.Float32
-instance dataViewFloat64 :: DataView Float64 Number
-
-
-class ShowArrayViewType (a :: ArrayViewType) (name :: Symbol) | a -> name
-instance showArrayViewTypeUint8Clamped :: ShowArrayViewType Uint8Clamped "Uint8Clamped"
-instance showArrayViewTypeViewUint32 :: ShowArrayViewType Uint32 "Uint32"
-instance showArrayViewTypeViewUint16 :: ShowArrayViewType Uint16 "Uint16"
-instance showArrayViewTypeViewUint8 :: ShowArrayViewType Uint8 "Uint8"
-instance showArrayViewTypeViewInt32 :: ShowArrayViewType Int32 "Int32"
-instance showArrayViewTypeViewInt16 :: ShowArrayViewType Int16 "Int16"
-instance showArrayViewTypeViewInt8 :: ShowArrayViewType Int8 "Int8"
-instance showArrayViewTypeViewFloat32 :: ShowArrayViewType Float32 "Float32"
-instance showArrayViewTypeViewFloat64 :: ShowArrayViewType Float64 "Float64"
 
 getter :: forall t.
           { functionName :: String
@@ -141,7 +116,7 @@ foreign import getterImpl :: forall t
 
 
 get :: forall a name t b
-     . DataView a t
+     . BinaryValue a t
     => BytesPerValue a b
     => ShowArrayViewType a name
     => IsSymbol name
@@ -157,7 +132,7 @@ get endian prx =
             }
 
 getBE :: forall a name t b
-       . DataView a t
+       . BinaryValue a t
       => BytesPerValue a b
       => ShowArrayViewType a name
       => IsSymbol name
@@ -166,7 +141,7 @@ getBE :: forall a name t b
 getBE = get BE
 
 getLE :: forall a name t b
-       . DataView a t
+       . BinaryValue a t
       => BytesPerValue a b
       => ShowArrayViewType a name
       => IsSymbol name
@@ -188,7 +163,7 @@ foreign import setterImpl :: forall t
 
 
 set :: forall a name t b
-     . DataView a t
+     . BinaryValue a t
     => BytesPerValue a b
     => ShowArrayViewType a name
     => IsSymbol name
@@ -262,7 +237,7 @@ getFloat64le = getLE (AProxy :: AProxy Float64)
 
 -- | Store big-endian value at a certain index in a `DataView`.
 setBE :: forall a name t b
-       . DataView a t
+       . BinaryValue a t
       => BytesPerValue a b
       => ShowArrayViewType a name
       => IsSymbol name
@@ -272,7 +247,7 @@ setBE = set BE
 
 -- | Store little-endian value at a certain index in a `DataView`.
 setLE :: forall a name t b
-       . DataView a t
+       . BinaryValue a t
       => BytesPerValue a b
       => ShowArrayViewType a name
       => IsSymbol name
