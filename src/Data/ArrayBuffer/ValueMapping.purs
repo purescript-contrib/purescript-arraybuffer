@@ -35,3 +35,16 @@ instance binaryValueInt16 :: BinaryValue Int16 Int
 instance binaryValueInt8 :: BinaryValue Int8 Int
 instance binaryValueFloat32 :: BinaryValue Float32 F.Float32
 instance binaryValueFloat64 :: BinaryValue Float64 Number
+
+
+
+class ShowArrayViewType (a :: ArrayViewType) (name :: Symbol) | a -> name
+instance showArrayViewTypeUint8Clamped :: ShowArrayViewType Uint8Clamped "Uint8Clamped"
+instance showArrayViewTypeViewUint32 :: ShowArrayViewType Uint32 "Uint32"
+instance showArrayViewTypeViewUint16 :: ShowArrayViewType Uint16 "Uint16"
+instance showArrayViewTypeViewUint8 :: ShowArrayViewType Uint8 "Uint8"
+instance showArrayViewTypeViewInt32 :: ShowArrayViewType Int32 "Int32"
+instance showArrayViewTypeViewInt16 :: ShowArrayViewType Int16 "Int16"
+instance showArrayViewTypeViewInt8 :: ShowArrayViewType Int8 "Int8"
+instance showArrayViewTypeViewFloat32 :: ShowArrayViewType Float32 "Float32"
+instance showArrayViewTypeViewFloat64 :: ShowArrayViewType Float64 "Float64"
