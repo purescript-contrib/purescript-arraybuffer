@@ -4,10 +4,13 @@ import Data.ArrayBuffer.Typed (class TypedArray, toString)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
 import Data.Maybe (Maybe(..))
+import Data.Generic.Rep (class Generic)
 import Effect.Unsafe (unsafePerformEffect)
 import Prelude (class Eq, class Monoid, class Ord, class Semigroup, class Show, bind, discard, pure, void, ($), (+), (<>))
 
 newtype AV a t = AV (ArrayView a)
+
+derive instance genericAV :: Generic (AV a t) _
 
 instance ordArrayView :: (TypedArray a t, Ord t) => Ord (AV a t) where
   compare (AV a) (AV b) = unsafePerformEffect $ TA.compare a b
