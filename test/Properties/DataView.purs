@@ -3,6 +3,7 @@ module Test.Properties.DataView where
 
 import Prelude
 
+import Data.Array.Partial (head) as Array
 import Data.ArrayBuffer.DataView as DV
 import Data.ArrayBuffer.DataView.Gen (genDataView, genWithOffsetAndValue, WithOffsetAndValue(..))
 import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genUint16, genUint32, genUint8)
@@ -12,7 +13,7 @@ import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, D1, D2, D4, D8)
 import Data.UInt (UInt)
 import Data.Float32 (Float32) as F
-import Data.Vec (head) as Vec
+-- import Data.Vec (head) as Vec
 import Data.Symbol (class IsSymbol)
 import Effect (Effect)
 import Effect.Console (log)
@@ -20,6 +21,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Test.QuickCheck (class Testable, quickCheckGen, Result, (===))
+import Partial.Unsafe (unsafePartial)
 
 
 
@@ -102,7 +104,7 @@ placingAValueIsThereTests endian count = overAll count placingAValueIsThere
   where
     placingAValueIsThere :: forall a name b t. TestableViewF a name b D1 t Result
     placingAValueIsThere (WithOffsetAndValue os t xs) =
-      let o = Vec.head os
+      let o = unsafePartial $ Array.head os
           prx = DV.AProxy :: DV.AProxy a
       in  unsafePerformEffect do
         _ <- DV.set endian prx xs o t

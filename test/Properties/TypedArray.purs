@@ -4,7 +4,8 @@ module Test.Properties.TypedArray where
 import Prelude
 
 import Control.Monad.Gen (suchThat)
-import Data.Array as Array
+import Data.Array (all, cons, drop, length, reverse, slice, snoc, sort, take, unsafeIndex) as Array
+import Data.Array.Partial (head) as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed.Gen (WithIndices(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithIndices)
@@ -12,13 +13,14 @@ import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Traversable (traverse)
-import Data.Typelevel.Num (class Nat, D0, D1, D2, D5, d0, d1, toInt')
-import Data.Vec (head, index) as Vec
+import Data.Typelevel.Num (class Nat, D0, D1, D2, D5, toInt')
+-- import Data.Vec (head, index) as Vec
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
+import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (class Testable, Result(..), quickCheckGen, (/==), (<?>), (===))
 import Test.QuickCheck.Combinators ((==>), (|=|))
 import Test.QuickCheck.Gen (Gen)
@@ -155,8 +157,8 @@ subarrayBehavesLikeArraySliceTests count = overAll count f
   where
     f :: forall a b t. TestableArrayF a b D2 t Result
     f (WithIndices os xs) = do
-      let s = os `Vec.index` d0
-          e = os `Vec.index` d1
+      let s = unsafePartial $ os `Array.unsafeIndex` 0
+          e = unsafePartial $ os `Array.unsafeIndex` 1
       axs <- TA.toArray xs
       let sxs = TA.subArray s e xs
       a <- TA.toArray sxs
@@ -167,8 +169,8 @@ sliceBehavesLikeArraySliceTests count = overAll count f
   where
     f :: forall a b t. TestableArrayF a b D2 t Result
     f (WithIndices os xs) = do
-      let s = os `Vec.index` d0
-          e = os `Vec.index` d1
+      let s = unsafePartial $ os `Array.unsafeIndex` 0
+          e = unsafePartial $ os `Array.unsafeIndex` 1
       axs <- TA.toArray xs
       sxs <- TA.slice s e xs
       a <- TA.toArray sxs
@@ -224,12 +226,12 @@ setSingletonIsEqTests count = overAll count setSingletonIsEq
     setSingletonIsEq (WithIndices os xs) = do
       e <- TA.at xs 0
       case e of
-            Nothing -> pure Success
-            Just x -> do
-              let o = Vec.head os
-              _ <- TA.set xs (Just o) [x]
-              e' <- TA.at xs o
-              pure $ e' === Just x
+        Nothing -> pure Success
+        Just x -> do
+          let o = unsafePartial $ Array.head os
+          _ <- TA.set xs (Just o) [x]
+          e' <- TA.at xs o
+          pure $ e' === Just x
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
@@ -592,7 +594,7 @@ modifyingOriginalMutatesSubArrayPartTests count = overAll count modifyingOrigina
   where
     modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalMutatesSubArrayPart (WithIndices os xs) = do
-      let o = Vec.head os
+      let o = unsafePartial $ Array.head os
           l = TA.length xs
           zsSub = TA.subArray 0 l xs
       zs <- TA.toArray zsSub
@@ -628,7 +630,7 @@ modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOrigi
     modifyingOriginalDoesntMutateSlicePart (WithIndices os xs) = do
       let l = TA.length xs
       axs <- TA.toArray =<< TA.slice 0 l xs
-      let o = Vec.head os
+      let o = unsafePartial $ Array.head os
       e <- TA.at xs o
       if Array.all (eq zero) axs || e == Just zero
         then pure Success
@@ -645,7 +647,7 @@ modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOrig
   where
     modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
     modifyingOriginalDoesntMutateSlicePart2 (WithIndices os xs) = do
-      let o = Vec.head os
+      let o = unsafePartial $ Array.head os
           l = TA.length xs
       axs <- TA.toArray =<< TA.slice o l xs
       e <- TA.at xs o
@@ -675,7 +677,7 @@ copyWithinIsSliceTests count = overAll count copyWithinIsSlice
   where
     copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
     copyWithinIsSlice (WithIndices os xs) = do
-      let o = Vec.head os
+      let o = unsafePartial $ Array.head os
           l = TA.length xs
       ys <- TA.toArray =<< TA.slice o l xs
       TA.copyWithin xs 0 o Nothing
@@ -689,7 +691,7 @@ copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
   where
     copyWithinViaSetTyped :: forall a b t. TestableArrayF a b D1 t Result
     copyWithinViaSetTyped (WithIndices os xs) = do
-      let o = Vec.head os
+      let o = unsafePartial $ Array.head os
       txs <- TA.toArray xs
       xs' <- TA.fromArray txs :: Effect (ArrayView a)
       let l = TA.length xs'
