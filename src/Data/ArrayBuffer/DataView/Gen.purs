@@ -1,6 +1,6 @@
 module Data.ArrayBuffer.DataView.Gen where
 
-import Prelude ((<$>), bind, ($), (<=), (-), pure)
+import Prelude ((<$>), bind, (<=), (-), pure)
 
 import Control.Monad.Gen (suchThat)
 import Control.Monad.Gen.Class (class MonadGen, chooseInt)
@@ -9,12 +9,8 @@ import Data.ArrayBuffer.ArrayBuffer.Gen (genArrayBuffer)
 import Data.ArrayBuffer.DataView (whole, byteLength)
 import Data.ArrayBuffer.Types (DataView, ByteOffset, kind ArrayViewType)
 import Data.ArrayBuffer.ValueMapping (class BytesPerValue, class BinaryValue)
-import Data.Maybe (Maybe(Just))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.Unfoldable (replicateA)
-import Data.Vec (Vec)
-import Data.Vec (fromArray) as Vec
-import Partial.Unsafe (unsafePartial)
 import Type.Proxy (Proxy(..))
 
 
@@ -27,7 +23,7 @@ genDataView = whole <$> genArrayBuffer
 
 -- | For generating some set of offsets residing inside the generated array, with some computable value
 data WithOffsetAndValue n (a :: ArrayViewType) t =
-  WithOffsetAndValue (Vec n ByteOffset) t DataView
+  WithOffsetAndValue (Array ByteOffset) t DataView
 
 genWithOffsetAndValue :: forall m n a b t
                       . MonadGen m
@@ -44,8 +40,6 @@ genWithOffsetAndValue gen genT = do
       b = toInt' (Proxy :: Proxy b)
   xs <- gen `suchThat` \xs -> b <= byteLength xs
   let l = byteLength xs
-  mos <- replicateA n (chooseInt 0 (l - b))
-  let os = unsafePartial $ case Vec.fromArray mos of
-        Just q -> q
+  os <- replicateA n (chooseInt 0 (l - b))
   t <- genT
   pure (WithOffsetAndValue os t xs)

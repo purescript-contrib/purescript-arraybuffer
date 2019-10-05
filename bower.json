@@ -19,7 +19,6 @@
     "purescript-nullable": "^4.1.1",
     "purescript-typelevel": "^6.0.0",
     "purescript-uint": "^5.1.1",
-    "purescript-sized-vectors": "git://github.com/athanclark/purescript-sized-vectors.git#4fcf13f5ed949e95242b99bcace1648e29bbcbad",
     "purescript-partial": "^2.0.1",
     "purescript-float32": "~0.1.1"
   },

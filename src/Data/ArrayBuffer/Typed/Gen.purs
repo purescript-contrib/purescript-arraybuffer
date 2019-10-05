@@ -2,23 +2,19 @@
 
 module Data.ArrayBuffer.Typed.Gen where
 
+import Prelude ((<$>), bind, (/), (-), negate, ($), bottom, pure, top)
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
 import Data.Float32 (Float32, fromNumber') as F
 import Data.Generic.Rep (class Generic)
-import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Data.UInt (fromInt) as UInt
 import Data.UInt.Gen (genUInt) as UInt
 import Data.Unfoldable (replicateA)
-import Data.Vec (Vec)
-import Data.Vec (fromArray) as Vec
 import Effect.Unsafe (unsafePerformEffect)
-import Partial.Unsafe (unsafePartial)
-import Prelude ((<$>), bind, (/), (-), negate, ($), bottom, pure, top)
 import Type.Proxy (Proxy(..))
 
 
@@ -58,7 +54,7 @@ genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+3
   where div = 4.0
 
 -- | For generating some set of offsets residing inside the generated array
-data WithIndices n a = WithIndices (Vec n TA.Index) (ArrayView a)
+data WithIndices n a = WithIndices (Array TA.Index) (ArrayView a)
 derive instance genericWithIndices :: Generic (ArrayView a) a' => Generic (WithIndices n a) _
 
 genWithIndices :: forall m n a
@@ -70,7 +66,5 @@ genWithIndices gen = do
   let n = toInt' (Proxy :: Proxy n)
   xs <- gen
   let l = TA.length xs
-  mos <- replicateA n (chooseInt 0 (l - 1))
-  let os = unsafePartial $ case Vec.fromArray mos of
-        Just q -> q
+  os <- replicateA n (chooseInt 0 (l - 1))
   pure (WithIndices os xs)
