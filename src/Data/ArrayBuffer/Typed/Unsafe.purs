@@ -6,7 +6,8 @@ import Data.ArrayBuffer.Types (ArrayView)
 import Data.Maybe (Maybe(..))
 import Data.Generic.Rep (class Generic)
 import Effect.Unsafe (unsafePerformEffect)
-import Prelude (class Eq, class Monoid, class Ord, class Semigroup, class Show, bind, discard, pure, void, ($), (+), (<>))
+import Prelude (class Eq, class Monoid, class Ord, class Semigroup, class Show, bind, discard, pure, void, ($), (+), (<>), (<$>))
+import Test.QuickCheck (class Arbitrary, arbitrary)
 
 newtype AV a t = AV (ArrayView a)
 
@@ -33,3 +34,8 @@ instance semigroupArrayView :: TypedArray a t => Semigroup (AV a t) where
 
 instance monoidArrayView :: TypedArray a t => Monoid (AV a t) where
   mempty = AV $ unsafePerformEffect $ TA.empty 0
+
+instance arbitraryArrayView :: (TypedArray a t, Arbitrary t) => Arbitrary (AV a t) where
+  arbitrary = do
+    xs <- arbitrary
+    pure $ unsafePerformEffect $ AV <$> TA.fromArray xs
