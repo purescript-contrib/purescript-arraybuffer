@@ -50,7 +50,7 @@ module Data.ArrayBuffer.Typed
   ) where
 
 import Data.Array (length) as A
-import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
+import Data.ArrayBuffer.Types (ArrayView, ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
 import Data.Float32 (Float32) as F
 import Data.Function.Uncurried (Fn2, Fn3, mkFn2, runFn2, runFn3)
