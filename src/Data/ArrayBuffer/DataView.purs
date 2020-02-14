@@ -46,7 +46,7 @@ module Data.ArrayBuffer.DataView
        , whole
        ) where
 
-import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, ByteOffset, DataView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, kind ArrayViewType)
+import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, ByteOffset, DataView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, ArrayViewType)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue, class ShowArrayViewType)
 import Data.Float32 (Float32) as F
 import Data.Maybe (Maybe)
