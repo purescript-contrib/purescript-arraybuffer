@@ -34,7 +34,7 @@ module Data.ArrayBuffer.Typed
   , buffer, byteOffset, byteLength, length
   , compare, eq
   , class TypedArray
-  , create, whole, remainder, part, empty, fromArray
+  , create, whole, remainder, part, part', empty, fromArray
   , fill, set, setTyped, copyWithin
   , map, traverse, traverse_, filter
   , mapWithIndex, traverseWithIndex, traverseWithIndex_, filterWithIndex
