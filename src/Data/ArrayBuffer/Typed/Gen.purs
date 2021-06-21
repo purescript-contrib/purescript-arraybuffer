@@ -1,21 +1,18 @@
 -- | Functions for generating typed arrays and values.
-
 module Data.ArrayBuffer.Typed.Gen where
 
-import Prelude ((<$>), bind, (/), (-), negate, ($), bottom, pure, top)
 import Control.Monad.Gen.Class (class MonadGen, sized, chooseInt, chooseFloat)
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayView)
+import Data.ArrayBuffer.ValueMapping (class BytesPerType)
 import Data.Float32 (Float32, fromNumber') as F
-import Data.Generic.Rep (class Generic)
-import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Data.UInt (fromInt) as UInt
 import Data.UInt.Gen (genUInt) as UInt
 import Data.Unfoldable (replicateA)
 import Effect.Unsafe (unsafePerformEffect)
-import Type.Proxy (Proxy(..))
+import Prelude (bind, bottom, negate, pure, top, ($), (-), (/), (<$>))
 
 
 genTypedArray :: forall m a t
@@ -54,16 +51,15 @@ genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+3
   where div = 4.0
 
 -- | For generating some set of offsets residing inside the generated array
-data WithIndices n a = WithIndices (Array TA.Index) (ArrayView a)
-derive instance genericWithIndices :: Generic (ArrayView a) a' => Generic (WithIndices n a) _
+data WithIndices a = WithIndices (Array TA.Index) (ArrayView a)
 
-genWithIndices :: forall m n a
+genWithIndices :: forall m a
                . MonadGen m
-              => Nat n
-              => m (ArrayView a)
-              -> m (WithIndices n a)
-genWithIndices gen = do
-  let n = toInt' (Proxy :: Proxy n)
+              => BytesPerType a
+              => Int -- Number of offsets residing inside the generated array
+              -> m (ArrayView a)
+              -> m (WithIndices a)
+genWithIndices n gen = do
   xs <- gen
   let l = TA.length xs
   os <- replicateA n (chooseInt 0 (l - 1))

@@ -1,6 +1,6 @@
 {
   "name": "purescript-arraybuffer",
-  "version": "9.0.0",
+  "version": "11.0.0",
   "main": "index.js",
   "repository": "git@github.com:jacereda/purescript-arraybuffer.git",
   "author": "https://github.com/jacereda",

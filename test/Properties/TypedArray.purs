@@ -9,12 +9,11 @@ import Data.Array.Partial (head) as Array
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Typed.Gen (WithIndices(..), genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8, genWithIndices)
-import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array, Int32Array, Int8Array, Uint16Array, Uint8Array, Uint8ClampedArray, Uint32Array)
-import Data.ArrayBuffer.ValueMapping (class BytesPerValue)
+import Data.ArrayBuffer.Types (ArrayView, Float32Array, Float64Array, Int16Array, Int32Array, Int8Array, Uint16Array, Uint32Array, Uint8Array, Uint8ClampedArray)
+import Data.ArrayBuffer.ValueMapping (class BytesPerType, byteWidth)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Traversable (traverse)
-import Data.Typelevel.Num (class Nat, D0, D1, D2, D5, toInt')
--- import Data.Vec (head, index) as Vec
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Ref (Ref)
@@ -22,10 +21,8 @@ import Effect.Ref as Ref
 import Effect.Unsafe (unsafePerformEffect)
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (class Testable, Result(..), quickCheckGen, (/==), (<?>), (===))
-import Test.QuickCheck.Combinators ((==>), (|=|))
 import Test.QuickCheck.Gen (Gen)
 import Type.Proxy (Proxy(..))
-
 
 typedArrayTests :: Ref Int -> Effect Unit
 typedArrayTests count = do
@@ -111,51 +108,66 @@ typedArrayTests count = do
   copyWithinViaSetTypedTests count
 
 
-
-type TestableArrayF a b n t q =
+type TestableArrayF a t q =
      Show t
   => Eq t
   => Ord t
   => Semiring t
   => TypedArray a t
-  => BytesPerValue a b
-  => Nat b
-  => WithIndices n a
+  => BytesPerType a
+  => WithIndices a
   -> Effect q
 
-
-overAll' :: forall q n. Testable q => Nat n => Int -> Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
-overAll' mn count f = do
+overAll'
+  :: forall q. Testable q
+  => Int -- n
+  -> Int -- “minimum n”?
+  -> Ref Int -> (forall a t. TestableArrayF a t q) -> Effect Unit
+overAll' n mn count f = do
   void (Ref.modify (_ + 1) count)
 
-  let chk :: forall a b t. Show t => Eq t => Ord t => Semiring t => Nat b => BytesPerValue a b => TypedArray a t => String -> Proxy (ArrayView a) -> Gen t -> Effect Unit
-      chk s _ gen = do
+  let chk
+        :: forall a t
+        . Show t
+        => Eq t
+        => Ord t
+        => Semiring t
+        => BytesPerType a
+        => TypedArray a t
+        => String
+        -> Int
+        -> Proxy (ArrayView a)
+        -> Gen t
+        -> Effect Unit
+      chk s n' _ gen = do
         log $ "      - " <> s
-        quickCheckGen $ unsafePerformEffect <<< f <$> genWithIndices arr
+        quickCheckGen $ unsafePerformEffect <<< f <$> genWithIndices n' arr
         where arr :: Gen (ArrayView a)
               arr = genTypedArray gen `suchThat` \xs -> mn <= TA.length xs
 
-  chk "Uint8ClampedArray" (Proxy :: Proxy Uint8ClampedArray) genUint8
-  chk "Uint32Array" (Proxy :: Proxy Uint32Array) genUint32
-  chk "Uint16Array" (Proxy :: Proxy Uint16Array) genUint16
-  chk "Uint8Array" (Proxy :: Proxy Uint8Array) genUint8
-  chk "Int32Array" (Proxy :: Proxy Int32Array) genInt32
-  chk "Int16Array" (Proxy :: Proxy Int16Array) genInt16
-  chk "Int8Array" (Proxy :: Proxy Int8Array) genInt8
-  chk "Float32Array" (Proxy :: Proxy Float32Array) genFloat32
-  chk "Float64Array" (Proxy :: Proxy Float64Array) genFloat64
+  chk "Uint8ClampedArray" n (Proxy :: Proxy Uint8ClampedArray) genUint8
+  chk "Uint32Array" n (Proxy :: Proxy Uint32Array) genUint32
+  chk "Uint16Array" n (Proxy :: Proxy Uint16Array) genUint16
+  chk "Uint8Array" n (Proxy :: Proxy Uint8Array) genUint8
+  chk "Int32Array" n (Proxy :: Proxy Int32Array) genInt32
+  chk "Int16Array" n (Proxy :: Proxy Int16Array) genInt16
+  chk "Int8Array" n (Proxy :: Proxy Int8Array) genInt8
+  chk "Float32Array" n (Proxy :: Proxy Float32Array) genFloat32
+  chk "Float64Array" n (Proxy :: Proxy Float64Array) genFloat64
 
 
-overAll :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
-overAll count f = overAll' 0 count f
+overAll :: forall q. Testable q
+        => Int -> Ref Int -> (forall a t. TestableArrayF a t q) -> Effect Unit
+overAll n count f = overAll' n 0 count f
 
-overAll1 :: forall q n. Testable q => Nat n => Ref Int -> (forall a b t. TestableArrayF a b n t q) -> Effect Unit
-overAll1 count f = overAll' 1 count f
+overAll1 :: forall q. Testable q
+         => Int -> Ref Int -> (forall a t. TestableArrayF a t q) -> Effect Unit
+overAll1 n count f = overAll' n 1 count f
 
 subarrayBehavesLikeArraySliceTests :: Ref Int -> Effect Unit
-subarrayBehavesLikeArraySliceTests count = overAll count f
+subarrayBehavesLikeArraySliceTests count = overAll 2 count f
   where
-    f :: forall a b t. TestableArrayF a b D2 t Result
+    f :: forall a t. TestableArrayF a t Result
     f (WithIndices os xs) = do
       let s = unsafePartial $ os `Array.unsafeIndex` 0
           e = unsafePartial $ os `Array.unsafeIndex` 1
@@ -165,9 +177,9 @@ subarrayBehavesLikeArraySliceTests count = overAll count f
       pure $ Array.slice s e axs === a
 
 sliceBehavesLikeArraySliceTests :: Ref Int -> Effect Unit
-sliceBehavesLikeArraySliceTests count = overAll count f
+sliceBehavesLikeArraySliceTests count = overAll 2 count f
   where
-    f :: forall a b t. TestableArrayF a b D2 t Result
+    f :: forall a t. TestableArrayF a t Result
     f (WithIndices os xs) = do
       let s = unsafePartial $ os `Array.unsafeIndex` 0
           e = unsafePartial $ os `Array.unsafeIndex` 1
@@ -177,9 +189,9 @@ sliceBehavesLikeArraySliceTests count = overAll count f
       pure $ Array.slice s e axs === a
 
 partBehavesLikeTakeDropTests :: Ref Int -> Effect Unit
-partBehavesLikeTakeDropTests count = overAll count f
+partBehavesLikeTakeDropTests count = overAll 0 count f
   where
-    f :: forall a b t. TestableArrayF a b D0 t Result
+    f :: forall a t. TestableArrayF a t Result
     f (WithIndices _ xs) = do
       let n = 2
       axs <- TA.toArray xs
@@ -188,17 +200,17 @@ partBehavesLikeTakeDropTests count = overAll count f
       pure $ Array.take n (Array.drop n axs) === aps
 
 byteLengthDivBytesPerValueTests :: Ref Int -> Effect Unit
-byteLengthDivBytesPerValueTests count = overAll count byteLengthDivBytesPerValueEqLength
+byteLengthDivBytesPerValueTests count = overAll 0 count byteLengthDivBytesPerValueEqLength
   where
-    byteLengthDivBytesPerValueEqLength :: forall a b t. TestableArrayF a b D0 t Result
-    byteLengthDivBytesPerValueEqLength (WithIndices _ a) =
-      let b = toInt' (Proxy :: Proxy b)
-      in  pure $ TA.length a === (TA.byteLength a `div` b)
+    byteLengthDivBytesPerValueEqLength :: forall a t. TestableArrayF a t Result
+    byteLengthDivBytesPerValueEqLength (WithIndices _ xs) =
+      let b = byteWidth (Proxy :: Proxy a)
+      in  pure $ TA.length xs === (TA.byteLength xs `div` b)
 
 fromArrayToArrayIsoTests :: Ref Int -> Effect Unit
-fromArrayToArrayIsoTests count = overAll count fromArrayToArrayIso
+fromArrayToArrayIsoTests count = overAll 0 count fromArrayToArrayIso
   where
-    fromArrayToArrayIso :: forall a b t. TestableArrayF a b D0 t Result
+    fromArrayToArrayIso :: forall a t. TestableArrayF a t Result
     fromArrayToArrayIso (WithIndices _ xs) = do
       axs <- TA.toArray xs
       xs' <- TA.fromArray axs :: Effect (ArrayView a)
@@ -207,9 +219,9 @@ fromArrayToArrayIsoTests count = overAll count fromArrayToArrayIso
 
 
 allAreFilledTests :: Ref Int -> Effect Unit
-allAreFilledTests count = overAll count allAreFilled
+allAreFilledTests count = overAll 0 count allAreFilled
   where
-    allAreFilled :: forall a b t. TestableArrayF a b D0 t Result
+    allAreFilled :: forall a t. TestableArrayF a t Result
     allAreFilled (WithIndices _ xs) = do
       e <- TA.at xs 0
       let x = fromMaybe zero e
@@ -220,9 +232,9 @@ allAreFilledTests count = overAll count allAreFilled
 
 
 setSingletonIsEqTests :: Ref Int -> Effect Unit
-setSingletonIsEqTests count = overAll count setSingletonIsEq
+setSingletonIsEqTests count = overAll 1 count setSingletonIsEq
   where
-    setSingletonIsEq :: forall a b t. TestableArrayF a b D1 t Result
+    setSingletonIsEq :: forall a t. TestableArrayF a t Result
     setSingletonIsEq (WithIndices os xs) = do
       e <- TA.at xs 0
       case e of
@@ -236,23 +248,23 @@ setSingletonIsEqTests count = overAll count setSingletonIsEq
 
 -- | Should work with any arbitrary predicate, but we can't generate them
 allImpliesAnyTests :: Ref Int -> Effect Unit
-allImpliesAnyTests count = overAll count allImpliesAny
+allImpliesAnyTests count = overAll 0 count allImpliesAny
   where
-    allImpliesAny :: forall a b t. TestableArrayF a b D0 t Result
+    allImpliesAny :: forall a t. TestableArrayF a t Result
     allImpliesAny (WithIndices _ xs) = do
       let pred x = x /= zero
       all'' <- TA.all pred xs
       let all' = all'' <?> "All don't satisfy the predicate"
       any'' <- TA.any pred xs
       let any' = any'' <?> "None satisfy the predicate"
-      pure $ (TA.length xs === zero) |=| all' ==> any'
+      pure $ (TA.length xs === zero) `xor` all' `implies` any'
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
 filterImpliesAllTests :: Ref Int -> Effect Unit
-filterImpliesAllTests count = overAll count filterImpliesAll
+filterImpliesAllTests count = overAll 0 count filterImpliesAll
   where
-    filterImpliesAll :: forall a b t. TestableArrayF a b D0 t Result
+    filterImpliesAll :: forall a t. TestableArrayF a t Result
     filterImpliesAll (WithIndices _ xs) = do
       let pred x = x /= zero
       ys <- TA.filter pred xs
@@ -262,9 +274,9 @@ filterImpliesAllTests count = overAll count filterImpliesAll
 
 -- | Should work with any arbitrary predicate, but we can't generate them
 filterIsTotalTests :: Ref Int -> Effect Unit
-filterIsTotalTests count = overAll count filterIsTotal
+filterIsTotalTests count = overAll 0 count filterIsTotal
   where
-    filterIsTotal :: forall a b t. TestableArrayF a b D0 t Result
+    filterIsTotal :: forall a t. TestableArrayF a t Result
     filterIsTotal (WithIndices _ xs) = do
       let pred x = x /= zero
       ys <- TA.filter pred xs
@@ -275,9 +287,9 @@ filterIsTotalTests count = overAll count filterIsTotal
 
 -- | Should work with any arbitrary predicate, but we can't generate them
 filterIsIdempotentTests :: Ref Int -> Effect Unit
-filterIsIdempotentTests count = overAll count filterIsIdempotent
+filterIsIdempotentTests count = overAll 0 count filterIsIdempotent
   where
-    filterIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
+    filterIsIdempotent :: forall a t. TestableArrayF a t Result
     filterIsIdempotent (WithIndices _ xs) = do
       let pred x = x /= zero
       ys <- TA.filter pred xs
@@ -288,17 +300,17 @@ filterIsIdempotentTests count = overAll count filterIsIdempotent
 
 
 withIndicesHasIndexTests :: Ref Int -> Effect Unit
-withIndicesHasIndexTests count = overAll1 count withIndicesHasIndex
+withIndicesHasIndexTests count = overAll1 5 count withIndicesHasIndex
   where
-    withIndicesHasIndex :: forall a b t. TestableArrayF a b D5 t Result
+    withIndicesHasIndex :: forall a t. TestableArrayF a t Result
     withIndicesHasIndex (WithIndices os xs) = pure $
       Array.all (TA.hasIndex xs) os <?> "All doesn't have index of itself"
 
 
 withIndicesElemTests :: Ref Int -> Effect Unit
-withIndicesElemTests count = overAll1 count withIndicesElem
+withIndicesElemTests count = overAll1 5 count withIndicesElem
   where
-    withIndicesElem :: forall a b t. TestableArrayF a b D5 t Result
+    withIndicesElem :: forall a t. TestableArrayF a t Result
     withIndicesElem (WithIndices os xs) = do
       let fetch o = TA.at xs o
       exs <- traverse fetch os
@@ -307,9 +319,9 @@ withIndicesElemTests count = overAll1 count withIndicesElem
 
 -- | Should work with any arbitrary predicate, but we can't generate them
 anyImpliesFindTests :: Ref Int -> Effect Unit
-anyImpliesFindTests count = overAll count anyImpliesFind
+anyImpliesFindTests count = overAll 0 count anyImpliesFind
   where
-    anyImpliesFind :: forall a b t. TestableArrayF a b D0 t Result
+    anyImpliesFind :: forall a t. TestableArrayF a t Result
     anyImpliesFind (WithIndices _ xs) = do
       let pred x = x /= zero
       a <- TA.any pred xs
@@ -320,14 +332,14 @@ anyImpliesFindTests count = overAll count anyImpliesFind
               Just z -> if pred z
                         then Success
                         else Failed "Found value doesn't satisfy the predicate"
-      pure $ p ==> q
+      pure $ p `implies` q
 
 
 -- | Should work with any arbitrary predicate, but we can't generate them
 findIndexImpliesAtTests :: Ref Int -> Effect Unit
-findIndexImpliesAtTests count = overAll count findIndexImpliesAt
+findIndexImpliesAtTests count = overAll 0 count findIndexImpliesAt
   where
-    findIndexImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
+    findIndexImpliesAt :: forall a t. TestableArrayF a t Result
     findIndexImpliesAt (WithIndices _ xs) = do
       let pred x _ = x /= zero
       mo <- TA.findIndex pred xs
@@ -342,9 +354,9 @@ findIndexImpliesAtTests count = overAll count findIndexImpliesAt
 
 
 indexOfImpliesAtTests :: Ref Int -> Effect Unit
-indexOfImpliesAtTests count = overAll count indexOfImpliesAt
+indexOfImpliesAtTests count = overAll 1 count indexOfImpliesAt
   where
-    indexOfImpliesAt :: forall a b t. TestableArrayF a b D1 t Result
+    indexOfImpliesAt :: forall a t. TestableArrayF a t Result
     indexOfImpliesAt (WithIndices _ xs) = do
       e <- TA.at xs 0
       case e of
@@ -359,9 +371,9 @@ indexOfImpliesAtTests count = overAll count indexOfImpliesAt
 
 
 lastIndexOfImpliesAtTests :: Ref Int -> Effect Unit
-lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
+lastIndexOfImpliesAtTests count = overAll 0 count lastIndexOfImpliesAt
   where
-    lastIndexOfImpliesAt :: forall a b t. TestableArrayF a b D0 t Result
+    lastIndexOfImpliesAt :: forall a t. TestableArrayF a t Result
     lastIndexOfImpliesAt (WithIndices _ xs) = do
       e <- TA.at xs 0
       case e of
@@ -376,9 +388,9 @@ lastIndexOfImpliesAtTests count = overAll count lastIndexOfImpliesAt
 
 
 foldrConsIsToArrayTests :: Ref Int -> Effect Unit
-foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
+foldrConsIsToArrayTests count = overAll 0 count foldrConsIsToArray
   where
-    foldrConsIsToArray :: forall a b t. TestableArrayF a b D0 t Result
+    foldrConsIsToArray :: forall a t. TestableArrayF a t Result
     foldrConsIsToArray (WithIndices _ xs) = do
       axs <- TA.toArray xs
       rxs <- TA.foldr Array.cons [] xs
@@ -386,9 +398,9 @@ foldrConsIsToArrayTests count = overAll count foldrConsIsToArray
 
 
 foldlSnocIsToArrayTests :: Ref Int -> Effect Unit
-foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
+foldlSnocIsToArrayTests count = overAll 0 count foldlSnocIsToArray
   where
-    foldlSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
+    foldlSnocIsToArray :: forall a t. TestableArrayF a t Result
     foldlSnocIsToArray (WithIndices _ xs) = do
       axs <- TA.toArray xs
       rxs <- TA.foldl Array.snoc [] xs
@@ -396,9 +408,9 @@ foldlSnocIsToArrayTests count = overAll count foldlSnocIsToArray
 
 
 mapIdentityIsIdentityTests :: Ref Int -> Effect Unit
-mapIdentityIsIdentityTests count = overAll count mapIdentityIsIdentity
+mapIdentityIsIdentityTests count = overAll 0 count mapIdentityIsIdentity
   where
-    mapIdentityIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    mapIdentityIsIdentity :: forall a t. TestableArrayF a t Result
     mapIdentityIsIdentity (WithIndices _ xs) = do
       axs <- TA.toArray xs
       mxs <- TA.toArray (TA.map identity xs)
@@ -406,9 +418,9 @@ mapIdentityIsIdentityTests count = overAll count mapIdentityIsIdentity
 
 
 traverseSnocIsToArrayTests :: Ref Int -> Effect Unit
-traverseSnocIsToArrayTests count = overAll count traverseSnocIsToArray
+traverseSnocIsToArrayTests count = overAll 0 count traverseSnocIsToArray
   where
-    traverseSnocIsToArray :: forall a b t. TestableArrayF a b D0 t Result
+    traverseSnocIsToArray :: forall a t. TestableArrayF a t Result
     traverseSnocIsToArray (WithIndices _ xs) = do
       ref <- Ref.new []
       TA.traverse_ (\x -> void (Ref.modify (\xs' -> Array.snoc xs' x) ref)) xs
@@ -418,9 +430,9 @@ traverseSnocIsToArrayTests count = overAll count traverseSnocIsToArray
 
 
 doubleReverseIsIdentityTests :: Ref Int -> Effect Unit
-doubleReverseIsIdentityTests count = overAll count doubleReverseIsIdentity
+doubleReverseIsIdentityTests count = overAll 0 count doubleReverseIsIdentity
   where
-    doubleReverseIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    doubleReverseIsIdentity :: forall a t. TestableArrayF a t Result
     doubleReverseIsIdentity (WithIndices _ xs) = do
       axs <- TA.toArray xs
       TA.reverse xs
@@ -430,9 +442,9 @@ doubleReverseIsIdentityTests count = overAll count doubleReverseIsIdentity
 
 
 reverseIsArrayReverseTests :: Ref Int -> Effect Unit
-reverseIsArrayReverseTests count = overAll count reverseIsArrayReverse
+reverseIsArrayReverseTests count = overAll 0 count reverseIsArrayReverse
   where
-    reverseIsArrayReverse :: forall a b t. TestableArrayF a b D0 t Result
+    reverseIsArrayReverse :: forall a t. TestableArrayF a t Result
     reverseIsArrayReverse (WithIndices _ xs) = do
       axs <- TA.toArray xs
       TA.reverse xs
@@ -441,9 +453,9 @@ reverseIsArrayReverseTests count = overAll count reverseIsArrayReverse
 
 
 sortIsIdempotentTests :: Ref Int -> Effect Unit
-sortIsIdempotentTests count = overAll count sortIsIdempotent
+sortIsIdempotentTests count = overAll 0 count sortIsIdempotent
   where
-    sortIsIdempotent :: forall a b t. TestableArrayF a b D0 t Result
+    sortIsIdempotent :: forall a t. TestableArrayF a t Result
     sortIsIdempotent (WithIndices _ xs) = do
       TA.sort xs
       ys <- TA.toArray xs
@@ -453,9 +465,9 @@ sortIsIdempotentTests count = overAll count sortIsIdempotent
 
 
 sortIsArraySortTests :: Ref Int -> Effect Unit
-sortIsArraySortTests count = overAll count sortIsArraySort
+sortIsArraySortTests count = overAll 0 count sortIsArraySort
   where
-    sortIsArraySort :: forall a b t. TestableArrayF a b D0 t Result
+    sortIsArraySort :: forall a t. TestableArrayF a t Result
     sortIsArraySort (WithIndices _ xs) = do
       axs <- TA.toArray xs
       let ys = Array.sort axs
@@ -465,9 +477,9 @@ sortIsArraySortTests count = overAll count sortIsArraySort
 
 
 toStringIsJoinWithCommaTests :: Ref Int -> Effect Unit
-toStringIsJoinWithCommaTests count = overAll count toStringIsJoinWithComma
+toStringIsJoinWithCommaTests count = overAll 0 count toStringIsJoinWithComma
   where
-    toStringIsJoinWithComma :: forall a b t. TestableArrayF a b D0 t Result
+    toStringIsJoinWithComma :: forall a t. TestableArrayF a t Result
     toStringIsJoinWithComma (WithIndices _ xs) = do
       s1 <- TA.join "," xs
       s2 <- TA.toString xs
@@ -475,9 +487,9 @@ toStringIsJoinWithCommaTests count = overAll count toStringIsJoinWithComma
 
 
 setTypedOfSubArrayIsIdentityTests :: Ref Int -> Effect Unit
-setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIdentity
+setTypedOfSubArrayIsIdentityTests count = overAll 0 count setTypedOfSubArrayIsIdentity
   where
-    setTypedOfSubArrayIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    setTypedOfSubArrayIsIdentity :: forall a t. TestableArrayF a t Result
     setTypedOfSubArrayIsIdentity (WithIndices _ xs) = do
       ys <- TA.toArray xs
       let l = TA.length xs
@@ -488,9 +500,9 @@ setTypedOfSubArrayIsIdentityTests count = overAll count setTypedOfSubArrayIsIden
 
 
 modifyingOriginalMutatesSubArrayTests :: Ref Int -> Effect Unit
-modifyingOriginalMutatesSubArrayTests count = overAll count modifyingOriginalMutatesSubArray
+modifyingOriginalMutatesSubArrayTests count = overAll 0 count modifyingOriginalMutatesSubArray
   where
-    modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArray :: forall a t. TestableArrayF a t Result
     modifyingOriginalMutatesSubArray (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -505,9 +517,9 @@ modifyingOriginalMutatesSubArrayTests count = overAll count modifyingOriginalMut
 
 
 modifyingSubArrayMutatesOriginalTests :: Ref Int -> Effect Unit
-modifyingSubArrayMutatesOriginalTests count = overAll count modifyingOriginalMutatesSubArray
+modifyingSubArrayMutatesOriginalTests count = overAll 0 count modifyingOriginalMutatesSubArray
   where
-    modifyingOriginalMutatesSubArray :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArray :: forall a t. TestableArrayF a t Result
     modifyingOriginalMutatesSubArray (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -522,9 +534,9 @@ modifyingSubArrayMutatesOriginalTests count = overAll count modifyingOriginalMut
 
 
 modifyingOriginalMutatesSubArrayZeroTests :: Ref Int -> Effect Unit
-modifyingOriginalMutatesSubArrayZeroTests count = overAll count modifyingOriginalMutatesSubArrayZero
+modifyingOriginalMutatesSubArrayZeroTests count = overAll 0 count modifyingOriginalMutatesSubArrayZero
   where
-    modifyingOriginalMutatesSubArrayZero :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArrayZero :: forall a t. TestableArrayF a t Result
     modifyingOriginalMutatesSubArrayZero (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -539,9 +551,9 @@ modifyingOriginalMutatesSubArrayZeroTests count = overAll count modifyingOrigina
 
 
 modifyingSubArrayMutatesOriginalZeroTests :: Ref Int -> Effect Unit
-modifyingSubArrayMutatesOriginalZeroTests count = overAll count modifyingSubArrayMutatesOriginalZero
+modifyingSubArrayMutatesOriginalZeroTests count = overAll 0 count modifyingSubArrayMutatesOriginalZero
   where
-    modifyingSubArrayMutatesOriginalZero :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingSubArrayMutatesOriginalZero :: forall a t. TestableArrayF a t Result
     modifyingSubArrayMutatesOriginalZero (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -556,9 +568,9 @@ modifyingSubArrayMutatesOriginalZeroTests count = overAll count modifyingSubArra
 
 
 modifyingOriginalMutatesSubArrayAllTests :: Ref Int -> Effect Unit
-modifyingOriginalMutatesSubArrayAllTests count = overAll count modifyingOriginalMutatesSubArrayAll
+modifyingOriginalMutatesSubArrayAllTests count = overAll 0 count modifyingOriginalMutatesSubArrayAll
   where
-    modifyingOriginalMutatesSubArrayAll :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalMutatesSubArrayAll :: forall a t. TestableArrayF a t Result
     modifyingOriginalMutatesSubArrayAll (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -573,9 +585,9 @@ modifyingOriginalMutatesSubArrayAllTests count = overAll count modifyingOriginal
 
 
 modifyingSubArrayMutatesOriginalAllTests :: Ref Int -> Effect Unit
-modifyingSubArrayMutatesOriginalAllTests count = overAll count modifyingSubArrayMutatesOriginalAll
+modifyingSubArrayMutatesOriginalAllTests count = overAll 0 count modifyingSubArrayMutatesOriginalAll
   where
-    modifyingSubArrayMutatesOriginalAll :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingSubArrayMutatesOriginalAll :: forall a t. TestableArrayF a t Result
     modifyingSubArrayMutatesOriginalAll (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -590,9 +602,9 @@ modifyingSubArrayMutatesOriginalAllTests count = overAll count modifyingSubArray
 
 
 modifyingOriginalMutatesSubArrayPartTests :: Ref Int -> Effect Unit
-modifyingOriginalMutatesSubArrayPartTests count = overAll count modifyingOriginalMutatesSubArrayPart
+modifyingOriginalMutatesSubArrayPartTests count = overAll 1 count modifyingOriginalMutatesSubArrayPart
   where
-    modifyingOriginalMutatesSubArrayPart :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalMutatesSubArrayPart :: forall a t. TestableArrayF a t Result
     modifyingOriginalMutatesSubArrayPart (WithIndices os xs) = do
       let o = unsafePartial $ Array.head os
           l = TA.length xs
@@ -607,9 +619,9 @@ modifyingOriginalMutatesSubArrayPartTests count = overAll count modifyingOrigina
 
 
 modifyingOriginalDoesntMutateSliceTests :: Ref Int -> Effect Unit
-modifyingOriginalDoesntMutateSliceTests count = overAll count modifyingOriginalDoesntMutateSlice
+modifyingOriginalDoesntMutateSliceTests count = overAll 0 count modifyingOriginalDoesntMutateSlice
   where
-    modifyingOriginalDoesntMutateSlice :: forall a b t. TestableArrayF a b D0 t Result
+    modifyingOriginalDoesntMutateSlice :: forall a t. TestableArrayF a t Result
     modifyingOriginalDoesntMutateSlice (WithIndices _ xs) = do
       axs <- TA.toArray xs
       if Array.all (eq zero) axs
@@ -624,9 +636,9 @@ modifyingOriginalDoesntMutateSliceTests count = overAll count modifyingOriginalD
 
 
 modifyingOriginalDoesntMutateSlicePartTests :: Ref Int -> Effect Unit
-modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOriginalDoesntMutateSlicePart
+modifyingOriginalDoesntMutateSlicePartTests count = overAll 1 count modifyingOriginalDoesntMutateSlicePart
   where
-    modifyingOriginalDoesntMutateSlicePart :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalDoesntMutateSlicePart :: forall a t. TestableArrayF a t Result
     modifyingOriginalDoesntMutateSlicePart (WithIndices os xs) = do
       let l = TA.length xs
       axs <- TA.toArray =<< TA.slice 0 l xs
@@ -643,9 +655,9 @@ modifyingOriginalDoesntMutateSlicePartTests count = overAll count modifyingOrigi
 
 
 modifyingOriginalDoesntMutateSlicePart2Tests :: Ref Int -> Effect Unit
-modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOriginalDoesntMutateSlicePart2
+modifyingOriginalDoesntMutateSlicePart2Tests count = overAll 1 count modifyingOriginalDoesntMutateSlicePart2
   where
-    modifyingOriginalDoesntMutateSlicePart2 :: forall a b t. TestableArrayF a b D1 t Result
+    modifyingOriginalDoesntMutateSlicePart2 :: forall a t. TestableArrayF a t Result
     modifyingOriginalDoesntMutateSlicePart2 (WithIndices os xs) = do
       let o = unsafePartial $ Array.head os
           l = TA.length xs
@@ -662,9 +674,9 @@ modifyingOriginalDoesntMutateSlicePart2Tests count = overAll count modifyingOrig
 
 
 copyWithinSelfIsIdentityTests :: Ref Int -> Effect Unit
-copyWithinSelfIsIdentityTests count = overAll count copyWithinSelfIsIdentity
+copyWithinSelfIsIdentityTests count = overAll 0 count copyWithinSelfIsIdentity
   where
-    copyWithinSelfIsIdentity :: forall a b t. TestableArrayF a b D0 t Result
+    copyWithinSelfIsIdentity :: forall a t. TestableArrayF a t Result
     copyWithinSelfIsIdentity (WithIndices _ xs) = do
       ys <- TA.toArray xs
       TA.copyWithin xs 0 0 (Just (TA.length xs))
@@ -673,9 +685,9 @@ copyWithinSelfIsIdentityTests count = overAll count copyWithinSelfIsIdentity
 
 
 copyWithinIsSliceTests :: Ref Int -> Effect Unit
-copyWithinIsSliceTests count = overAll count copyWithinIsSlice
+copyWithinIsSliceTests count = overAll 1 count copyWithinIsSlice
   where
-    copyWithinIsSlice :: forall a b t. TestableArrayF a b D1 t Result
+    copyWithinIsSlice :: forall a t. TestableArrayF a t Result
     copyWithinIsSlice (WithIndices os xs) = do
       let o = unsafePartial $ Array.head os
           l = TA.length xs
@@ -687,9 +699,9 @@ copyWithinIsSliceTests count = overAll count copyWithinIsSlice
 
 
 copyWithinViaSetTypedTests :: Ref Int -> Effect Unit
-copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
+copyWithinViaSetTypedTests count = overAll 1 count copyWithinViaSetTyped
   where
-    copyWithinViaSetTyped :: forall a b t. TestableArrayF a b D1 t Result
+    copyWithinViaSetTyped :: forall a t. TestableArrayF a t Result
     copyWithinViaSetTyped (WithIndices os xs) = do
       let o = unsafePartial $ Array.head os
       txs <- TA.toArray xs
@@ -701,3 +713,27 @@ copyWithinViaSetTypedTests count = overAll count copyWithinViaSetTyped
       axs <- TA.toArray xs
       axs' <- TA.toArray xs'
       pure $ axs === axs'
+
+-- | Uses the second failure message as the result failure message
+-- | https://github.com/athanclark/purescript-quickcheck-combinators/blob/293e5af07ae47b61d4eae5defef4c0f472bfa9ca/src/Test/QuickCheck/Combinators.purs#L62
+implies :: Result -> Result -> Result
+implies x y = case y of
+  Failed y' -> case x of
+    Success -> Failed ("Implied failure: " <> y')
+    _ -> Success
+  _ -> Success
+
+-- | Combine two results with "Exclusive Or" logic, and with `", xor "` as the failure message separator, and "XOR" as the failure message if they are both `Success`
+-- | https://github.com/athanclark/purescript-quickcheck-combinators/blob/293e5af07ae47b61d4eae5defef4c0f472bfa9ca/src/Test/QuickCheck/Combinators.purs#L44
+xor :: Result -> Result -> Result
+xor = xor' ", xor " "XOR"
+  where
+  -- Combine two results with "Exclusive Or" logic, and with a failure message separator and failure message if they are both `Success`
+  xor' :: String -- ^ Separator
+      -> String -- ^ Success failure message
+      -> Result -> Result -> Result
+  xor' m s x y = case Tuple x y of
+    Tuple (Failed x') (Failed y') -> Failed (x' <> m <> y')
+    Tuple Success Success -> Failed s
+    Tuple Success y' -> y'
+    Tuple x' Success -> x'

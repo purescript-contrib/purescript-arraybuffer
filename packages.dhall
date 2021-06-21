@@ -25,7 +25,7 @@ let additions =
       , "quickcheck"
       , "quickcheck-laws"
       ]
-    , repo = "https://github.com/zaquest/purescript-uint.git"
+    , repo = "https://github.com/purescript-contrib/purescript-uint.git"
     , version = "v5.1.4"
     }
   }

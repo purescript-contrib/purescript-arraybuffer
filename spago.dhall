@@ -13,14 +13,13 @@
   , "partial"
   , "prelude"
   , "quickcheck"
-  , "quickcheck-combinators"
   , "quickcheck-laws"
   , "refs"
   , "tailrec"
-  , "typelevel"
   , "typelevel-prelude"
   , "uint"
   , "unfoldable"
+  , "tuples"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

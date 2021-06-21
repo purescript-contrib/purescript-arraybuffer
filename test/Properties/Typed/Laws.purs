@@ -3,7 +3,7 @@ module Test.Properties.Typed.Laws where
 import Data.ArrayBuffer.Typed (class TypedArray)
 import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8)
 import Data.ArrayBuffer.Typed.Unsafe (AV(..))
-import Data.ArrayBuffer.Types (ArrayView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, Uint8Clamped, kind ArrayViewType)
+import Data.ArrayBuffer.Types (ArrayView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, Uint8Clamped, ArrayViewType)
 import Data.Float32 as F
 import Data.UInt (UInt)
 import Effect (Effect)

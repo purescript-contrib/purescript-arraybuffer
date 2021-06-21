@@ -43,20 +43,19 @@ module Data.ArrayBuffer.Typed
   , all, any
   , allWithIndex, anyWithIndex
   , unsafeAt, hasIndex, at, (!)
-  , reduce, reduce1, foldl, foldl1, reduceRight, reduceRight1, foldr, foldr1
-  , find, findIndex, indexOf, lastIndexOf
+  , reduce, reduce1, foldl, foldl1, reduceRight, reduceRight1, foldr, foldr1, foldlWithIndex, foldrWithIndex
+  , find, findIndex, findWithIndex, indexOf, lastIndexOf
   , slice, subArray
   , toString, join, toArray
   ) where
 
 import Data.Array (length) as A
-import Data.ArrayBuffer.Types (ArrayView, kind ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
-import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerValue)
+import Data.ArrayBuffer.Types (ArrayView, ArrayViewType, ArrayBuffer, ByteOffset, ByteLength, Float64Array, Float32Array, Uint8ClampedArray, Uint32Array, Uint16Array, Uint8Array, Int32Array, Int16Array, Int8Array, Float64, Float32, Uint8Clamped, Uint32, Uint16, Uint8, Int32, Int16, Int8)
+import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerType, byteWidth)
 import Data.Float32 (Float32) as F
 import Data.Function.Uncurried (Fn2, Fn3, mkFn2, runFn2, runFn3)
 import Data.Maybe (Maybe, fromMaybe)
 import Data.Nullable (Nullable, notNull, null, toMaybe, toNullable)
-import Data.Typelevel.Num (class Nat, toInt')
 import Data.UInt (UInt)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn2, mkEffectFn3, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
@@ -126,17 +125,17 @@ whole :: forall a t. TypedArray a t => ArrayBuffer -> Effect (ArrayView a)
 whole a = runEffectFn3 create a null null
 
 -- | View mapping the rest of an `ArrayBuffer` after an index.
-remainder :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffer -> Index -> Effect (ArrayView a)
+remainder :: forall a b t. TypedArray a t => BytesPerType b => ArrayBuffer -> Index -> Effect (ArrayView a)
 remainder a x = remainder' a o
-  where o = x * toInt' (Proxy :: Proxy b)
+  where o = x * byteWidth (Proxy :: Proxy b)
 
 remainder' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Effect (ArrayView a)
 remainder' a x = runEffectFn3 create a (notNull x) null
 
 -- | View mapping a region of the `ArrayBuffer`.
-part :: forall a b t. TypedArray a t => Nat b => BytesPerValue a b => ArrayBuffer -> Index -> Length -> Effect (ArrayView a)
+part :: forall a t. TypedArray a t => BytesPerType a => ArrayBuffer -> Index -> Length -> Effect (ArrayView a)
 part a x y = part' a o y
-  where o = x * toInt' (Proxy :: Proxy b)
+  where o = x * byteWidth (Proxy :: Proxy a)
 
 part' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
 part' a x y = runEffectFn3 create a (notNull x) (notNull y)
