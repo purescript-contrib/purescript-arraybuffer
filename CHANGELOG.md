@@ -2,9 +2,10 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v11.0.0 [Unreleased]
+## v11.0.0
 
 Jorge Acereda has graciously donated this package to __purescript-contrib__.
+
 For version 11, we have refactored this library so that it depends only on
 other packages in __purescript-contrib__.
 
@@ -25,3 +26,5 @@ to the type declarations in your own dependent code:
 * Replace the type `AProxy` with `Proxy` from the Prelude.
 * Remove most of the `Nat` typeclass constraints. https://github.com/purescript-contrib/purescript-arraybuffer/issues/29
 * Replace any `BytesPerValue a b` typeclass constraints with `BytesPerType a`.
+
+We have also privatized `Typed.part'`. https://github.com/purescript-contrib/purescript-arraybuffer/issues/32

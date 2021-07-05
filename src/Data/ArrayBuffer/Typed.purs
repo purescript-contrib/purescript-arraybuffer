@@ -34,7 +34,7 @@ module Data.ArrayBuffer.Typed
   , buffer, byteOffset, byteLength, length
   , compare, eq
   , class TypedArray
-  , create, whole, remainder, part, part', empty, fromArray
+  , create, whole, remainder, part, empty, fromArray
   , fill, set, setTyped, copyWithin
   , map, traverse, traverse_, filter
   , mapWithIndex, traverseWithIndex, traverseWithIndex_, filterWithIndex
@@ -137,6 +137,8 @@ part :: forall a t. TypedArray a t => BytesPerType a => ArrayBuffer -> Index -> 
 part a x y = part' a o y
   where o = x * byteWidth (Proxy :: Proxy a)
 
+-- | The ByteOffset must be aligned.
+-- | https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#byteoffset_must_be_aligned
 part' :: forall a t. TypedArray a t => ArrayBuffer -> ByteOffset -> Length -> Effect (ArrayView a)
 part' a x y = runEffectFn3 create a (notNull x) (notNull y)
 
