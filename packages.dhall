@@ -1,34 +1,10 @@
 
 let upstream =
-     https://github.com/purescript/package-sets/releases/download/psc-0.14.1-20210419/packages.dhall sha256:d9a082ffb5c0fabf689574f0680e901ca6f924e01acdbece5eeedd951731375a
+     https://github.com/purescript/package-sets/releases/download/psc-0.14.2-20210713/packages.dhall sha256:654c3148cb995f642c73b4508d987d9896e2ad3ea1d325a1e826c034c0d3cd7b
 
 let overrides = {=}
 
-let additions =
-  { float32 =
-    { dependencies =
-      [ "effect"
-      , "gen"
-      , "maybe"
-      , "prelude"
-      ]
-    , repo =
-        "https://github.com/athanclark/purescript-float32.git"
-    , version =
-        "v0.2.0"
-    }
-  , uint =
-    { dependencies =
-      [ "effect"
-      , "math"
-      , "maybe"
-      , "quickcheck"
-      , "quickcheck-laws"
-      ]
-    , repo = "https://github.com/purescript-contrib/purescript-uint.git"
-    , version = "v5.1.4"
-    }
-  }
+let additions = {=}
 
 in  upstream // overrides // additions
 
