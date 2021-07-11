@@ -75,3 +75,11 @@ These are some other packages which provide more `ArrayBuffer` features.
 ### Base64
 
 * [__base64-codec__](https://pursuit.purescript.org/packages/purescript-base64-codec)
+
+## Development
+
+Run the tests with
+
+```sh
+spago -x spago-test.dhall test
+```

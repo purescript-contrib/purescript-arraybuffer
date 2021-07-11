@@ -30,5 +30,11 @@ jobs:
       - name: Build source
         run: spago build --no-install --purs-args '--censor-lib --strict'
 
+      - name: Install test dependencies
+        run: spago -x spago-test.dhall install
+
+      - name: Build tests
+        run: spago -x spago-test.dhall build --no-install --purs-args '--censor-lib --strict'
+
       - name: Run tests
-        run: spago test --no-install
+        run: spago -x spago-test.dhall test --no-install

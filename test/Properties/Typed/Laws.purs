@@ -1,19 +1,24 @@
 module Test.Properties.Typed.Laws where
 
-import Data.ArrayBuffer.Typed (class TypedArray)
+import Prelude
+-- import Prelude (class Eq, class Monoid, class Ord, class Semigroup, class Show, bind, discard, pure, void, ($), (+), (<>), (<$>))
+-- import Prelude (class Eq, class Monoid, class Ord, class Semigroup, Unit, discard, void, ($), (+), (<$>), (<<<))
+import Data.ArrayBuffer.Typed (class TypedArray, toString)
 import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8)
-import Data.ArrayBuffer.Typed.Unsafe (AV(..))
 import Data.ArrayBuffer.Types (ArrayView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, Uint8Clamped, ArrayViewType)
 import Data.Float32 as F
 import Data.UInt (UInt)
 import Effect (Effect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Prelude (class Eq, class Monoid, class Ord, class Semigroup, Unit, discard, void, ($), (+), (<$>), (<<<))
-import Test.QuickCheck (class Arbitrary)
+import Test.QuickCheck (class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (Gen)
 import Test.QuickCheck.Laws.Data (checkEq, checkMonoid, checkOrd, checkSemigroup)
 import Type.Prelude (Proxy(..))
+import Data.ArrayBuffer.Typed as TA
+import Data.Generic.Rep (class Generic)
+import Data.Maybe (Maybe(..))
+import Effect.Unsafe (unsafePerformEffect)
 
 newtype A a = A a
 
@@ -102,3 +107,35 @@ typedArrayLaws count = do
     f (Proxy :: Proxy (A (AV Uint32 UInt)))
     f (Proxy :: Proxy (A (AV Uint8 UInt)))
     f (Proxy :: Proxy (A (AV Uint8Clamped UInt)))
+
+newtype AV :: forall k. ArrayViewType -> k -> Type
+newtype AV a t = AV (ArrayView a)
+
+derive instance genericAV :: Generic (AV a t) _
+
+instance ordArrayView :: (TypedArray a t, Ord t) => Ord (AV a t) where
+  compare (AV a) (AV b) = unsafePerformEffect $ TA.compare a b
+
+instance eqArrayView :: (TypedArray a t, Eq t) => Eq (AV a t) where
+  eq (AV a) (AV b) = unsafePerformEffect $ TA.eq a b
+
+instance showArrayView :: (TypedArray a t, Show t) => Show (AV a t) where
+  show (AV a) = "T[" <> s <> "]"
+    where s = unsafePerformEffect $ toString a
+
+instance semigroupArrayView :: TypedArray a t => Semigroup (AV a t) where
+  append (AV a) (AV b) = unsafePerformEffect do
+    let la = TA.length a
+        lb = TA.length b
+    r <- TA.empty $ la + lb
+    void $ TA.setTyped r (Just 0) a
+    void $ TA.setTyped r (Just la) b
+    pure $ AV r
+
+instance monoidArrayView :: TypedArray a t => Monoid (AV a t) where
+  mempty = AV $ unsafePerformEffect $ TA.empty 0
+
+instance arbitraryArrayView :: (TypedArray a t, Arbitrary t) => Arbitrary (AV a t) where
+  arbitrary = do
+    xs <- arbitrary
+    pure $ unsafePerformEffect $ AV <$> TA.fromArray xs
