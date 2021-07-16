@@ -18,8 +18,8 @@ access of aligned local-machine-endian types, for in-process flat memory operati
 The `DataView` module provides a view into an `ArrayBuffer` for inter-process
 flat memory operations.
 
-* [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
-* [ECMA-262](https://tc39.es/ecma262/multipage/structured-data.html#sec-arraybuffer-objects)
+* [MDN `ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+* [ECMA-262 `ArrayBuffer`](https://tc39.es/ecma262/multipage/structured-data.html#sec-arraybuffer-objects)
 
 
 ## Installation
@@ -53,7 +53,7 @@ You can contribute to `arraybuffer` in several ways:
 
 3. If you have written a library, tutorial, guide, or other resource based on this package, please share it on the [PureScript Discourse](https://discourse.purescript.org)! Writing libraries and learning resources are a great way to help this library succeed.
 
-## Other packages
+## Related packages
 
 These are some other packages which provide more `ArrayBuffer` features.
 
