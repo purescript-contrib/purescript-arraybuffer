@@ -66,7 +66,7 @@ and
 [`TypedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray)
 ([Indexed Collections](https://tc39.es/ecma262/multipage/indexed-collections.html#sec-indexed-collections)).
 
-If you want to be sure that those implemtations are available in your target
+If you want to be sure that those implementations are available in your target
 runtime environment, you might want to consider using a polyfill such as
 [__core-js__ Typed Arrays](https://github.com/zloirock/core-js#ecmascript-typed-arrays).
 
