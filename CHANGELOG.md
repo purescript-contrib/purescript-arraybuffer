@@ -2,9 +2,9 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v11.0.2
 
-@jamesdbrock Delete the `TypedArray` polyfill which was preventing this
+Delete the `TypedArray` polyfill which was preventing this
 library from working with `purs bundle` v0.14.4.
 https://github.com/purescript-contrib/purescript-arraybuffer/issues/34
 
@@ -34,3 +34,4 @@ to the type declarations in your own dependent code:
 * Replace any `BytesPerValue a b` typeclass constraints with `BytesPerType a`.
 
 We have also privatized `Typed.part'`. https://github.com/purescript-contrib/purescript-arraybuffer/issues/32
+
