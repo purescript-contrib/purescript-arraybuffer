@@ -401,3 +401,4 @@ compare a b = Prelude.compare <$> toArray a <*> toArray b
 -- | Equality test for typed arrays.
 eq :: forall a t. TypedArray a t => Eq t => ArrayView a -> ArrayView a -> Effect Boolean
 eq a b = Prelude.eq <$> toArray a <*> toArray b
+

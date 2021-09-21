@@ -1,23 +1,26 @@
 "use strict";
 
-
-
-// Lightweight polyfill for ie - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
-function polyFill () {
-    var typedArrayTypes =
+// Lightweight polyfill for IE
+// See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
+//
+// Can we trust that this FFI code gets called exactly once? I think so, but
+// I can't find a reference for that.
+{
+    // var is not block scoped, but there is no way to scope this block inside
+    // a function in such a way that the function will not be dead-code-eliminated.
+    // https://github.com/purescript-contrib/purescript-arraybuffer/issues/34
+    var _typedArrayTypes =
         [ Int8Array, Uint8Array, Uint8ClampedArray, Int16Array
         , Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array
         ];
 
-    for (var k in typedArrayTypes) {
+    for (var k in _typedArrayTypes) {
         for (var v in Array.prototype) {
-            if (Array.prototype.hasOwnProperty(v) && !typedArrayTypes[k].prototype.hasOwnProperty(v))
-                typedArrayTypes[k].prototype[v] = Array.prototype[v];
+            if (Array.prototype.hasOwnProperty(v) && !_typedArrayTypes[k].prototype.hasOwnProperty(v))
+                _typedArrayTypes[k].prototype[v] = Array.prototype[v];
         }
     }
 };
-
-polyFill();
 
 // module Data.ArrayBuffer.Typed
 
