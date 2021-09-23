@@ -2,11 +2,32 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v12.0.0
+
+Delete the `TypedArray` polyfill which was preventing this
+library from working with `purs bundle` v0.14.4.
+https://github.com/purescript-contrib/purescript-arraybuffer/issues/34
+
+### Breaking Changes
+
+May lose partial polyfill `TypedArray` support for only the methods present
+in regular JavaScript Arrays.
+https://web.archive.org/web/20171019084331/https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#Methods_Polyfill
+
+## v11.0.3
+
+Revert to v11.0.1.
+https://github.com/purescript-contrib/purescript-arraybuffer/issues/37
+
 ## v11.0.2
 
 Delete the `TypedArray` polyfill which was preventing this
 library from working with `purs bundle` v0.14.4.
 https://github.com/purescript-contrib/purescript-arraybuffer/issues/34
+
+## v11.0.1
+
+Regenerate `bower.json`.
 
 ## v11.0.0
 
