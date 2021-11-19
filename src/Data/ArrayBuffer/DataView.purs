@@ -1,48 +1,48 @@
 -- | This module represents the functional bindings to JavaScript's `DataView`
 -- | objects. See [MDN's spec](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView) for details.
 module Data.ArrayBuffer.DataView
-       ( Endian(..)
-       , buffer
-       , byteLength
-       , byteOffset
-       , get
-       , getBE
-       , getFloat32be
-       , getFloat32le
-       , getFloat64be
-       , getFloat64le
-       , getInt16be
-       , getInt16le
-       , getInt32be
-       , getInt32le
-       , getInt8
-       , getLE
-       , getUint16be
-       , getUint16le
-       , getUint32be
-       , getUint32le
-       , getUint8
-       , part
-       , remainder
-       , set
-       , setBE
-       , setFloat32be
-       , setFloat32le
-       , setFloat64be
-       , setFloat64le
-       , setInt16be
-       , setInt16le
-       , setInt32be
-       , setInt32le
-       , setInt8
-       , setLE
-       , setUint16be
-       , setUint16le
-       , setUint32be
-       , setUint32le
-       , setUint8
-       , whole
-       ) where
+  ( Endian(..)
+  , buffer
+  , byteLength
+  , byteOffset
+  , get
+  , getBE
+  , getFloat32be
+  , getFloat32le
+  , getFloat64be
+  , getFloat64le
+  , getInt16be
+  , getInt16le
+  , getInt32be
+  , getInt32le
+  , getInt8
+  , getLE
+  , getUint16be
+  , getUint16le
+  , getUint32be
+  , getUint32le
+  , getUint8
+  , part
+  , remainder
+  , set
+  , setBE
+  , setFloat32be
+  , setFloat32le
+  , setFloat64be
+  , setFloat64le
+  , setInt16be
+  , setInt16le
+  , setInt32be
+  , setInt32le
+  , setInt8
+  , setLE
+  , setUint16be
+  , setUint16le
+  , setUint32be
+  , setUint32le
+  , setUint8
+  , whole
+  ) where
 
 import Data.ArrayBuffer.Types (ArrayBuffer, ByteLength, ByteOffset, DataView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8)
 import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerType, class ShowArrayViewType, byteWidth)
@@ -67,15 +67,16 @@ instance eqEndian :: Eq Endian where
 -- | View mapping the whole `ArrayBuffer`.
 foreign import whole :: ArrayBuffer -> DataView
 
-
 -- | View mapping the rest of an `ArrayBuffer` after an index.
 remainder :: ArrayBuffer -> ByteOffset -> Effect DataView
 remainder a o = runEffectFn2 remainderImpl a o
+
 foreign import remainderImpl :: EffectFn2 ArrayBuffer ByteOffset DataView
 
 -- | View mapping a region of the `ArrayBuffer`.
 part :: ArrayBuffer -> ByteOffset -> ByteLength -> Effect DataView
 part a o l = runEffectFn3 partImpl a o l
+
 foreign import partImpl :: EffectFn3 ArrayBuffer ByteOffset ByteLength DataView
 
 -- | `ArrayBuffer` being mapped by the view.
@@ -87,86 +88,129 @@ foreign import byteOffset :: DataView -> ByteOffset
 -- | Represents the length of this view.
 foreign import byteLength :: DataView -> ByteLength
 
-
-
-getter :: forall t.
-          { functionName :: String
-          , bytesPerValue :: ByteLength
-          , littleEndian :: Boolean
-          }
-       -> DataView -> ByteOffset -> Effect (Maybe t)
+getter
+  :: forall t
+   . { functionName :: String
+     , bytesPerValue :: ByteLength
+     , littleEndian :: Boolean
+     }
+  -> DataView
+  -> ByteOffset
+  -> Effect (Maybe t)
 getter data' d o = toMaybe <$>
   runEffectFn3 getterImpl
     { functionName: data'.functionName
     , littleEndian: data'.littleEndian
     , bytesPerValue: data'.bytesPerValue
-    } d o
-foreign import getterImpl :: forall t
-                           . EffectFn3 { functionName :: String
-                                       , littleEndian :: Boolean
-                                       , bytesPerValue :: ByteLength
-                                       } DataView ByteOffset (Nullable t)
+    }
+    d
+    o
 
+foreign import getterImpl
+  :: forall t
+   . EffectFn3
+       { functionName :: String
+       , littleEndian :: Boolean
+       , bytesPerValue :: ByteLength
+       }
+       DataView
+       ByteOffset
+       (Nullable t)
 
-
-get :: forall a name t
-     . BinaryValue a t
-    => BytesPerType a
-    => ShowArrayViewType a name
-    => IsSymbol name
-    => Endian -> Proxy a -> DataView -> ByteOffset -> Effect (Maybe t)
+get
+  :: forall a name t
+   . BinaryValue a t
+  => BytesPerType a
+  => ShowArrayViewType a name
+  => IsSymbol name
+  => Endian
+  -> Proxy a
+  -> DataView
+  -> ByteOffset
+  -> Effect (Maybe t)
 get endian prx =
-  let le = endian == LE
-      pnm = "get" <> reflectSymbol (SProxy :: SProxy name)
-      bpv = byteWidth prx
-  in getter { functionName: pnm
-            , bytesPerValue: bpv
-            , littleEndian: le
-            }
+  let
+    le = endian == LE
+    pnm = "get" <> reflectSymbol (SProxy :: SProxy name)
+    bpv = byteWidth prx
+  in
+    getter
+      { functionName: pnm
+      , bytesPerValue: bpv
+      , littleEndian: le
+      }
 
-getBE :: forall a name t
-       . BinaryValue a t
-      => BytesPerType a
-      => ShowArrayViewType a name
-      => IsSymbol name
-      => Proxy a -> DataView -> ByteOffset -> Effect (Maybe t)
+getBE
+  :: forall a name t
+   . BinaryValue a t
+  => BytesPerType a
+  => ShowArrayViewType a name
+  => IsSymbol name
+  => Proxy a
+  -> DataView
+  -> ByteOffset
+  -> Effect (Maybe t)
 getBE = get BE
 
-getLE :: forall a name t
-       . BinaryValue a t
-      => BytesPerType a
-      => ShowArrayViewType a name
-      => IsSymbol name
-      => Proxy a -> DataView -> ByteOffset -> Effect (Maybe t)
+getLE
+  :: forall a name t
+   . BinaryValue a t
+  => BytesPerType a
+  => ShowArrayViewType a name
+  => IsSymbol name
+  => Proxy a
+  -> DataView
+  -> ByteOffset
+  -> Effect (Maybe t)
 getLE = get LE
 
-setter :: forall t.
-          { functionName :: String
-          , bytesPerValue :: ByteLength
-          , littleEndian :: Boolean
-          } -> DataView -> ByteOffset -> t -> Effect Boolean
+setter
+  :: forall t
+   . { functionName :: String
+     , bytesPerValue :: ByteLength
+     , littleEndian :: Boolean
+     }
+  -> DataView
+  -> ByteOffset
+  -> t
+  -> Effect Boolean
 setter d o t = runEffectFn4 setterImpl d o t
-foreign import setterImpl :: forall t
-                           . EffectFn4 { functionName :: String
-                                       , littleEndian :: Boolean
-                                       , bytesPerValue :: ByteLength
-                                       } DataView ByteOffset t Boolean
 
+foreign import setterImpl
+  :: forall t
+   . EffectFn4
+       { functionName :: String
+       , littleEndian :: Boolean
+       , bytesPerValue :: ByteLength
+       }
+       DataView
+       ByteOffset
+       t
+       Boolean
 
-set :: forall a name t
-     . BinaryValue a t
-    => BytesPerType a
-    => ShowArrayViewType a name
-    => IsSymbol name
-    => Endian -> Proxy a -> DataView -> ByteOffset -> t -> Effect Boolean
+set
+  :: forall a name t
+   . BinaryValue a t
+  => BytesPerType a
+  => ShowArrayViewType a name
+  => IsSymbol name
+  => Endian
+  -> Proxy a
+  -> DataView
+  -> ByteOffset
+  -> t
+  -> Effect Boolean
 set endian prx =
-  let le = endian == LE
-      pnm = "set" <> reflectSymbol (SProxy :: SProxy name)
-      bpv = byteWidth prx
-  in setter { functionName: pnm
-            , bytesPerValue: bpv
-            , littleEndian: le
-            }
+  let
+    le = endian == LE
+    pnm = "set" <> reflectSymbol (SProxy :: SProxy name)
+    bpv = byteWidth prx
+  in
+    setter
+      { functionName: pnm
+      , bytesPerValue: bpv
+      , littleEndian: le
+      }
 
 -- | Fetch int8 value at a certain index in a `DataView`.
 getInt8 :: DataView -> ByteOffset -> Effect (Maybe Int)
@@ -224,23 +268,32 @@ getFloat64be = getBE (Proxy :: Proxy Float64)
 getFloat64le :: DataView -> ByteOffset -> Effect (Maybe Number)
 getFloat64le = getLE (Proxy :: Proxy Float64)
 
-
 -- | Store big-endian value at a certain index in a `DataView`.
-setBE :: forall a name t
-       . BinaryValue a t
-      => BytesPerType a
-      => ShowArrayViewType a name
-      => IsSymbol name
-      => Proxy a -> DataView -> ByteOffset -> t -> Effect Boolean
+setBE
+  :: forall a name t
+   . BinaryValue a t
+  => BytesPerType a
+  => ShowArrayViewType a name
+  => IsSymbol name
+  => Proxy a
+  -> DataView
+  -> ByteOffset
+  -> t
+  -> Effect Boolean
 setBE = set BE
 
 -- | Store little-endian value at a certain index in a `DataView`.
-setLE :: forall a name t
-       . BinaryValue a t
-      => BytesPerType a
-      => ShowArrayViewType a name
-      => IsSymbol name
-      => Proxy a -> DataView -> ByteOffset -> t -> Effect Boolean
+setLE
+  :: forall a name t
+   . BinaryValue a t
+  => BytesPerType a
+  => ShowArrayViewType a name
+  => IsSymbol name
+  => Proxy a
+  -> DataView
+  -> ByteOffset
+  -> t
+  -> Effect Boolean
 setLE = set LE
 
 -- | Store int8 value at a certain index in a `DataView`.
@@ -266,7 +319,6 @@ setInt32le = setLE (Proxy :: Proxy Int32)
 -- | Store uint8 value at a certain index in a `DataView`.
 setUint8 :: DataView -> ByteOffset -> UInt -> Effect Boolean
 setUint8 = setLE (Proxy :: Proxy Uint8)
-
 
 -- | Store big-endian uint16 value at a certain index in a `DataView`.
 setUint16be :: DataView -> ByteOffset -> UInt -> Effect Boolean

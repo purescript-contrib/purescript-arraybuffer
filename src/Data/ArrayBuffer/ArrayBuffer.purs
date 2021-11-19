@@ -14,6 +14,7 @@ import Effect.Uncurried (EffectFn1, runEffectFn1)
 -- | Create an `ArrayBuffer` with the given capacity.
 empty :: ByteLength -> Effect ArrayBuffer
 empty l = runEffectFn1 emptyImpl l
+
 foreign import emptyImpl :: EffectFn1 ByteLength ArrayBuffer
 
 -- | Represents the length of an `ArrayBuffer` in bytes.
@@ -22,4 +23,5 @@ foreign import byteLength :: ArrayBuffer -> ByteLength
 -- | Returns a new `ArrayBuffer` whose contents are a copy of this ArrayBuffer's bytes from begin, inclusive, up to end, exclusive.
 slice :: ByteOffset -> ByteOffset -> ArrayBuffer -> ArrayBuffer
 slice s e a = runFn3 sliceImpl a s e
+
 foreign import sliceImpl :: Fn3 ArrayBuffer ByteOffset ByteOffset ArrayBuffer

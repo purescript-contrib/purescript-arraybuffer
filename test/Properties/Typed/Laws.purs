@@ -29,20 +29,28 @@ class ArrayEl (a :: ArrayViewType) (t :: Type) where
 
 instance arrayElUint8Clamped :: ArrayEl Uint8Clamped UInt where
   arb _ = genUint8
+
 instance arrayElUint32 :: ArrayEl Uint32 UInt where
   arb _ = genUint32
+
 instance arrayElUint16 :: ArrayEl Uint16 UInt where
   arb _ = genUint16
+
 instance arrayElUint8 :: ArrayEl Uint8 UInt where
   arb _ = genUint8
+
 instance arrayElInt32 :: ArrayEl Int32 Int where
   arb _ = genInt32
+
 instance arrayElInt16 :: ArrayEl Int16 Int where
   arb _ = genInt16
+
 instance arrayElInt8 :: ArrayEl Int8 Int where
   arb _ = genInt8
+
 instance arrayElFloat32 :: ArrayEl Float32 F.Float32 where
   arb _ = genFloat32
+
 instance arrayElFloat64 :: ArrayEl Float64 Number where
   arb _ = genFloat64
 
@@ -121,12 +129,14 @@ instance eqArrayView :: (TypedArray a t, Eq t) => Eq (AV a t) where
 
 instance showArrayView :: (TypedArray a t, Show t) => Show (AV a t) where
   show (AV a) = "T[" <> s <> "]"
-    where s = unsafePerformEffect $ toString a
+    where
+    s = unsafePerformEffect $ toString a
 
 instance semigroupArrayView :: TypedArray a t => Semigroup (AV a t) where
   append (AV a) (AV b) = unsafePerformEffect do
-    let la = TA.length a
-        lb = TA.length b
+    let
+      la = TA.length a
+      lb = TA.length b
     r <- TA.empty $ la + lb
     void $ TA.setTyped r (Just 0) a
     void $ TA.setTyped r (Just la) b
