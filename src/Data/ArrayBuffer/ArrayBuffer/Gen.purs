@@ -6,8 +6,5 @@ import Data.ArrayBuffer.Typed.Gen (genTypedArray, genUint8)
 import Data.ArrayBuffer.Types (ArrayBuffer, Uint8Array)
 import Prelude ((<$>))
 
-
-genArrayBuffer :: forall m
-                . MonadGen m
-               => m ArrayBuffer
+genArrayBuffer :: forall m. MonadGen m => m ArrayBuffer
 genArrayBuffer = buffer <$> (genTypedArray genUint8 :: m Uint8Array)

@@ -11,27 +11,23 @@ import Data.Unfoldable (replicateA)
 import Prelude ((<$>), bind, (<=), (-), pure)
 import Type.Proxy (Proxy(..))
 
-
-genDataView :: forall m
-             . MonadGen m
-            => m DataView
+genDataView :: forall m. MonadGen m => m DataView
 genDataView = whole <$> genArrayBuffer
-
-
 
 -- | For generating some set of offsets residing inside the generated array, with some computable value
 data WithOffsetAndValue (a :: ArrayViewType) t =
   WithOffsetAndValue (Array ByteOffset) t DataView
 
-genWithOffsetAndValue :: forall m a t
-                      . MonadGen m
-                      => MonadRec m
-                      => BytesPerType a
-                      => BinaryValue a t
-                      => Int -- generated length
-                      -> m DataView -- ^ Assumes generated length is at least the minimum length of one value
-                      -> m t
-                      -> m (WithOffsetAndValue a t)
+genWithOffsetAndValue
+  :: forall m a t
+   . MonadGen m
+  => MonadRec m
+  => BytesPerType a
+  => BinaryValue a t
+  => Int -- generated length
+  -> m DataView -- ^ Assumes generated length is at least the minimum length of one value
+  -> m t
+  -> m (WithOffsetAndValue a t)
 genWithOffsetAndValue n gen genT = do
   let b = byteWidth (Proxy :: Proxy a)
   xs <- gen `suchThat` \xs -> b <= byteLength xs

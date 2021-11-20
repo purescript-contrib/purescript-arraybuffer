@@ -8,6 +8,5 @@ import Test.Properties (propertiesTests)
 
 main :: Effect Unit
 main = do
-
   log "Starting tests..."
   propertiesTests

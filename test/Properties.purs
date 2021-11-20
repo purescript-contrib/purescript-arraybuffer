@@ -8,7 +8,6 @@ import Test.Properties.DataView (dataViewTests)
 import Test.Properties.TypedArray (typedArrayTests)
 import Test.Properties.Typed.Laws (typedArrayLaws)
 
-
 propertiesTests :: Effect Unit
 propertiesTests = do
   do

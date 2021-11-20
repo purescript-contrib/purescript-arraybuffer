@@ -21,7 +21,6 @@ import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck (class Testable, quickCheckGen, Result, (===))
 import Type.Proxy (Proxy(..))
 
-
 dataViewTests :: Ref Int -> Effect Unit
 dataViewTests count = do
   log "    - setBE x o => getBE o === Just x"
@@ -29,9 +28,8 @@ dataViewTests count = do
   log "    - setLE x o => getLE o === Just x"
   placingAValueIsThereTests DV.LE count
 
-
 type TestableViewF a name t q =
-     Show t
+  Show t
   => Eq t
   => Ord t
   => Semiring t
@@ -42,68 +40,88 @@ type TestableViewF a name t q =
   => WithOffsetAndValue a t
   -> q
 
-
-overAll :: forall q . Testable q
-        => Ref Int -> (forall a name t. TestableViewF a name t q) -> Effect Unit
+overAll
+  :: forall q
+   . Testable q
+  => Ref Int
+  -> (forall a name t. TestableViewF a name t q)
+  -> Effect Unit
 overAll count f = do
   void (Ref.modify (_ + 1) count)
   log "      - Uint32"
-  quickCheckGen $
-    let f' :: TestableViewF Uint32 "Uint32" UInt q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 4 genDataView genUint32
+  quickCheckGen do
+    let
+      f' :: TestableViewF Uint32 "Uint32" UInt q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 4 genDataView genUint32
 
   log "      - Uint16"
-  quickCheckGen $
-    let f' :: TestableViewF Uint16 "Uint16" UInt q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 2 genDataView genUint16
+  quickCheckGen do
+    let
+      f' :: TestableViewF Uint16 "Uint16" UInt q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 2 genDataView genUint16
 
   log "      - Uint8"
-  quickCheckGen $
-    let f' :: TestableViewF Uint8 "Uint8" UInt q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 1 genDataView genUint8
+  quickCheckGen do
+    let
+      f' :: TestableViewF Uint8 "Uint8" UInt q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 1 genDataView genUint8
 
   log "      - Int32"
-  quickCheckGen $
-    let f' :: TestableViewF Int32 "Int32" Int q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 4 genDataView genInt32
+  quickCheckGen do
+    let
+      f' :: TestableViewF Int32 "Int32" Int q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 4 genDataView genInt32
 
   log "      - Int16"
-  quickCheckGen $
-    let f' :: TestableViewF Int16 "Int16" Int q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 2 genDataView genInt16
+  quickCheckGen do
+    let
+      f' :: TestableViewF Int16 "Int16" Int q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 2 genDataView genInt16
 
   log "      - Int8"
-  quickCheckGen $
-    let f' :: TestableViewF Int8 "Int8" Int q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 1 genDataView genInt8
+  quickCheckGen do
+    let
+      f' :: TestableViewF Int8 "Int8" Int q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 1 genDataView genInt8
 
   log "      - Float32"
-  quickCheckGen $
-    let f' :: TestableViewF Float32 "Float32" F.Float32 q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 4 genDataView genFloat32
+  quickCheckGen do
+    let
+      f' :: TestableViewF Float32 "Float32" F.Float32 q
+      f' = f
+
+    f' <$> genWithOffsetAndValue 4 genDataView genFloat32
 
   log "      - Float64"
-  quickCheckGen $
-    let f' :: TestableViewF Float64 "Float64" Number q
-        f' = f
-    in  f' <$> genWithOffsetAndValue 8 genDataView genFloat64
+  quickCheckGen do
+    let
+      f' :: TestableViewF Float64 "Float64" Number q
+      f' = f
 
+    f' <$> genWithOffsetAndValue 8 genDataView genFloat64
 
 placingAValueIsThereTests :: DV.Endian -> Ref Int -> Effect Unit
 placingAValueIsThereTests endian count = overAll count placingAValueIsThere
   where
-    placingAValueIsThere :: forall a name t. TestableViewF a name t Result
-    placingAValueIsThere (WithOffsetAndValue os t xs) =
-      let o = unsafePartial $ Array.head os
-          prx = Proxy :: Proxy a
-      in  unsafePerformEffect do
-        _ <- DV.set endian prx xs o t
-        my <- DV.get endian prx xs o
-        pure (my === Just t)
+  placingAValueIsThere :: forall a name t. TestableViewF a name t Result
+  placingAValueIsThere (WithOffsetAndValue os t xs) = do
+    let
+      o = unsafePartial $ Array.head os
+      prx = Proxy :: Proxy a
+
+    unsafePerformEffect do
+      _ <- DV.set endian prx xs o t
+      my <- DV.get endian prx xs o
+      pure (my === Just t)

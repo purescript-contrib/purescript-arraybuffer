@@ -14,12 +14,12 @@ import Data.Unfoldable (replicateA)
 import Effect.Unsafe (unsafePerformEffect)
 import Prelude (bind, bottom, negate, pure, top, ($), (-), (/), (<$>))
 
-
-genTypedArray :: forall m a t
-               . MonadGen m
-              => TypedArray a t
-              => m t
-              -> m (ArrayView a)
+genTypedArray
+  :: forall m a t
+   . MonadGen m
+  => TypedArray a t
+  => m t
+  -> m (ArrayView a)
 genTypedArray gen = sized \s -> do
   n <- chooseInt 0 s
   a <- replicateA n gen
@@ -47,18 +47,20 @@ genFloat32 :: forall m. MonadGen m => m F.Float32
 genFloat32 = F.fromNumber' <$> chooseFloat (-3.40282347e+38) 3.40282347e+38
 
 genFloat64 :: forall m. MonadGen m => m Number
-genFloat64 = chooseFloat ((-1.7976931348623157e+308)/div) (1.7976931348623157e+308/div)
-  where div = 4.0
+genFloat64 = chooseFloat ((-1.7976931348623157e+308) / div) (1.7976931348623157e+308 / div)
+  where
+  div = 4.0
 
 -- | For generating some set of offsets residing inside the generated array
 data WithIndices a = WithIndices (Array TA.Index) (ArrayView a)
 
-genWithIndices :: forall m a
-               . MonadGen m
-              => BytesPerType a
-              => Int -- Number of offsets residing inside the generated array
-              -> m (ArrayView a)
-              -> m (WithIndices a)
+genWithIndices
+  :: forall m a
+   . MonadGen m
+  => BytesPerType a
+  => Int -- Number of offsets residing inside the generated array
+  -> m (ArrayView a)
+  -> m (WithIndices a)
 genWithIndices n gen = do
   xs <- gen
   let l = TA.length xs
