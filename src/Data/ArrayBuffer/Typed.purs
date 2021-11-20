@@ -402,12 +402,12 @@ reverse a = runEffectFn1 reverseImpl a
 foreign import reverseImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
 setInternal :: forall a b. (b -> Length) -> ArrayView a -> Maybe Index -> b -> Effect Boolean
-setInternal lenfn a mo b =
-  let
-    o = fromMaybe 0 mo
-  in
-    if o >= 0 && lenfn b <= length a - o then runEffectFn3 setImpl a o b *> pure true
-    else pure false
+setInternal lenfn a mo b = do
+  let o = fromMaybe 0 mo
+  if o >= 0 && lenfn b <= length a - o then
+    runEffectFn3 setImpl a o b *> pure true
+  else
+    pure false
 
 foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) Index b Unit
 

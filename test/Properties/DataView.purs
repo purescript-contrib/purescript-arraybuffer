@@ -49,79 +49,79 @@ overAll
 overAll count f = do
   void (Ref.modify (_ + 1) count)
   log "      - Uint32"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Uint32 "Uint32" UInt q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 4 genDataView genUint32
+
+    f' <$> genWithOffsetAndValue 4 genDataView genUint32
 
   log "      - Uint16"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Uint16 "Uint16" UInt q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 2 genDataView genUint16
+
+    f' <$> genWithOffsetAndValue 2 genDataView genUint16
 
   log "      - Uint8"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Uint8 "Uint8" UInt q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 1 genDataView genUint8
+
+    f' <$> genWithOffsetAndValue 1 genDataView genUint8
 
   log "      - Int32"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Int32 "Int32" Int q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 4 genDataView genInt32
+
+    f' <$> genWithOffsetAndValue 4 genDataView genInt32
 
   log "      - Int16"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Int16 "Int16" Int q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 2 genDataView genInt16
+
+    f' <$> genWithOffsetAndValue 2 genDataView genInt16
 
   log "      - Int8"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Int8 "Int8" Int q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 1 genDataView genInt8
+
+    f' <$> genWithOffsetAndValue 1 genDataView genInt8
 
   log "      - Float32"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Float32 "Float32" F.Float32 q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 4 genDataView genFloat32
+
+    f' <$> genWithOffsetAndValue 4 genDataView genFloat32
 
   log "      - Float64"
-  quickCheckGen $
+  quickCheckGen do
     let
       f' :: TestableViewF Float64 "Float64" Number q
       f' = f
-    in
-      f' <$> genWithOffsetAndValue 8 genDataView genFloat64
+
+    f' <$> genWithOffsetAndValue 8 genDataView genFloat64
 
 placingAValueIsThereTests :: DV.Endian -> Ref Int -> Effect Unit
 placingAValueIsThereTests endian count = overAll count placingAValueIsThere
   where
   placingAValueIsThere :: forall a name t. TestableViewF a name t Result
-  placingAValueIsThere (WithOffsetAndValue os t xs) =
+  placingAValueIsThere (WithOffsetAndValue os t xs) = do
     let
       o = unsafePartial $ Array.head os
       prx = Proxy :: Proxy a
-    in
-      unsafePerformEffect do
-        _ <- DV.set endian prx xs o t
-        my <- DV.get endian prx xs o
-        pure (my === Just t)
+
+    unsafePerformEffect do
+      _ <- DV.set endian prx xs o t
+      my <- DV.get endian prx xs o
+      pure (my === Just t)

@@ -1,8 +1,6 @@
 module Test.Properties.Typed.Laws where
 
 import Prelude
--- import Prelude (class Eq, class Monoid, class Ord, class Semigroup, class Show, bind, discard, pure, void, ($), (+), (<>), (<$>))
--- import Prelude (class Eq, class Monoid, class Ord, class Semigroup, Unit, discard, void, ($), (+), (<$>), (<<<))
 import Data.ArrayBuffer.Typed (class TypedArray, toString)
 import Data.ArrayBuffer.Typed.Gen (genFloat32, genFloat64, genInt16, genInt32, genInt8, genTypedArray, genUint16, genUint32, genUint8)
 import Data.ArrayBuffer.Types (ArrayView, Float32, Float64, Int16, Int32, Int8, Uint16, Uint32, Uint8, Uint8Clamped, ArrayViewType)

@@ -97,14 +97,14 @@ getter
   -> DataView
   -> ByteOffset
   -> Effect (Maybe t)
-getter data' d o = toMaybe <$>
-  runEffectFn3 getterImpl
+getter data' dataView offset =
+  toMaybe <$> runEffectFn3 getterImpl
     { functionName: data'.functionName
     , littleEndian: data'.littleEndian
     , bytesPerValue: data'.bytesPerValue
     }
-    d
-    o
+    dataView
+    offset
 
 foreign import getterImpl
   :: forall t
@@ -128,17 +128,17 @@ get
   -> DataView
   -> ByteOffset
   -> Effect (Maybe t)
-get endian prx =
+get endian prx = do
   let
     le = endian == LE
     pnm = "get" <> reflectSymbol (SProxy :: SProxy name)
     bpv = byteWidth prx
-  in
-    getter
-      { functionName: pnm
-      , bytesPerValue: bpv
-      , littleEndian: le
-      }
+
+  getter
+    { functionName: pnm
+    , bytesPerValue: bpv
+    , littleEndian: le
+    }
 
 getBE
   :: forall a name t
@@ -174,7 +174,7 @@ setter
   -> ByteOffset
   -> t
   -> Effect Boolean
-setter d o t = runEffectFn4 setterImpl d o t
+setter dataView offset t = runEffectFn4 setterImpl dataView offset t
 
 foreign import setterImpl
   :: forall t
@@ -200,17 +200,17 @@ set
   -> ByteOffset
   -> t
   -> Effect Boolean
-set endian prx =
+set endian prx = do
   let
     le = endian == LE
     pnm = "set" <> reflectSymbol (SProxy :: SProxy name)
     bpv = byteWidth prx
-  in
-    setter
-      { functionName: pnm
-      , bytesPerValue: bpv
-      , littleEndian: le
-      }
+
+  setter
+    { functionName: pnm
+    , bytesPerValue: bpv
+    , littleEndian: le
+    }
 
 -- | Fetch int8 value at a certain index in a `DataView`.
 getInt8 :: DataView -> ByteOffset -> Effect (Maybe Int)

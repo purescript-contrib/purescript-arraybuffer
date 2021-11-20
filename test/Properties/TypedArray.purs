@@ -217,11 +217,9 @@ byteLengthDivBytesPerValueTests :: Ref Int -> Effect Unit
 byteLengthDivBytesPerValueTests count = overAll 0 count byteLengthDivBytesPerValueEqLength
   where
   byteLengthDivBytesPerValueEqLength :: forall a t. TestableArrayF a t Result
-  byteLengthDivBytesPerValueEqLength (WithIndices _ xs) =
-    let
-      b = byteWidth (Proxy :: Proxy a)
-    in
-      pure $ TA.length xs === (TA.byteLength xs `div` b)
+  byteLengthDivBytesPerValueEqLength (WithIndices _ xs) = do
+    let b = byteWidth (Proxy :: Proxy a)
+    pure $ TA.length xs === (TA.byteLength xs `div` b)
 
 fromArrayToArrayIsoTests :: Ref Int -> Effect Unit
 fromArrayToArrayIsoTests count = overAll 0 count fromArrayToArrayIso

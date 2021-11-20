@@ -11,10 +11,7 @@ import Data.Unfoldable (replicateA)
 import Prelude ((<$>), bind, (<=), (-), pure)
 import Type.Proxy (Proxy(..))
 
-genDataView
-  :: forall m
-   . MonadGen m
-  => m DataView
+genDataView :: forall m. MonadGen m => m DataView
 genDataView = whole <$> genArrayBuffer
 
 -- | For generating some set of offsets residing inside the generated array, with some computable value
