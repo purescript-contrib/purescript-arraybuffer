@@ -1,6 +1,6 @@
 // module Data.ArrayBuffer.ArrayBuffer
 
-exports.emptyImpl = function empty (s) {
+export function emptyImpl(s) {
     return new ArrayBuffer(s);
 };
 

@@ -12,7 +12,7 @@ export function byteLength(v) {
     return v.byteLength;
 }
 
-exports.lengthImpl = function lemgthImpl (v) {
+export function lengthImpl(v) {
     return v.length;
 };
 
