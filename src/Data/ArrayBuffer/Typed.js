@@ -1,5 +1,3 @@
-"use strict";
-
 // module Data.ArrayBuffer.Typed
 
 export function buffer(v) {

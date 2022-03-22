@@ -1,5 +1,3 @@
-"use strict";
-
 // module Data.ArrayBuffer.ArrayBuffer
 
 exports.emptyImpl = function empty (s) {
