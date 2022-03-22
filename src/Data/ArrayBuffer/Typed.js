@@ -36,15 +36,15 @@ function newArray (f) {
   };
 }
 
-export var newUint8ClampedArray = newArray(Uint8ClampedArray);
-export var newUint32Array = newArray(Uint32Array);
-export var newUint16Array = newArray(Uint16Array);
-export var newUint8Array = newArray(Uint8Array);
-export var newInt32Array = newArray(Int32Array);
-export var newInt16Array = newArray(Int16Array);
-export var newInt8Array = newArray(Int8Array);
-export var newFloat32Array = newArray(Float32Array);
-export var newFloat64Array = newArray(Float64Array);
+export const newUint8ClampedArray = newArray(Uint8ClampedArray);
+export const newUint32Array = newArray(Uint32Array);
+export const newUint16Array = newArray(Uint16Array);
+export const newUint8Array = newArray(Uint8Array);
+export const newInt32Array = newArray(Int32Array);
+export const newInt16Array = newArray(Int16Array);
+export const newInt8Array = newArray(Int8Array);
+export const newFloat32Array = newArray(Float32Array);
+export const newFloat64Array = newArray(Float64Array);
 
 // ------
 
