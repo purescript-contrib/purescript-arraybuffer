@@ -26,5 +26,8 @@
     "purescript-tailrec": "master",
     "purescript-uint": "main",
     "purescript-unfoldable": "master"
+  },
+  "devDependencies": {
+    "purescript-quickcheck-laws": "main"
   }
 }
