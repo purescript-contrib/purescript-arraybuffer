@@ -49,7 +49,7 @@ import Data.ArrayBuffer.ValueMapping (class BinaryValue, class BytesPerType, cla
 import Data.Float32 (Float32) as F
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
-import Data.Symbol (SProxy(..), class IsSymbol, reflectSymbol)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.UInt (UInt)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn2, EffectFn3, EffectFn4, runEffectFn2, runEffectFn3, runEffectFn4)
@@ -131,7 +131,7 @@ get
 get endian prx = do
   let
     le = endian == LE
-    pnm = "get" <> reflectSymbol (SProxy :: SProxy name)
+    pnm = "get" <> reflectSymbol (Proxy :: Proxy name)
     bpv = byteWidth prx
 
   getter
@@ -203,7 +203,7 @@ set
 set endian prx = do
   let
     le = endian == LE
-    pnm = "set" <> reflectSymbol (SProxy :: SProxy name)
+    pnm = "set" <> reflectSymbol (Proxy :: Proxy name)
     bpv = byteWidth prx
 
   setter

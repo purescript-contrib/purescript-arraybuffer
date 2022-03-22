@@ -12,7 +12,7 @@ import Effect.Ref as Ref
 import Test.QuickCheck (class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (Gen)
 import Test.QuickCheck.Laws.Data (checkEq, checkMonoid, checkOrd, checkSemigroup)
-import Type.Prelude (Proxy(..))
+import Type.Proxy (Proxy(..))
 import Data.ArrayBuffer.Typed as TA
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..))
