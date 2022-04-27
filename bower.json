@@ -14,20 +14,20 @@
     "output"
   ],
   "dependencies": {
-    "purescript-arraybuffer-types": "main",
-    "purescript-arrays": "master",
-    "purescript-effect": "master",
-    "purescript-float32": "main",
-    "purescript-functions": "master",
-    "purescript-gen": "master",
-    "purescript-maybe": "master",
-    "purescript-nullable": "main",
-    "purescript-prelude": "master",
-    "purescript-tailrec": "master",
-    "purescript-uint": "main",
-    "purescript-unfoldable": "master"
+    "purescript-arraybuffer-types": "^3.0.2",
+    "purescript-arrays": "^7.0.0",
+    "purescript-effect": "^4.0.0",
+    "purescript-float32": "^2.0.0",
+    "purescript-functions": "^6.0.0",
+    "purescript-gen": "^4.0.0",
+    "purescript-maybe": "^6.0.0",
+    "purescript-nullable": "^6.0.0",
+    "purescript-prelude": "^6.0.0",
+    "purescript-tailrec": "^6.0.0",
+    "purescript-uint": "^7.0.0",
+    "purescript-unfoldable": "^6.0.0"
   },
   "devDependencies": {
-    "purescript-quickcheck-laws": "main"
+    "purescript-quickcheck-laws": "^7.0.0"
   }
 }
