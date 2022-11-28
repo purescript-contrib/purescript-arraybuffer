@@ -12,7 +12,8 @@ import Data.Float32 (Float32) as F
 import Data.UInt (UInt)
 import Type.Proxy (Proxy)
 
--- | Map of each `ArrayViewType` to the number of bytes of storage it requires.
+-- | Type-level map of each `ArrayViewType` to the number of bytes of storage
+-- | it requires.
 class BytesPerType (a :: ArrayViewType) where
   byteWidth :: (Proxy a) -> Int
 
@@ -43,7 +44,8 @@ instance bytesPerTypeFloat32 :: BytesPerType Float32 where
 instance bytesPerTypeFloat64 :: BytesPerType Float64 where
   byteWidth _ = 8
 
--- | Maps a `TypedArray`’s binary casted value to its computable representation in JavaScript.
+-- | Type-level map of `TypedArray`’s binary casted value to its
+-- | representation in JavaScript.
 class BinaryValue (a :: ArrayViewType) (t :: Type) | a -> t
 
 instance binaryValueUint8Clamped :: BinaryValue Uint8Clamped UInt
@@ -56,6 +58,7 @@ instance binaryValueInt8 :: BinaryValue Int8 Int
 instance binaryValueFloat32 :: BinaryValue Float32 F.Float32
 instance binaryValueFloat64 :: BinaryValue Float64 Number
 
+-- | Type-level map of `TypedArray` to its element type name.
 class ShowArrayViewType (a :: ArrayViewType) (name :: Symbol) | a -> name
 
 instance showArrayViewTypeUint8Clamped :: ShowArrayViewType Uint8Clamped "Uint8Clamped"
