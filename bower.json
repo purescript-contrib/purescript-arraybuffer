@@ -1,33 +1,30 @@
 {
-  "name": "purescript-arraybuffer",
-  "license": [
-    "MIT"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/purescript-contrib/purescript-arraybuffer"
-  },
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "output"
-  ],
-  "dependencies": {
-    "purescript-arraybuffer-types": "^3.0.2",
-    "purescript-arrays": "^7.0.0",
-    "purescript-effect": "^4.0.0",
-    "purescript-float32": "^2.0.0",
-    "purescript-functions": "^6.0.0",
-    "purescript-gen": "^4.0.0",
-    "purescript-maybe": "^6.0.0",
-    "purescript-nullable": "^6.0.0",
-    "purescript-prelude": "^6.0.0",
-    "purescript-tailrec": "^6.0.0",
-    "purescript-uint": "^7.0.0",
-    "purescript-unfoldable": "^6.0.0"
-  },
-  "devDependencies": {
-    "purescript-quickcheck-laws": "^7.0.0"
-  }
+    "name": "purescript-arraybuffer",
+    "license": [
+        "MIT"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/purescript-contrib/purescript-arraybuffer"
+    },
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "output"
+    ],
+    "dependencies": {
+        "purescript-arraybuffer-types": "^v3.0.2",
+        "purescript-arrays": "^v7.1.0",
+        "purescript-effect": "^v4.0.0",
+        "purescript-float32": "^v2.0.0",
+        "purescript-functions": "^v6.0.0",
+        "purescript-gen": "^v4.0.0",
+        "purescript-maybe": "^v6.0.0",
+        "purescript-nullable": "^v6.0.0",
+        "purescript-prelude": "^v6.0.1",
+        "purescript-tailrec": "^v6.1.0",
+        "purescript-uint": "^v7.0.0",
+        "purescript-unfoldable": "^v6.0.0"
+    }
 }

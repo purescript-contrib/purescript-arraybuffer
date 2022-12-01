@@ -8,11 +8,15 @@ Breaking changes:
 
 New features:
 
-- `Data.ArrayBuffer.Cast` (#46 by @jamesdbrock)
-
 Bugfixes:
 
 Other improvements:
+
+## [v13.1.0](https://github.com/purescript-contrib/purescript-arraybuffer/releases/tag/v13.1.0) - 2022-12-01
+
+New features:
+
+- `Data.ArrayBuffer.Cast` (#46 by @jamesdbrock)
 
 ## [v13.0.0](https://github.com/purescript-contrib/purescript-arraybuffer/releases/tag/v13.0.0) - 2022-04-27
 
