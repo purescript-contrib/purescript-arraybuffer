@@ -5,7 +5,6 @@ in conf // {
   , "foldable-traversable"
   , "partial"
   , "refs"
-  , "typelevel-prelude"
   , "tuples"
   , "quickcheck"
   , "quickcheck-laws"

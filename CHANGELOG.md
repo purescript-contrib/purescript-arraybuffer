@@ -8,6 +8,8 @@ Breaking changes:
 
 New features:
 
+- `Data.ArrayBuffer.Cast` (#46 by @jamesdbrock)
+
 Bugfixes:
 
 Other improvements:
