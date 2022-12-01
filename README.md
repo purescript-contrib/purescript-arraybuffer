@@ -87,7 +87,7 @@ These are some other packages which provide more `ArrayBuffer` features.
 
 ### UTF
 
-* [__text-encoding__](https://pursuit.purescript.org/packages/purescript-text-encoding)
+* [__web-encoding__](https://pursuit.purescript.org/packages/purescript-web-encoding)
 
 ### Base64
 
