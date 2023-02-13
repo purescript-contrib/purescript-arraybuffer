@@ -23,8 +23,8 @@
 -- | - `foldr`, `foldrM`, `foldr1`, `foldr1M`, `foldl`, `foldlM`, `foldl1`, `foldl1M` all can reduce an array
 -- | - `find` and `findIndex` are searching functions via a predicate
 -- | - `indexOf` and `lastIndexOf` are searching functions via equality
--- | - `slice` returns a new typed array on the same array buffer content as the input
--- | - `subArray` returns a new typed array with a separate array buffer
+-- | - `slice` returns a new typed array with a new copied underlying `ArrayBuffer`
+-- | - `subArray` returns a new typed array view of the same `ArrayBuffer`
 -- | - `toString` prints to a CSV, `join` allows you to supply the delimiter
 -- | - `toArray` returns an array of numeric values
 
@@ -211,7 +211,7 @@ set = setInternal A.length
 ap1 :: forall a b c. (a -> c) -> (a -> b -> c)
 ap1 f = \x _ -> f x
 
--- | Maps a new value over the typed array, creating a new buffer and
+-- | Maps a new value over the typed array, creating a new `ArrayBuffer` and
 -- | typed array as well.
 map :: forall a t. TypedArray a t => (t -> t) -> ArrayView a -> ArrayView a
 map = mapWithIndex' <<< ap1
@@ -415,7 +415,8 @@ foreign import setImpl :: forall a b. EffectFn3 (ArrayView a) Index b Unit
 setTyped :: forall a. ArrayView a -> Maybe Index -> ArrayView a -> Effect Boolean
 setTyped = setInternal length
 
--- | Copy part of the contents of a typed array into a new buffer, between some start and end indices.
+-- | Copy part of the contents of a typed array into a new `ArrayBuffer`,
+-- | between the start and end indices.
 slice :: forall a. Index -> Index -> ArrayView a -> Effect (ArrayView a)
 slice s e a = runEffectFn3 sliceImpl a s e
 
@@ -427,7 +428,8 @@ sort a = runEffectFn1 sortImpl a
 
 foreign import sortImpl :: forall a. EffectFn1 (ArrayView a) Unit
 
--- | Returns a new typed array view of the same buffer, beginning at the index and ending at the second.
+-- | Returns a new typed array view of the same `ArrayBuffer`, beginning at
+-- | the index and ending at the second.
 subArray :: forall a. Index -> Index -> ArrayView a -> ArrayView a
 subArray s e a = runFn3 subArrayImpl a s e
 
