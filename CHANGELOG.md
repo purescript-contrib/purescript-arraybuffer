@@ -12,6 +12,10 @@ Bugfixes:
 
 Other improvements:
 
+## [v13.2.0](https://github.com/purescript-contrib/purescript-arraybuffer/releases/tag/v13.2.0) - 2023-02-13
+
+Other improvements:
+
 - Correct `Typed` `slice` and `subArray` docs (#51 by @jamesdbrock)
 
 ## [v13.1.0](https://github.com/purescript-contrib/purescript-arraybuffer/releases/tag/v13.1.0) - 2022-12-01
