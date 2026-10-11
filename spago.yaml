@@ -1,0 +1,37 @@
+package:
+  name: arraybuffer
+  description: Bindings and implementation for mutable JavaScript ArrayBuffers
+  publish:
+    version: 13.2.1
+    license: MIT
+    location:
+      githubOwner: purescript-contrib
+      githubRepo: purescript-arraybuffer
+  build:
+    strict: true
+  dependencies:
+    - arraybuffer-types: ">=3.0.2 <4.0.0"
+    - arrays: ">=7.2.0 <8.0.0"
+    - effect: ">=4.0.0 <5.0.0"
+    - float32: ">=2.0.0 <3.0.0"
+    - functions: ">=6.0.0 <7.0.0"
+    - gen: ">=4.0.0 <5.0.0"
+    - maybe: ">=6.0.0 <7.0.0"
+    - nullable: ">=6.0.0 <7.0.0"
+    - prelude: ">=6.0.1 <7.0.0"
+    - tailrec: ">=6.1.0 <7.0.0"
+    - uint: ">=7.0.0 <8.0.0"
+    - unfoldable: ">=6.0.0 <7.0.0"
+  test:
+    main: Test.Main
+    dependencies:
+      - console
+      - foldable-traversable
+      - partial
+      - refs
+      - tuples
+      - quickcheck
+      - quickcheck-laws
+workspace:
+  packageSet:
+    registry: 81.4.0
