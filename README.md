@@ -98,5 +98,5 @@ These are some other packages which provide more `ArrayBuffer` features.
 Run the tests with
 
 ```sh
-spago -x spago-test.dhall test
+spago test
 ```
