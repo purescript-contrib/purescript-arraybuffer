@@ -12,6 +12,10 @@ Bugfixes:
 
 Other improvements:
 
+## [v13.2.1](https://github.com/purescript-contrib/purescript-arraybuffer/releases/tag/v13.2.1) - 2026-10-11
+
+Other improvements:
+
 - Migrate to registry-backed Spago and update CI tooling.
 
 ## [v13.2.0](https://github.com/purescript-contrib/purescript-arraybuffer/releases/tag/v13.2.0) - 2023-02-13
